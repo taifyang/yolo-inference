@@ -12,14 +12,14 @@ class YOLOv5_TensorRT : public YOLOv5
 public:
 	YOLOv5_TensorRT(std::string model_path, Device_Type device_type);
 
+	~YOLOv5_TensorRT();
+
 private:
 	void pre_process();
 
 	void process();
 
 	void post_process();
-
-	void release();
 
 	nvinfer1::IExecutionContext* m_execution_context;
 

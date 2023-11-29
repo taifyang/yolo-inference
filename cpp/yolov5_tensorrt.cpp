@@ -130,7 +130,7 @@ void YOLOv5_TensorRT::post_process()
 }
 
 
-void YOLOv5_TensorRT::release()
+YOLOv5_TensorRT::~YOLOv5_TensorRT()
 {
 	cudaStreamDestroy(m_stream);
 	cudaFree(m_inputs_device);

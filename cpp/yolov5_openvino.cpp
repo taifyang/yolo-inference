@@ -76,7 +76,3 @@ void YOLOv5_OpenVINO::post_process()
 	}
 }
 
-
-void YOLOv5_OpenVINO::release()
-{
-}

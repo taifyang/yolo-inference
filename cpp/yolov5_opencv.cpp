@@ -76,7 +76,3 @@ void YOLOv5_OpenCV::post_process()
 	}
 }
 
-
-void YOLOv5_OpenCV::release()
-{
-}

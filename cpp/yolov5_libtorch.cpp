@@ -79,7 +79,3 @@ void YOLOv5_Libtorch::post_process()
 	}
 }
 
-
-void YOLOv5_Libtorch::release()
-{
-}

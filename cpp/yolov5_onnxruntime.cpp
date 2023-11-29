@@ -131,7 +131,3 @@ void YOLOv5_ONNXRuntime::post_process()
 	}
 }
 
-
-void YOLOv5_ONNXRuntime::release()
-{
-}

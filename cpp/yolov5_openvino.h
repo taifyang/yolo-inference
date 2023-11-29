@@ -10,14 +10,14 @@ class YOLOv5_OpenVINO : public YOLOv5
 public:
 	YOLOv5_OpenVINO(std::string model_path, Device_Type device_type);
 
+	~YOLOv5_OpenVINO();
+
 private:
 	void pre_process();
 
 	void process();
 
 	void post_process();
-
-	void release();
 
 	ov::InferRequest m_infer_request;
 

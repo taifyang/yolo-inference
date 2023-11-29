@@ -10,12 +10,12 @@ class YOLOv5_OpenCV : public YOLOv5
 public:
 	YOLOv5_OpenCV(std::string model_path, Device_Type device_type);
 
+	~YOLOv5_OpenCV();
+
 private:
 	void pre_process();
 
 	void process();
-
-	void release();
 
 	void post_process();
 

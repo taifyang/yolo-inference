@@ -10,14 +10,14 @@ class YOLOv5_ONNXRuntime : public YOLOv5
 public:
 	YOLOv5_ONNXRuntime(std::string model_path, Device_Type device_type);
 
+	~YOLOv5_ONNXRuntime();
+
 private:
 	void pre_process();
 
 	void process();
 
 	void post_process();
-
-	void release();
 
 	const OrtApi* m_ort;
 

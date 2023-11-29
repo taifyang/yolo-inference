@@ -54,7 +54,6 @@ public:
 		pre_process();
 		process();
 		post_process();
-		release();
 		cv::imwrite("result.jpg", m_result);
 		cv::imshow("result", m_result);
 		cv::waitKey(0);
@@ -70,6 +69,4 @@ private:
 	virtual void process() = 0;
 
 	virtual void post_process() = 0;
-
-	virtual void release() = 0;
 };
