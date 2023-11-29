@@ -1,17 +1,16 @@
 #include "utils.h"
 
 
-void LetterBox(cv::Mat & input_image, cv::Mat & output_image, cv::Size & shape, cv::Scalar & color)
+void LetterBox(cv::Mat& input_image, cv::Mat& output_image, cv::Size& shape, cv::Scalar& color)
 {
-	cv::Size shape = input_image.size();
-	float r = std::min((float)shape.height / (float)shape.height, (float)shape.width / (float)shape.width);
+	float r = std::min((float)shape.height / (float)input_image.rows, (float)shape.width / (float)input_image.cols);
 	float ratio[2]{ r, r };
-	int new_un_pad[2] = { (int)std::round((float)shape.width * r),(int)std::round((float)shape.height * r) };
+	int new_un_pad[2] = { (int)std::round((float)input_image.cols * r),(int)std::round((float)input_image.rows * r) };
 
 	auto dw = (float)(shape.width - new_un_pad[0]) / 2;
 	auto dh = (float)(shape.height - new_un_pad[1]) / 2;
 
-	if (shape.width != new_un_pad[0] && shape.height != new_un_pad[1])
+	if (input_image.cols != new_un_pad[0] && input_image.rows != new_un_pad[1])
 		cv::resize(input_image, output_image, cv::Size(new_un_pad[0], new_un_pad[1]));
 	else
 		output_image = input_image.clone();
@@ -19,7 +18,7 @@ void LetterBox(cv::Mat & input_image, cv::Mat & output_image, cv::Size & shape, 
 	int top = int(std::round(dh - 0.1f));
 	int bottom = int(std::round(dh + 0.1f));
 	int left = int(std::round(dw - 0.1f));
-	int right = int(std::round(dw + 0.1f));
+	int right = int(std::round(dw + 0.1f));	
 
 	cv::Vec4d params;
 	params[0] = ratio[0];

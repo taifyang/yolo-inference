@@ -59,7 +59,7 @@ void YOLOv5_OpenVINO::post_process()
 		int height = int(h);
 
 		cv::Rect box = cv::Rect(left, top, width, height);
-		scale_boxes(box, m_image.size());
+		scale_box(box, m_image.size());
 		boxes.push_back(box);
 		scores.push_back(score);
 		class_ids.push_back(class_id);
