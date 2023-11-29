@@ -5,7 +5,7 @@
 
 
 //LetterBox¥¶¿Ì
-void LetterBox(cv::Mat& image, cv::Mat& outImage, cv::Size& newShape = cv::Size(640, 640), cv::Scalar& color = cv::Scalar(114, 114, 114));
+void LetterBox(cv::Mat& input_image, cv::Mat& output_image, cv::Size& shape = cv::Size(640, 640), cv::Scalar& color = cv::Scalar(114, 114, 114));
 
 //NMS
 void nms(std::vector<cv::Rect>& boxes, std::vector<float>& scores, float score_threshold, float nms_threshold, std::vector<int>& indices);

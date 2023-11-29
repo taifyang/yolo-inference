@@ -1,20 +1,20 @@
 #include "utils.h"
 
 
-void LetterBox(cv::Mat & image, cv::Mat & outImage, cv::Size & newShape, cv::Scalar & color)
+void LetterBox(cv::Mat & input_image, cv::Mat & output_image, cv::Size & shape, cv::Scalar & color)
 {
-	cv::Size shape = image.size();
-	float r = std::min((float)newShape.height / (float)shape.height, (float)newShape.width / (float)shape.width);
+	cv::Size shape = input_image.size();
+	float r = std::min((float)shape.height / (float)shape.height, (float)shape.width / (float)shape.width);
 	float ratio[2]{ r, r };
 	int new_un_pad[2] = { (int)std::round((float)shape.width * r),(int)std::round((float)shape.height * r) };
 
-	auto dw = (float)(newShape.width - new_un_pad[0]) / 2;
-	auto dh = (float)(newShape.height - new_un_pad[1]) / 2;
+	auto dw = (float)(shape.width - new_un_pad[0]) / 2;
+	auto dh = (float)(shape.height - new_un_pad[1]) / 2;
 
 	if (shape.width != new_un_pad[0] && shape.height != new_un_pad[1])
-		cv::resize(image, outImage, cv::Size(new_un_pad[0], new_un_pad[1]));
+		cv::resize(input_image, output_image, cv::Size(new_un_pad[0], new_un_pad[1]));
 	else
-		outImage = image.clone();
+		output_image = input_image.clone();
 
 	int top = int(std::round(dh - 0.1f));
 	int bottom = int(std::round(dh + 0.1f));
@@ -27,7 +27,7 @@ void LetterBox(cv::Mat & image, cv::Mat & outImage, cv::Size & newShape, cv::Sca
 	params[2] = left;
 	params[3] = top;
 
-	cv::copyMakeBorder(outImage, outImage, top, bottom, left, right, cv::BORDER_CONSTANT, color);
+	cv::copyMakeBorder(output_image, output_image, top, bottom, left, right, cv::BORDER_CONSTANT, color);
 }
 
 
@@ -87,7 +87,7 @@ void nms(std::vector<cv::Rect> & boxes, std::vector<float> & scores, float score
 }
 
 
-void scale_boxes(cv::Rect & box, cv::Size size)
+void scale_box(cv::Rect & box, cv::Size size)
 {
 	float gain = std::min(input_width * 1.0 / size.width, input_height * 1.0 / size.height);
 	int pad_w = (input_width - size.width * gain) / 2;
