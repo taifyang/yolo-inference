@@ -1,11 +1,10 @@
-import cv2
 from openvino.inference_engine import IECore
 from yolov5 import *
 from utils import *
 
 
 class YOLOv5_OpenVINO(YOLOv5):
-    def __init__(self, model_path:str, device_type:Device_Type) -> None:
+    def __init__(self, model_path:str, device_type:Device_Type, model_type:Model_Type) -> None:
         super().__init__()
         ie = IECore()
         net = ie.read_network(model=model_path)
@@ -23,7 +22,7 @@ class YOLOv5_OpenVINO(YOLOv5):
         if infer_request_handle.wait(-1) == 0:
             output_layer = infer_request_handle._outputs_list[0]
             self.outputs = infer_request_handle.output_blobs[output_layer].buffer
-    
+             
     def post_process(self) -> None:
         self.outputs = np.squeeze(self.outputs)
         self.outputs = self.outputs[self.outputs[..., 4] > confidence_threshold]

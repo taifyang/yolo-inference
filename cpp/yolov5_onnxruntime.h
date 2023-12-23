@@ -8,7 +8,7 @@
 class YOLOv5_ONNXRuntime : public YOLOv5
 {
 public:
-	YOLOv5_ONNXRuntime(std::string model_path, Device_Type device_type);
+	YOLOv5_ONNXRuntime(std::string model_path, Device_Type device_type, Model_Type model_type);
 
 	~YOLOv5_ONNXRuntime();
 
@@ -27,7 +27,13 @@ private:
 
 	float* m_inputs;
 
+	uint16_t* m_inputs_fp16;
+
 	float* m_outputs;
+
+	uint16_t* m_outputs_fp16;
+
+	Model_Type m_model;
 
 	std::vector<const char*> m_input_names;
 

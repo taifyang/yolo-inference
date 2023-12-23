@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <opencv2/opencv.hpp>
+#include "utils.h"
 
 
 const std::vector<std::string> class_names = {
@@ -43,30 +44,29 @@ enum Device_Type
 	GPU,
 };
 
+enum Model_Type
+{
+	FP32,
+	FP16,
+	INT8,
+};
+
 
 class YOLOv5
 {
 public:
-	void infer(const std::string image_path)
-	{
-		m_image = cv::imread(image_path);
-		m_result = m_image.clone();
-		pre_process();
-		process();
-		post_process();
-		cv::imwrite("result.jpg", m_result);
-		cv::imshow("result", m_result);
-		cv::waitKey(0);
-	}
+	void infer(const std::string file_path);
 
 	cv::Mat m_image;
 
 	cv::Mat m_result;
+
+	float* m_outputs_host;
 	
 private:
 	virtual void pre_process() = 0;
 
 	virtual void process() = 0;
 
-	virtual void post_process() = 0;
+	void post_process();
 };
