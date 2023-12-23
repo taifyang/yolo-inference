@@ -9,7 +9,7 @@
 class YOLOv5_Libtorch : public YOLOv5
 {	
 public:
-	YOLOv5_Libtorch(std::string model_path, Device_Type device_type);
+	YOLOv5_Libtorch(std::string model_path, Device_Type device_type, Model_Type model_type);
 
 	~YOLOv5_Libtorch();
 
@@ -21,6 +21,8 @@ private:
 	void post_process();
 
 	torch::DeviceType m_device;
+
+	Model_Type m_model;
 
 	torch::jit::script::Module module;
 

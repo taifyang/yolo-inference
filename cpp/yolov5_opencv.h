@@ -8,7 +8,7 @@
 class YOLOv5_OpenCV : public YOLOv5
 {
 public:
-	YOLOv5_OpenCV(std::string model_path, Device_Type device_type);
+	YOLOv5_OpenCV(std::string model_path, Device_Type device_type, Model_Type model_type);
 
 	~YOLOv5_OpenCV();
 

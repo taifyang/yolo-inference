@@ -6,21 +6,30 @@ from utils import *
 
 
 class YOLOv5_TensorRT(YOLOv5):
-    def __init__(self, model_path:str, device_type:Device_Type) -> None:
+    def __init__(self, model_path:str, device_type:Device_Type, model_type:Model_Type) -> None:
         super().__init__()
-        logger = trt.Logger(trt.Logger.WARNING)
+        assert device_type == Device_Type.GPU, "only support GPU!"
+        self.model_type = model_type
+        logger = trt.Logger(trt.Logger.ERROR)
         with open(model_path, "rb") as f, trt.Runtime(logger) as runtime:
             self.engine = runtime.deserialize_cuda_engine(f.read())
         context = self.engine.create_execution_context()
-        self.inputs_host = cuda.pagelocked_empty(trt.volume(context.get_binding_shape(0)), dtype=np.float32)
-        self.outputs_host = cuda.pagelocked_empty(trt.volume(context.get_binding_shape(1)), dtype=np.float32)
+        if self.model_type == Model_Type.FP32 or self.model_type == Model_Type.INT8:
+            self.inputs_host = cuda.pagelocked_empty(trt.volume(context.get_binding_shape(0)), dtype=np.float32)
+            self.outputs_host = cuda.pagelocked_empty(trt.volume(context.get_binding_shape(1)), dtype=np.float32)
+        elif self.model_type == Model_Type.FP16:
+            self.inputs_host = cuda.pagelocked_empty(trt.volume(context.get_binding_shape(0)), dtype=np.float16)
+            self.outputs_host = cuda.pagelocked_empty(trt.volume(context.get_binding_shape(1)), dtype=np.float16)
         self.inputs_device = cuda.mem_alloc(self.inputs_host.nbytes)
         self.outputs_device = cuda.mem_alloc(self.outputs_host.nbytes)
         self.stream = cuda.Stream()
             
     def pre_process(self) -> None:
         input = letterbox(self.image, input_shape)
-        input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB和HWC2CHW
+        if self.model_type == Model_Type.FP32 or self.model_type == Model_Type.INT8:
+            input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  
+        elif self.model_type == Model_Type.FP16:
+            input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float16) 
         input = input / 255.0
         input = np.expand_dims(input, axis=0) 
         np.copyto(self.inputs_host, input.ravel())
@@ -34,7 +43,7 @@ class YOLOv5_TensorRT(YOLOv5):
             self.outputs = self.outputs_host.reshape(context.get_binding_shape(1)) 
     
     def post_process(self) -> None:
-        self.outputs = np.squeeze(self.outputs)
+        self.outputs = np.squeeze(self.outputs).astype(dtype=np.float32)       
         self.outputs = self.outputs[self.outputs[..., 4] > confidence_threshold]
         classes_scores = self.outputs[..., 5:]       
         boxes = []

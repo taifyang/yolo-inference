@@ -4,12 +4,13 @@ from utils import *
 
 
 class YOLOv5_OpenCV(YOLOv5):
-    def __init__(self, model_path:str, device_type:Device_Type) -> None:
+    def __init__(self, model_path:str, device_type:Device_Type, model_type:Model_Type) -> None:
         super().__init__()
         self.net = cv2.dnn.readNet(model_path)
         if device_type == Device_Type.GPU:
             self.net.setPreferableBackend(cv2.dnn_DNN_BACKEND_CUDA)
             self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+        assert model_type == Model_Type.FP32, "unsupported model type!"
             
     def pre_process(self) -> None:
         input = letterbox(self.image, input_shape)
@@ -18,7 +19,7 @@ class YOLOv5_OpenCV(YOLOv5):
         
     def process(self) -> None:
         self.outputs = self.net.forward()
-    
+        
     def post_process(self) -> None:
         boxes = []
         scores = []

@@ -2,7 +2,7 @@
 #include "utils.h"
 
 
-YOLOv5_ONNXRuntime::YOLOv5_ONNXRuntime(std::string model_path, Device_Type device_type)
+YOLOv5_ONNXRuntime::YOLOv5_ONNXRuntime(std::string model_path, Device_Type device_type, Model_Type model_type)
 {
 	//初始化OrtApi
 	m_ort = OrtGetApiBase()->GetApi(ORT_API_VERSION); 	
@@ -18,6 +18,9 @@ YOLOv5_ONNXRuntime::YOLOv5_ONNXRuntime(std::string model_path, Device_Type devic
 	{
 		OrtSessionOptionsAppendExecutionProvider_CUDA(session_options, 0);
 	}
+
+	assert(("unsupported model type!", model_type == FP32 || model_type == FP16));
+	m_model = model_type;
 
 	//初始化session
 #ifdef _WIN32
@@ -46,6 +49,10 @@ YOLOv5_ONNXRuntime::YOLOv5_ONNXRuntime(std::string model_path, Device_Type devic
 	}
 
 	m_ort->CreateCpuMemoryInfo(OrtArenaAllocator, OrtMemTypeDefault, &m_memory_info);
+
+	if (m_model == FP16)
+		m_inputs_fp16 = (uint16_t*)malloc(sizeof(uint16_t) * input_numel);
+	m_outputs_host = (float*)malloc(sizeof(float) * output_numel);
 }
 
 
@@ -64,6 +71,14 @@ void YOLOv5_ONNXRuntime::pre_process()
 		std::vector<float> split_image_data = split_images[i].reshape(1, 1);
 		std::copy(split_image_data.begin(), split_image_data.end(), m_inputs + i * split_image_data.size());
 	}
+
+	if (m_model == FP16)
+	{
+		for (size_t i = 0; i < input_numel; i++)
+		{
+			m_inputs_fp16[i] = float32_to_float16(m_inputs[i]);
+		}
+	}
 }
 
 
@@ -71,63 +86,29 @@ void YOLOv5_ONNXRuntime::process()
 {
 	//input_tensor
 	OrtValue* input_tensor = NULL;
-	int64_t input_shape[4] = { 1, m_image.channels(), input_width, input_height };
-	m_ort->CreateTensorWithDataAsOrtValue(m_memory_info, m_inputs, sizeof(float) * input_numel, input_shape,
-		4, ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT, &input_tensor);
-
+	int64_t input_shape[4] = { 1, m_image.channels(), input_width, input_height }; 
+	if(m_model == FP32)
+		m_ort->CreateTensorWithDataAsOrtValue(m_memory_info, m_inputs, sizeof(float) * input_numel, input_shape, 4, ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT, &input_tensor);
+	else if (m_model == FP16)
+		m_ort->CreateTensorWithDataAsOrtValue(m_memory_info, m_inputs_fp16, sizeof(uint16_t) * input_numel, input_shape, 4, ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16, &input_tensor);
+	
 	//推理
 	OrtValue* output_tensor = NULL;
-	m_ort->Run(m_session, NULL, m_input_names.data(), (const OrtValue * const*)& input_tensor, m_input_names.size(),
-		m_output_names.data(), m_output_names.size(), &output_tensor);
+	m_ort->Run(m_session, NULL, m_input_names.data(), (const OrtValue* const*)& input_tensor, m_input_names.size(), m_output_names.data(), m_output_names.size(), &output_tensor);
 
-	//取output数据
-	m_ort->GetTensorMutableData(output_tensor, (void**)& m_outputs);
-}
-
-void YOLOv5_ONNXRuntime::post_process()
-{
-	std::vector<cv::Rect> boxes;
-	std::vector<float> scores;
-	std::vector<int> class_ids;
-
-	for (int i = 0; i < output_numbox; ++i)
+	//取output数据	
+	if (m_model == FP32)
 	{
-		float* ptr = m_outputs + i * output_numprob;
-		float objness = ptr[4];
-		if (objness < confidence_threshold)
-			continue;
-
-		float* classes_scores = ptr + 5;
-		int class_id = std::max_element(classes_scores, classes_scores + num_classes) - classes_scores;
-		float max_class_score = classes_scores[class_id];
-		float score = max_class_score * objness;
-		if (score < score_threshold)
-			continue;
-
-		float x = ptr[0];
-		float y = ptr[1];
-		float w = ptr[2];
-		float h = ptr[3];
-		int left = int(x - 0.5 * w);
-		int top = int(y - 0.5 * h);
-		int width = int(w);
-		int height = int(h);
-
-		cv::Rect box = cv::Rect(left, top, width, height);
-		scale_box(box, m_image.size());
-		boxes.push_back(box);
-		scores.push_back(score);
-		class_ids.push_back(class_id);
+		m_ort->GetTensorMutableData(output_tensor, (void**)& m_outputs);
+		m_outputs_host = m_outputs;
 	}
-
-	std::vector<int> indices;
-	nms(boxes, scores, score_threshold, nms_threshold, indices);
-	for (int i = 0; i < indices.size(); i++)
+	else if (m_model == FP16)
 	{
-		int idx = indices[i];
-		cv::Rect box = boxes[idx];
-		std::string label = class_names[class_ids[idx]] + ":" + cv::format("%.2f", scores[idx]); //class_ids[idx]是class_id
-		draw_result(m_result, label, box);
+		m_ort->GetTensorMutableData(output_tensor, (void**)& m_outputs_fp16);
+		for (size_t i = 0; i < output_numel; i++)
+		{
+			m_outputs_host[i] = float16_to_float32(m_outputs_fp16[i]);
+		}
 	}
 }
 

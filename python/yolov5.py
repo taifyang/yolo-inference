@@ -1,7 +1,10 @@
+import os
 import cv2
+import time
 import numpy as np
 from enum import Enum
 from abc import ABC, abstractclassmethod
+
 
 class_names = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
         'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
@@ -25,18 +28,37 @@ class Device_Type(Enum):
     CPU = 0
     GPU = 1
 
+class Model_Type(Enum):
+    FP32 = 0
+    FP16 = 1
+    INT8 = 2
+    
 
 class YOLOv5(ABC):
-    def infer(self, image_path:str) -> None:
-        self.image = cv2.imread(image_path)
-        self.result = self.image.copy()
-        self.pre_process()
-        self.process()
-        self.post_process()
-        cv2.imwrite("result.jpg", self.result)
-        cv2.imshow("result", self.result)
-        cv2.waitKey(0)
-    
+    def infer(self, file_path:str) -> None:
+        assert os.path.exists(file_path)
+        if file_path[-4:] == ".bmp" or file_path[-4:] == ".jpg" or file_path[-4:] == ".png":
+            self.image = cv2.imread(file_path)
+            self.result = self.image.copy()
+            self.pre_process()
+            self.process()
+            self.post_process()
+            cv2.imwrite("result.jpg", self.result)
+            cv2.imshow("result", self.result)
+            cv2.waitKey(0)
+        elif file_path[-4:] == ".mp4":
+            cap = cv2.VideoCapture(file_path)
+            while cv2.waitKey(1) < 0:
+                start = time.time()
+                _, self.image  = cap.read()
+                self.result = self.image.copy()
+                self.pre_process()
+                self.process()
+                self.post_process()
+                cv2.imshow("result", self.result)
+                end = time.time()
+                print((end-start)*1000, "ms")                         
+            
     @abstractclassmethod
     def pre_process(self) -> None:
         pass
