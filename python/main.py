@@ -20,7 +20,7 @@ from yolov5_tensorrt import *
 # yolov5 = YOLOv5_OpenVINO(model_path="yolov5n_int8.xml", device_type=Device_Type.GPU, model_type=Model_Type.INT8)      #67-115ms
 
 # yolov5 = YOLOv5_TensorRT(model_path="yolov5n_fp32.engine", device_type=Device_Type.GPU, model_type=Model_Type.FP32)   #20-30ms
-# yolov5 = YOLOv5_TensorRT(model_path="yolov5n_fp16.engine", device_type=Device_Type.GPU, model_type=Model_Type.FP16)   #24-28ms
+# yolov5 = YOLOv5_TensorRT(model_path="yolov5n_fp16.engine", device_type=Device_Type.GPU, model_type=Model_Type.FP16)   #19-26ms
 yolov5 = YOLOv5_TensorRT(model_path="yolov5n_int8.engine", device_type=Device_Type.GPU, model_type=Model_Type.INT8)   #19-23ms
 
 yolov5.infer("test.mp4")

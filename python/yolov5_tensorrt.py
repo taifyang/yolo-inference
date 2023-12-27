@@ -14,22 +14,15 @@ class YOLOv5_TensorRT(YOLOv5):
         with open(model_path, "rb") as f, trt.Runtime(logger) as runtime:
             self.engine = runtime.deserialize_cuda_engine(f.read())
         context = self.engine.create_execution_context()
-        if self.model_type == Model_Type.FP32 or self.model_type == Model_Type.INT8:
-            self.inputs_host = cuda.pagelocked_empty(trt.volume(context.get_binding_shape(0)), dtype=np.float32)
-            self.outputs_host = cuda.pagelocked_empty(trt.volume(context.get_binding_shape(1)), dtype=np.float32)
-        elif self.model_type == Model_Type.FP16:
-            self.inputs_host = cuda.pagelocked_empty(trt.volume(context.get_binding_shape(0)), dtype=np.float16)
-            self.outputs_host = cuda.pagelocked_empty(trt.volume(context.get_binding_shape(1)), dtype=np.float16)
+        self.inputs_host = cuda.pagelocked_empty(trt.volume(context.get_binding_shape(0)), dtype=np.float32)
+        self.outputs_host = cuda.pagelocked_empty(trt.volume(context.get_binding_shape(1)), dtype=np.float32)
         self.inputs_device = cuda.mem_alloc(self.inputs_host.nbytes)
         self.outputs_device = cuda.mem_alloc(self.outputs_host.nbytes)
         self.stream = cuda.Stream()
             
     def pre_process(self) -> None:
         input = letterbox(self.image, input_shape)
-        if self.model_type == Model_Type.FP32 or self.model_type == Model_Type.INT8:
-            input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  
-        elif self.model_type == Model_Type.FP16:
-            input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float16) 
+        input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  
         input = input / 255.0
         input = np.expand_dims(input, axis=0) 
         np.copyto(self.inputs_host, input.ravel())

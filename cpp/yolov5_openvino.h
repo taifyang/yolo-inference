@@ -17,8 +17,6 @@ private:
 
 	void process();
 
-	void post_process();
-
 	ov::InferRequest m_infer_request;
 
 	ov::Output<const ov::Node> m_input_port;

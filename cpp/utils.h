@@ -16,8 +16,8 @@ void scale_box(cv::Rect& box, cv::Size size);
 //可视化函数
 void draw_result(cv::Mat& image, std::string label, cv::Rect box);	
 
-//float32转float16
+//float32转float16 https://github.com/Tencent/ncnn/blob/master/src/mat.cpp
 uint16_t float32_to_float16(float value);
 
-//float16转float32
+//float16转float32 https://github.com/Tencent/ncnn/blob/master/src/mat.cpp
 float float16_to_float32(uint16_t value);

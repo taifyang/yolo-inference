@@ -18,8 +18,6 @@ private:
 		
 	void process();
 
-	void post_process();
-
 	torch::DeviceType m_device;
 
 	Model_Type m_model;

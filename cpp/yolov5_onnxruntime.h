@@ -17,7 +17,7 @@ private:
 
 	void process();
 
-	void post_process();
+	Model_Type m_model;
 
 	const OrtApi* m_ort;
 
@@ -32,8 +32,6 @@ private:
 	float* m_outputs;
 
 	uint16_t* m_outputs_fp16;
-
-	Model_Type m_model;
 
 	std::vector<const char*> m_input_names;
 
