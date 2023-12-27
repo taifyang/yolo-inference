@@ -68,5 +68,5 @@ private:
 
 	virtual void process() = 0;
 
-	void post_process();
+	virtual void post_process();
 };

@@ -17,8 +17,6 @@ private:
 
 	void process();
 
-	void post_process();
-
 	cv::dnn::Net m_net;
 
 	cv::Mat m_inputs;

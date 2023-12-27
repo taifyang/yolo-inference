@@ -101,7 +101,7 @@ void scale_box(cv::Rect & box, cv::Size size)
 
 
 void draw_result(cv::Mat & image, std::string label, cv::Rect box)
-{
+{	
 	cv::rectangle(image, box, cv::Scalar(255, 0, 0), 1);
 	int baseLine;
 	cv::Size label_size = cv::getTextSize(label, 1, 1, 1, &baseLine);
