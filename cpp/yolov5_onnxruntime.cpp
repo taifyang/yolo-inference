@@ -19,7 +19,6 @@ YOLOv5_ONNXRuntime::YOLOv5_ONNXRuntime(std::string model_path, Device_Type devic
 		OrtSessionOptionsAppendExecutionProvider_CUDA(session_options, 0);
 	}
 
-	assert(("unsupported model type!", model_type == FP32 || model_type == FP16));
 	m_model = model_type;
 
 	//初始化session
@@ -87,7 +86,7 @@ void YOLOv5_ONNXRuntime::process()
 	//input_tensor
 	OrtValue* input_tensor = NULL;
 	int64_t input_shape[4] = { 1, m_image.channels(), input_width, input_height }; 
-	if(m_model == FP32)
+	if(m_model == FP32 || m_model == INT8)
 		m_ort->CreateTensorWithDataAsOrtValue(m_memory_info, m_inputs, sizeof(float) * input_numel, input_shape, 4, ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT, &input_tensor);
 	else if (m_model == FP16)
 		m_ort->CreateTensorWithDataAsOrtValue(m_memory_info, m_inputs_fp16, sizeof(uint16_t) * input_numel, input_shape, 4, ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16, &input_tensor);
@@ -97,7 +96,7 @@ void YOLOv5_ONNXRuntime::process()
 	m_ort->Run(m_session, NULL, m_input_names.data(), (const OrtValue* const*)& input_tensor, m_input_names.size(), m_output_names.data(), m_output_names.size(), &output_tensor);
 
 	//取output数据	
-	if (m_model == FP32)
+	if (m_model == FP32 || m_model == INT8)
 	{
 		m_ort->GetTensorMutableData(output_tensor, (void**)& m_outputs);
 		m_outputs_host = m_outputs;

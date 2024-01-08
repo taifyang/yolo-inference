@@ -12,7 +12,6 @@ class YOLOv5_ONNXRuntime(YOLOv5):
         elif device_type == Device_Type.GPU:
             self.onnx_session = onnxruntime.InferenceSession(model_path, providers=['CUDAExecutionProvider'])
         
-        assert model_type == Model_Type.FP32 or model_type == Model_Type.FP16, "unsupported model type!"
         self.model_type = model_type
          
         self.input_name = []
@@ -27,7 +26,7 @@ class YOLOv5_ONNXRuntime(YOLOv5):
         input = letterbox(self.image, input_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB和HWC2CHW
         input = input / 255.0
-        if self.model_type == Model_Type.FP32:
+        if self.model_type == Model_Type.FP32 or self.model_type == Model_Type.INT8:
             input = np.expand_dims(input, axis=0).astype(dtype=np.float32)
         elif self.model_type == Model_Type.FP16:
             input = np.expand_dims(input, axis=0).astype(dtype=np.float16)
