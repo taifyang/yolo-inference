@@ -15,6 +15,8 @@ int main(int argc, char* argv[])
 	//YOLOv5* yolov5 = new YOLOv5_ONNXRuntime("yolov5n_fp32.onnx", GPU, FP32);	//13-16ms
 	//YOLOv5* yolov5 = new YOLOv5_ONNXRuntime("yolov5n_fp16.onnx", CPU, FP16);	//37-46ms
 	//YOLOv5* yolov5 = new YOLOv5_ONNXRuntime("yolov5n_fp16.onnx", GPU, FP16);	//17-20ms
+	//YOLOv5* yolov5 = new YOLOv5_ONNXRuntime("yolov5n_int8.onnx", CPU, INT8);	//37-48ms
+	YOLOv5* yolov5 = new YOLOv5_ONNXRuntime("yolov5n_int8.onnx", GPU, INT8);	//46-58ms
 
 	//YOLOv5* yolov5 = new YOLOv5_OpenCV("yolov5n_fp32.onnx", CPU, FP32);	//51-55ms
 	//YOLOv5* yolov5 = new YOLOv5_OpenCV("yolov5n_fp32.onnx", GPU, FP32);	//11-13ms
@@ -26,9 +28,9 @@ int main(int argc, char* argv[])
 	//YOLOv5* yolov5 = new YOLOv5_OpenVINO("yolov5n_int8.xml", CPU, INT8);	//12-18ms
 	//YOLOv5* yolov5 = new YOLOv5_OpenVINO("yolov5n_int8.xml", GPU, INT8);	//47-61ms
 
-	//YOLOv5* yolov5 = new YOLOv5_TensorRT("yolov5n_fp32", GPU, FP32);	//7-11ms
-	//YOLOv5* yolov5 = new YOLOv5_TensorRT("yolov5n_fp16", GPU, FP16);	//10-12ms
-	YOLOv5* yolov5 = new YOLOv5_TensorRT("yolov5n_int8.trt", GPU, INT8);		//6-7ms
+	//YOLOv5* yolov5 = new YOLOv5_TensorRT("yolov5n_fp32.engine", GPU, FP32);	//7-11ms
+	//YOLOv5* yolov5 = new YOLOv5_TensorRT("yolov5n_fp16.engine", GPU, FP16);	//10-12ms
+	//YOLOv5* yolov5 = new YOLOv5_TensorRT("yolov5n_int8.engine", GPU, INT8);	//6-7ms
 
 	yolov5->infer("test.mp4");
 	return 0;
