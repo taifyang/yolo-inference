@@ -8,24 +8,22 @@ YOLOv5_ONNXRuntime::YOLOv5_ONNXRuntime(std::string model_path, Device_Type devic
 	m_ort = OrtGetApiBase()->GetApi(ORT_API_VERSION); 	
 
 	//初始化OrtEnv
-	OrtEnv* env;
-	m_ort->CreateEnv(ORT_LOGGING_LEVEL_WARNING, "yolov5", &env);
+	m_ort->CreateEnv(ORT_LOGGING_LEVEL_WARNING, "yolov5", &m_env);
 
 	//初始化session_options
-	OrtSessionOptions* session_options;
-	m_ort->CreateSessionOptions(&session_options);
+	m_ort->CreateSessionOptions(&m_session_options);
 	if (device_type == GPU)
 	{
-		OrtSessionOptionsAppendExecutionProvider_CUDA(session_options, 0);
+		OrtSessionOptionsAppendExecutionProvider_CUDA(m_session_options, 0);
 	}
-
+	
 	m_model = model_type;
 
 	//初始化session
 #ifdef _WIN32
-	m_ort->CreateSession(env, std::wstring(model_path.begin(), model_path.end()).c_str(), session_options, &m_session);
+	m_ort->CreateSession(m_env, std::wstring(model_path.begin(), model_path.end()).c_str(), m_session_options, &m_session);
 #else
-	g_ort->CreateSession(env, model_path.c_str(), session_options, &m_session);
+	g_ort->CreateSession(m_env, model_path.c_str(), session_options, &m_session);
 #endif
 
 	OrtAllocator* allocator;
@@ -109,5 +107,13 @@ void YOLOv5_ONNXRuntime::process()
 			m_outputs_host[i] = float16_to_float32(m_outputs_fp16[i]);
 		}
 	}
+}
+
+
+YOLOv5_ONNXRuntime::~YOLOv5_ONNXRuntime()
+{
+	m_ort->ReleaseSessionOptions(m_session_options);
+	m_ort->ReleaseSession(m_session);
+	m_ort->ReleaseEnv(m_env);
 }
 

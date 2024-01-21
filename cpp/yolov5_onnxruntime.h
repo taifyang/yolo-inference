@@ -21,7 +21,11 @@ private:
 
 	const OrtApi* m_ort;
 
+	OrtEnv* m_env;
+
 	OrtSession* m_session;
+
+	OrtSessionOptions* m_session_options;
 
 	OrtMemoryInfo* m_memory_info;
 
