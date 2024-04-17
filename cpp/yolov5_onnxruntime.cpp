@@ -4,51 +4,42 @@
 
 YOLOv5_ONNXRuntime::YOLOv5_ONNXRuntime(std::string model_path, Device_Type device_type, Model_Type model_type)
 {
-	//³õÊ¼»¯OrtApi
-	m_ort = OrtGetApiBase()->GetApi(ORT_API_VERSION); 	
+	Ort::SessionOptions session_options;
+	session_options.SetIntraOpNumThreads(12);//è®¾ç½®çº¿ç¨‹æ•°
+	session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);//å¯ç”¨æ¨¡åž‹ä¼˜åŒ–ç­–ç•¥
 
-	//³õÊ¼»¯OrtEnv
-	m_ort->CreateEnv(ORT_LOGGING_LEVEL_WARNING, "yolov5", &m_env);
-
-	//³õÊ¼»¯session_options
-	m_ort->CreateSessionOptions(&m_session_options);
 	if (device_type == GPU)
 	{
-		OrtSessionOptionsAppendExecutionProvider_CUDA(m_session_options, 0);
+		OrtCUDAProviderOptions cuda_option;
+		cuda_option.device_id = 0;
+		cuda_option.arena_extend_strategy = 0;
+		cuda_option.cudnn_conv_algo_search = OrtCudnnConvAlgoSearchExhaustive;
+		cuda_option.gpu_mem_limit = SIZE_MAX;
+		cuda_option.do_copy_in_default_stream = 1;
+		session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+		session_options.AppendExecutionProvider_CUDA(cuda_option);
 	}
 	
 	m_model = model_type;
+	m_session = new Ort::Session(m_env, std::wstring(model_path.begin(), model_path.end()).c_str(), session_options);
 
-	//³õÊ¼»¯session
-#ifdef _WIN32
-	m_ort->CreateSession(m_env, std::wstring(model_path.begin(), model_path.end()).c_str(), m_session_options, &m_session);
-#else
-	g_ort->CreateSession(m_env, model_path.c_str(), session_options, &m_session);
-#endif
+	Ort::AllocatorWithDefaultOptions allocator;
 
-	OrtAllocator* allocator;
-	m_ort->GetAllocatorWithDefaultOptions(&allocator);
-	size_t input_count, output_count;
-	m_ort->SessionGetInputCount(m_session, &input_count);
-	m_ort->SessionGetOutputCount(m_session, &output_count);
-
-	char* input_name;
-	for (size_t i = 0; i < input_count; i++)
+	for (size_t i = 0; i < m_session->GetInputCount(); i++)
 	{
-		m_ort->SessionGetInputName(m_session, i, allocator, &input_name);
-		m_input_names.push_back(input_name);
-	}
-	char* output_name;
-	for (size_t i = 0; i < output_count; i++)
-	{
-		m_ort->SessionGetOutputName(m_session, i, allocator, &output_name);
-		m_output_names.push_back(output_name);
+		m_input_names.push_back("images");
 	}
 
-	m_ort->CreateCpuMemoryInfo(OrtArenaAllocator, OrtMemTypeDefault, &m_memory_info);
+	for (size_t i = 0; i < m_session->GetOutputCount(); i++)
+	{
+		m_output_names.push_back("output");
+	}
 
 	if (m_model == FP16)
-		m_inputs_fp16 = (uint16_t*)malloc(sizeof(uint16_t) * input_numel);
+	{
+		m_inputs_fp16.resize(input_numel);
+		m_outputs_fp16.resize(output_numel);
+	}
 	m_outputs_host = (float*)malloc(sizeof(float) * output_numel);
 }
 
@@ -62,11 +53,11 @@ void YOLOv5_ONNXRuntime::pre_process()
 	letterbox.convertTo(letterbox, CV_32FC3, 1.0f / 255.0f);
 	std::vector<cv::Mat> split_images;
 	cv::split(letterbox, split_images);
-	m_inputs = (float*)malloc(sizeof(float) * input_numel);
+	m_inputs.clear();
 	for (size_t i = 0; i < letterbox.channels(); ++i)
 	{
 		std::vector<float> split_image_data = split_images[i].reshape(1, 1);
-		std::copy(split_image_data.begin(), split_image_data.end(), m_inputs + i * split_image_data.size());
+		m_inputs.insert(m_inputs.end(), split_image_data.begin(), split_image_data.end());
 	}
 
 	if (m_model == FP16)
@@ -82,26 +73,27 @@ void YOLOv5_ONNXRuntime::pre_process()
 void YOLOv5_ONNXRuntime::process()	
 {
 	//input_tensor
-	OrtValue* input_tensor = NULL;
-	int64_t input_shape[4] = { 1, m_image.channels(), input_width, input_height }; 
+	std::vector<int64_t> input_node_dims = { 1, m_image.channels(), input_width, input_height };
+	auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+	Ort::Value input_tensor{ nullptr };
 	if(m_model == FP32 || m_model == INT8)
-		m_ort->CreateTensorWithDataAsOrtValue(m_memory_info, m_inputs, sizeof(float) * input_numel, input_shape, 4, ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT, &input_tensor);
+		input_tensor = Ort::Value::CreateTensor(memory_info, m_inputs.data(), sizeof(float) * input_numel, input_node_dims.data(), input_node_dims.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT);		
 	else if (m_model == FP16)
-		m_ort->CreateTensorWithDataAsOrtValue(m_memory_info, m_inputs_fp16, sizeof(uint16_t) * input_numel, input_shape, 4, ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16, &input_tensor);
+		input_tensor = Ort::Value::CreateTensor(memory_info, m_inputs_fp16.data(), sizeof(uint16_t) * input_numel, input_node_dims.data(), input_node_dims.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
 	
-	//ÍÆÀí
-	OrtValue* output_tensor = NULL;
-	m_ort->Run(m_session, NULL, m_input_names.data(), (const OrtValue* const*)& input_tensor, m_input_names.size(), m_output_names.data(), m_output_names.size(), &output_tensor);
+	std::vector<Ort::Value> ort_inputs;
+	ort_inputs.push_back(std::move(input_tensor)); 
 
-	//È¡outputÊý¾Ý	
+	std::vector<Ort::Value> outputs = m_session->Run(Ort::RunOptions{ nullptr }, m_input_names.data(), ort_inputs.data(), m_input_names.size(), m_output_names.data(), m_output_names.size());
+
+	//å–outputæ•°æ®	
 	if (m_model == FP32 || m_model == INT8)
 	{
-		m_ort->GetTensorMutableData(output_tensor, (void**)& m_outputs);
-		m_outputs_host = m_outputs;
+		m_outputs_host = const_cast<float*> (outputs[0].GetTensorData<float>());
 	}
 	else if (m_model == FP16)
 	{
-		m_ort->GetTensorMutableData(output_tensor, (void**)& m_outputs_fp16);
+		std::copy(const_cast<uint16_t*> (outputs[0].GetTensorData<uint16_t>()), const_cast<uint16_t*> (outputs[0].GetTensorData<uint16_t>()) + output_numel, m_outputs_fp16.begin());
 		for (size_t i = 0; i < output_numel; i++)
 		{
 			m_outputs_host[i] = float16_to_float32(m_outputs_fp16[i]);
@@ -112,8 +104,7 @@ void YOLOv5_ONNXRuntime::process()
 
 YOLOv5_ONNXRuntime::~YOLOv5_ONNXRuntime()
 {
-	m_ort->ReleaseSessionOptions(m_session_options);
-	m_ort->ReleaseSession(m_session);
-	m_ort->ReleaseEnv(m_env);
+	m_session->release();
+	m_env.release();
 }
 
