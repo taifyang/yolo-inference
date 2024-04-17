@@ -2,7 +2,7 @@
 
 
 #include "yolov5.h"
-#include <onnxruntime_c_api.h>
+#include <onnxruntime_cxx_api.h>
 
 
 class YOLOv5_ONNXRuntime : public YOLOv5
@@ -19,19 +19,15 @@ private:
 
 	Model_Type m_model;
 
-	const OrtApi* m_ort;
+	Ort::Env m_env;
 
-	OrtSession* m_session;
+	Ort::Session* m_session;
 
-	OrtMemoryInfo* m_memory_info;
+	std::vector<float> m_inputs;
 
-	float* m_inputs;
+	std::vector<uint16_t> m_inputs_fp16;
 
-	uint16_t* m_inputs_fp16;
-
-	float* m_outputs;
-
-	uint16_t* m_outputs_fp16;
+	std::vector<uint16_t> m_outputs_fp16;
 
 	std::vector<const char*> m_input_names;
 
