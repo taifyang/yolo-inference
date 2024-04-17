@@ -5,8 +5,8 @@
 YOLOv5_ONNXRuntime::YOLOv5_ONNXRuntime(std::string model_path, Device_Type device_type, Model_Type model_type)
 {
 	Ort::SessionOptions session_options;
-	session_options.SetIntraOpNumThreads(12);//ÉèÖÃÏß³ÌÊı
-	session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);//ÆôÓÃÄ£ĞÍÓÅ»¯²ßÂÔ
+	session_options.SetIntraOpNumThreads(12);//è®¾ç½®çº¿ç¨‹æ•°
+	session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);//å¯ç”¨æ¨¡å‹ä¼˜åŒ–ç­–ç•¥
 
 	if (device_type == GPU)
 	{
@@ -86,7 +86,7 @@ void YOLOv5_ONNXRuntime::process()
 
 	std::vector<Ort::Value> outputs = m_session->Run(Ort::RunOptions{ nullptr }, m_input_names.data(), ort_inputs.data(), m_input_names.size(), m_output_names.data(), m_output_names.size());
 
-	//È¡outputÊı¾İ	
+	//å–outputæ•°æ®	
 	if (m_model == FP32 || m_model == INT8)
 	{
 		m_outputs_host = const_cast<float*> (outputs[0].GetTensorData<float>());
