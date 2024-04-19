@@ -15,6 +15,8 @@ YOLOv5_Libtorch::YOLOv5_Libtorch(std::string model_path, Device_Type device_type
 		assert(("FP16 only support CPU!", device_type == GPU));
 		module.to(torch::kHalf);
 	}
+
+	m_outputs_host = new float[output_numel];
 }
 
 
@@ -47,7 +49,7 @@ void YOLOv5_Libtorch::process()
 	m_outputs = module.forward(m_inputs);
 
 	torch::Tensor preds = m_outputs.toTuple()->elements()[0].toTensor().to(torch::kFloat).to(at::kCPU);
-	m_outputs_host = new float[preds[0].numel()];
-	std::copy(preds[0].data_ptr<float>(), preds[0].data_ptr<float>() + preds[0].numel(), m_outputs_host);
+
+	std::copy(preds[0].data_ptr<float>(), preds[0].data_ptr<float>() + output_numel, m_outputs_host);
 }
 
