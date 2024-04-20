@@ -4,7 +4,6 @@
 #include <iostream>
 #include <fstream>
 #include <opencv2/opencv.hpp>
-#include "utils.h"
 
 
 const std::vector<std::string> class_names = {
@@ -38,6 +37,16 @@ const int output_numbox = 3 * (input_width / 8 * input_height / 8 + input_width 
 
 const int output_numel = 1 * output_numprob * output_numbox;
 
+
+enum Algo_Type
+{
+	Libtorch,
+	ONNXRuntime,
+	OpenCV,
+	OpenVINO,
+	TensorRT,
+};
+
 enum Device_Type
 {
 	CPU,
@@ -55,18 +64,40 @@ enum Model_Type
 class YOLOv5
 {
 public:
-	void infer(const std::string file_path);
+	virtual void init(const std::string model_path, const Device_Type device_type, Model_Type model_type) = 0;
+
+	void infer(const std::string image_path);
+
+	virtual void release() {};
+	
+protected:
+	virtual void pre_process() = 0;
+
+	virtual void process() = 0;
+
+	virtual void post_process();
 
 	cv::Mat m_image;
 
 	cv::Mat m_result;
 
 	float* m_outputs_host;
-	
-private:
-	virtual void pre_process() = 0;
-
-	virtual void process() = 0;
-
-	virtual void post_process();
 };
+
+class  AlgoFactory
+{
+public:
+	typedef std::unique_ptr<YOLOv5>(*CreateFunction)();
+
+	static AlgoFactory& instance();
+
+	void register_algo(const Algo_Type& algo_type, CreateFunction create_function);
+
+	std::unique_ptr<YOLOv5> create(const Algo_Type& algo_type);
+
+private:
+	AlgoFactory();
+
+	std::map<Algo_Type, CreateFunction> m_algo_registry;
+};
+

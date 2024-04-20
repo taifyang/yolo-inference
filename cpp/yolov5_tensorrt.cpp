@@ -13,7 +13,7 @@ public:
 } logger;
 
 
-YOLOv5_TensorRT::YOLOv5_TensorRT(std::string model_path, Device_Type device_type, Model_Type model_type)
+void YOLOv5_TensorRT::init(const std::string model_path, const Device_Type device_type, Model_Type model_type)
 {
 	assert(("only support GPU!", device_type == GPU));
 
@@ -140,7 +140,7 @@ void YOLOv5_TensorRT::post_process()
 #endif // CUDA_POSTPROCESS
 
 
-YOLOv5_TensorRT::~YOLOv5_TensorRT()	
+void YOLOv5_TensorRT::release()
 {
 	cudaStreamDestroy(m_stream);
 	cudaFree(m_inputs_device);

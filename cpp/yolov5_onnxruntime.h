@@ -8,9 +8,9 @@
 class YOLOv5_ONNXRuntime : public YOLOv5
 {
 public:
-	YOLOv5_ONNXRuntime(std::string model_path, Device_Type device_type, Model_Type model_type);
+	void init(const std::string model_path, const Device_Type device_type, Model_Type model_type);
 
-	~YOLOv5_ONNXRuntime();
+	void release();
 
 private:
 	void pre_process();

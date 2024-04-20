@@ -1,38 +1,148 @@
-#include "yolov5_libtorch.h"
-#include "yolov5_onnxruntime.h"
-#include "yolov5_opencv.h"
-#include "yolov5_openvino.h"
-#include "yolov5_tensorrt.h"
+#include "yolov5.h"
 
 
 int main(int argc, char* argv[])
 {
-	//YOLOv5* yolov5 = new YOLOv5_Libtorch("yolov5n_cpu_fp32.torchscript", CPU, FP32);	//65-90ms
-	//YOLOv5* yolov5 = new YOLOv5_Libtorch("yolov5n_gpu_fp32.torchscript", GPU, FP32);	//12-19ms
-	//YOLOv5* yolov5 = new YOLOv5_Libtorch("yolov5n_gpu_fp16.torchscript", GPU, FP16);	//10-16ms
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::Libtorch);
+		yolov5->init("yolov5n_cpu_fp32.torchscript", CPU, FP32);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
 
-	//YOLOv5* yolov5 = new YOLOv5_ONNXRuntime("yolov5n_fp32.onnx", CPU, FP32);	//21-25ms
-	//YOLOv5* yolov5 = new YOLOv5_ONNXRuntime("yolov5n_fp32.onnx", GPU, FP32);	//13-16ms
-	//YOLOv5* yolov5 = new YOLOv5_ONNXRuntime("yolov5n_fp16.onnx", CPU, FP16);	//37-46ms
-	//YOLOv5* yolov5 = new YOLOv5_ONNXRuntime("yolov5n_fp16.onnx", GPU, FP16);	//17-20ms
-	//YOLOv5* yolov5 = new YOLOv5_ONNXRuntime("yolov5n_int8.onnx", CPU, INT8);	//37-48ms
-	YOLOv5* yolov5 = new YOLOv5_ONNXRuntime("yolov5n_int8.onnx", GPU, INT8);	//46-58ms
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::Libtorch);
+		yolov5->init("yolov5n_gpu_fp32.torchscript", GPU, FP32);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
 
-	//YOLOv5* yolov5 = new YOLOv5_OpenCV("yolov5n_fp32.onnx", CPU, FP32);	//51-55ms
-	//YOLOv5* yolov5 = new YOLOv5_OpenCV("yolov5n_fp32.onnx", GPU, FP32);	//11-13ms
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::Libtorch);
+		yolov5->init("yolov5n_gpu_fp16.torchscript", GPU, FP16);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
 
-	//YOLOv5* yolov5 = new YOLOv5_OpenVINO("yolov5n_fp32.xml", CPU, FP32);	//17-22ms
-	//YOLOv5* yolov5 = new YOLOv5_OpenVINO("yolov5n_fp32.xml", GPU, FP32);	//75-91ms
-	//YOLOv5* yolov5 = new YOLOv5_OpenVINO("yolov5n_fp16.xml", CPU, FP16);	//15-23ms
-	//YOLOv5* yolov5 = new YOLOv5_OpenVINO("yolov5n_fp16.xml", GPU, FP16);	//60-75ms
-	//YOLOv5* yolov5 = new YOLOv5_OpenVINO("yolov5n_int8.xml", CPU, INT8);	//12-18ms
-	//YOLOv5* yolov5 = new YOLOv5_OpenVINO("yolov5n_int8.xml", GPU, INT8);	//47-61ms
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::ONNXRuntime);
+		yolov5->init("yolov5n_fp32.onnx", CPU, FP32);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
 
-	//YOLOv5* yolov5 = new YOLOv5_TensorRT("yolov5n_fp32.engine", GPU, FP32);	//7-11ms
-	//YOLOv5* yolov5 = new YOLOv5_TensorRT("yolov5n_fp16.engine", GPU, FP16);	//10-12ms
-	//YOLOv5* yolov5 = new YOLOv5_TensorRT("yolov5n_int8.engine", GPU, INT8);	//6-7ms
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::ONNXRuntime);
+		yolov5->init("yolov5n_fp32.onnx", GPU, FP32);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
 
-	yolov5->infer("test.mp4");
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::ONNXRuntime);
+		yolov5->init("yolov5n_fp16.onnx", CPU, FP16);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
+
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::ONNXRuntime);
+		yolov5->init("yolov5n_fp16.onnx", GPU, FP16);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
+
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::ONNXRuntime);
+		yolov5->init("yolov5n_int8.onnx", CPU, INT8);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
+
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::ONNXRuntime);
+		yolov5->init("yolov5n_int8.onnx", GPU, INT8);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
+
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::OpenCV);
+		yolov5->init("yolov5n_fp32.onnx", CPU, FP32);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
+
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::OpenCV);
+		yolov5->init("yolov5n_fp32.onnx", GPU, FP32);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
+
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::OpenVINO);
+		yolov5->init("yolov5n_fp32.xml", CPU, FP32);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
+
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::OpenVINO);
+		yolov5->init("yolov5n_fp32.xml", GPU, FP32);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
+
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::OpenVINO);
+		yolov5->init("yolov5n_fp16.xml", CPU, FP16);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
+
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::OpenVINO);
+		yolov5->init("yolov5n_fp16.xml", GPU, FP16);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
+
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::OpenVINO);
+		yolov5->init("yolov5n_int8.xml", CPU, INT8);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
+
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::OpenVINO);
+		yolov5->init("yolov5n_int8.xml", GPU, INT8);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
+
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::TensorRT);
+		yolov5->init("yolov5n_fp32.engine", GPU, FP32);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
+
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::TensorRT);
+		yolov5->init("yolov5n_fp16.engine", GPU, FP16);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
+
+	{
+		std::unique_ptr<YOLOv5> yolov5 = AlgoFactory::instance().create(Algo_Type::TensorRT);
+		yolov5->init("yolov5n_int8.engine", GPU, INT8);
+		yolov5->infer("test.mp4");
+		yolov5->release();
+	}
+
 	return 0;
 }
 
