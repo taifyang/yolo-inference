@@ -2,7 +2,7 @@
 #include "utils.h"
 
 
-YOLOv5_OpenCV::YOLOv5_OpenCV(std::string model_path, Device_Type device_type, Model_Type model_type)
+void YOLOv5_OpenCV::init(const std::string model_path, const Device_Type device_type, Model_Type model_type)
 {
 	assert(("unsupported model type!", model_type == FP32));
 	m_net = cv::dnn::readNet(model_path);

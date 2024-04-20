@@ -9,9 +9,7 @@
 class YOLOv5_Libtorch : public YOLOv5
 {	
 public:
-	YOLOv5_Libtorch(std::string model_path, Device_Type device_type, Model_Type model_type);
-
-	~YOLOv5_Libtorch();
+	void init(const std::string model_path, const Device_Type device_type, Model_Type model_type);
 
 private:
 	void pre_process();

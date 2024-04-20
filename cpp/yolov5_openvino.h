@@ -8,9 +8,7 @@
 class YOLOv5_OpenVINO : public YOLOv5
 {
 public:
-	YOLOv5_OpenVINO(std::string model_path, Device_Type device_type, Model_Type model_type);
-
-	~YOLOv5_OpenVINO();
+	void init(const std::string model_path, const Device_Type device_type, Model_Type model_type);
 
 private:
 	void pre_process();

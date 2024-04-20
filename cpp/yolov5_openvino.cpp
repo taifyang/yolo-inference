@@ -2,7 +2,7 @@
 #include "utils.h"
 
 
-YOLOv5_OpenVINO::YOLOv5_OpenVINO(std::string model_path, Device_Type device_type, Model_Type model_type)
+void YOLOv5_OpenVINO::init(const std::string model_path, const Device_Type device_type, Model_Type model_type)
 {
 	ov::Core core; //Initialize OpenVINO Runtime Core 
 	auto compiled_model = core.compile_model(model_path, device_type == GPU ? "GPU" : "CPU"); //Compile the Model 
