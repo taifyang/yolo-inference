@@ -20,7 +20,7 @@
 class YOLOv5_TensorRT : public YOLOv5
 {
 public:
-	void init(const std::string model_path, const Device_Type device_type, Model_Type model_type);
+	void init(const std::string model_path, const Device_Type device_type, const Model_Type model_type);
 
 	void release();
 

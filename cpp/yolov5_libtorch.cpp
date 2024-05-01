@@ -2,7 +2,7 @@
 #include "utils.h"
 
 
-void YOLOv5_Libtorch::init(const std::string model_path, const Device_Type device_type, Model_Type model_type)
+void YOLOv5_Libtorch::init(const std::string model_path, const Device_Type device_type, const Model_Type model_type)
 {
 	module = torch::jit::load(model_path);
 	m_device = (device_type == GPU ? at::kCUDA : at::kCPU);
