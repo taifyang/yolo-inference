@@ -2,7 +2,7 @@
 #include "utils.h"
 
 
-void YOLOv5_ONNXRuntime::init(const std::string model_path, const Device_Type device_type, Model_Type model_type)
+void YOLOv5_ONNXRuntime::init(const std::string model_path, const Device_Type device_type, const Model_Type model_type)
 {
 	Ort::SessionOptions session_options;
 	session_options.SetIntraOpNumThreads(12);//设置线程数

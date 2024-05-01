@@ -64,7 +64,7 @@ enum Model_Type
 class YOLOv5
 {
 public:
-	virtual void init(const std::string model_path, const Device_Type device_type, Model_Type model_type) = 0;
+	virtual void init(const std::string model_path, const Device_Type device_type, const Model_Type model_type) = 0;
 
 	void infer(const std::string image_path);
 

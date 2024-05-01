@@ -13,7 +13,7 @@ public:
 } logger;
 
 
-void YOLOv5_TensorRT::init(const std::string model_path, const Device_Type device_type, Model_Type model_type)
+void YOLOv5_TensorRT::init(const std::string model_path, const Device_Type device_type, const Model_Type model_type)
 {
 	assert(("only support GPU!", device_type == GPU));
 
