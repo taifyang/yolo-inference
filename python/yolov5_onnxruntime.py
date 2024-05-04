@@ -15,7 +15,7 @@ class YOLOv5_ONNXRuntime(YOLOv5):
         self.model_type = model_type
          
         self.input_name = []
-        for node in self.onnx_session.get_inputs():
+        for node in self.onnx_session.get_inputs(): 
             self.input_name.append(node.name)
         self.output_name = []
         for node in self.onnx_session.get_outputs():

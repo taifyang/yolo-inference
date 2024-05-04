@@ -1,7 +1,6 @@
 import os
 import cv2
 import time
-import numpy as np
 from enum import Enum
 from abc import ABC, abstractclassmethod
 
@@ -34,7 +33,7 @@ class Model_Type(Enum):
     INT8 = 2
     
 
-class YOLOv5(ABC):
+class YOLOv5(ABC):  
     def infer(self, file_path:str) -> None:
         assert os.path.exists(file_path)
         if file_path[-4:] == ".bmp" or file_path[-4:] == ".jpg" or file_path[-4:] == ".png":
@@ -48,14 +47,19 @@ class YOLOv5(ABC):
             cv2.waitKey(0)
         elif file_path[-4:] == ".mp4":
             cap = cv2.VideoCapture(file_path)
+            #fourcc = cv2.VideoWriter_fourcc(*'XVID')
+            #wri = cv2.VideoWriter('result.avi', fourcc, 30.0, (1280,720))
             while cv2.waitKey(1) < 0:
                 start = time.time()
-                _, self.image  = cap.read()
+                ret, self.image  = cap.read()
+                if not ret:
+                    break
                 self.result = self.image.copy()
                 self.pre_process()
                 self.process()
                 self.post_process()
-                cv2.imshow("result", self.result)
+                #cv2.imshow("result", self.result)
+                #wri.write(self.result)
                 end = time.time()
                 print((end-start)*1000, "ms")                         
             
