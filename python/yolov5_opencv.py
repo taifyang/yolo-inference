@@ -8,7 +8,7 @@ class YOLOv5_OpenCV(YOLOv5):
         super().__init__()
         self.net = cv2.dnn.readNet(model_path)
         if device_type == Device_Type.GPU:
-            self.net.setPreferableBackend(cv2.dnn_DNN_BACKEND_CUDA)
+            self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
             self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
         assert model_type == Model_Type.FP32, "unsupported model type!"
             
