@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from yolov5 import *
+from yolo import *
 
 
 def nms(boxes, scores, score_threshold, nms_threshold):

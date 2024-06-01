@@ -1,7 +1,7 @@
 #include "utils.h"
 
 
-void LetterBox(cv::Mat& input_image, cv::Mat& output_image, cv::Size& shape, cv::Scalar& color)
+void LetterBox(cv::Mat& input_image, cv::Mat& output_image, cv::Size shape, cv::Scalar color)
 {
 	float r = std::min((float)shape.height / (float)input_image.rows, (float)shape.width / (float)input_image.cols);
 	float ratio[2]{ r, r };

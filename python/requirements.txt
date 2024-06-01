@@ -1,6 +1,6 @@
 numpy
-opencv-python
-onnxruntime-gpu
-openvino 
-pycuda
-tensorrt
+opencv-python #from local
+onnxruntime-gpu==1.17.1
+openvino==2024.1.0
+pycuda==2024.1
+tensorrt #from local
