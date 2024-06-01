@@ -21,10 +21,10 @@ static __device__ void affine_project(float* matrix, float x, float y, float* ox
 }
 
 
-static __global__ void decode_kernel(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float* invert_affine_matrix, float* parray, int max_objects)
+static __global__ void decode_kernel_yolov5(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float* invert_affine_matrix, float* parray, int max_objects)
 {
 	int position = blockDim.x * blockIdx.x + threadIdx.x;
-	if (position >= num_bboxes) 
+	if (position >= num_bboxes)
 		return;
 
 	float* pitem = predict + (5 + num_classes) * position;
@@ -35,9 +35,9 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 	float* class_confidence = pitem + 5;
 	float confidence = *class_confidence++;
 	int label = 0;
-	for (int i = 1; i < num_classes; ++i, ++class_confidence) 
+	for (int i = 1; i < num_classes; ++i, ++class_confidence)
 	{
-		if (*class_confidence > confidence) 
+		if (*class_confidence > confidence)
 		{
 			confidence = *class_confidence;
 			label = i;
@@ -45,6 +45,53 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 	}
 
 	confidence *= objectness;
+	if (confidence < confidence_threshold)
+		return;
+
+	int index = atomicAdd(parray, 1);
+	if (index >= max_objects)
+		return;
+
+	float cx = *pitem++;
+	float cy = *pitem++;
+	float width = *pitem++;
+	float height = *pitem++;
+	float left = cx - width * 0.5f;
+	float top = cy - height * 0.5f;
+	float right = cx + width * 0.5f;
+	float bottom = cy + height * 0.5f;
+	affine_project(invert_affine_matrix, left, top, &left, &top);
+	affine_project(invert_affine_matrix, right, bottom, &right, &bottom);
+
+	float* pout_item = parray + 1 + index * NUM_BOX_ELEMENT;
+	*pout_item++ = left;
+	*pout_item++ = top;
+	*pout_item++ = right;
+	*pout_item++ = bottom;
+	*pout_item++ = confidence;
+	*pout_item++ = label;
+	*pout_item++ = 1; // 1 = keep, 0 = ignore
+}
+
+
+static __global__ void decode_kernel_yolov8(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float* invert_affine_matrix, float* parray, int max_objects)
+{
+	int position = blockDim.x * blockIdx.x + threadIdx.x;
+	if (position >= num_bboxes) 
+		return;
+
+	float* pitem = predict + (4 + num_classes) * position;
+	float* class_confidence = pitem + 4;
+	float confidence = *class_confidence++;
+	int label = 0;
+	for (int i = 1; i < num_classes; ++i, ++class_confidence)
+	{
+		if (*class_confidence > confidence) 
+		{
+			confidence = *class_confidence;
+			label = i;
+		}
+	}
 	if (confidence < confidence_threshold)
 		return;
 
@@ -122,11 +169,18 @@ static __global__ void nms_kernel(float* bboxes, int max_objects, float threshol
 }
 
 
-void decode_kernel_invoker(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float* invert_affine_matrix, float* parray, int max_objects, cudaStream_t stream) 
+void decode_kernel_invoker(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float* invert_affine_matrix, float* parray, int max_objects, cudaStream_t stream, Algo_Type algo_type)
 {
 	auto grid = grid_dims(num_bboxes);
 	auto block = block_dims(num_bboxes);
-	decode_kernel << <grid, block, 0, stream >> > (predict, num_bboxes, num_classes, confidence_threshold, invert_affine_matrix, parray, max_objects);
+	if (algo_type == YOLOv5)
+	{
+		decode_kernel_yolov5 << <grid, block, 0, stream >> > (predict, num_bboxes, num_classes, confidence_threshold, invert_affine_matrix, parray, max_objects);
+	}
+	if (algo_type == YOLOv8)
+	{
+		decode_kernel_yolov8 << <grid, block, 0, stream >> > (predict, num_bboxes, num_classes, confidence_threshold, invert_affine_matrix, parray, max_objects);
+	}
 }
 
 

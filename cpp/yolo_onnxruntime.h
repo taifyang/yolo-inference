@@ -1,14 +1,14 @@
 #pragma once
 
 
-#include "yolov5.h"
+#include "yolo.h"
 #include <onnxruntime_cxx_api.h>
 
 
-class YOLOv5_ONNXRuntime : public YOLOv5
+class YOLO_ONNXRuntime : public YOLO
 {
 public:
-	void init(const std::string model_path, const Device_Type device_type, const Model_Type model_type);
+	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
 
 	void release();
 
@@ -16,6 +16,10 @@ private:
 	void pre_process();
 
 	void process();
+
+	void post_process();
+
+	Algo_Type m_algo;
 
 	Model_Type m_model;
 

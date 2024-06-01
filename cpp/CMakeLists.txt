@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(yolov5 LANGUAGES C CXX CUDA)
+project(yolo LANGUAGES C CXX CUDA)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_BUILD_TYPE "Release")
 
@@ -20,13 +20,13 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
     include_directories(${ORT_INCLUDE_DIRS})
     link_directories(${ORT_LIBRARY_DIRS})
 
-    set(OPENCV_INCLUDE_DIRS D:/software/OpenCV4.5.5/opencv/build/include)
-    set(OPENCV_LIBRARY_DIRS D:/software/OpenCV4.5.5/opencv/build/x64/vc16/lib)
+    set(OPENCV_INCLUDE_DIRS D:/software/OpenCV4.9.0/build/install/include)
+    set(OPENCV_LIBRARY_DIRS D:/software/OpenCV4.9.0/build/install/x64/vc16/lib)
     include_directories(${OPENCV_INCLUDE_DIRS})
     link_directories(${OPENCV_LIBRARY_DIRS})
 
-    set(OPENVINO_INCLUDE_DIRS D:/software/OpenVINO/openvino_2022.3.1.9227/runtime/include)
-    set(OPENVINO_LIBRARY_DIRS D:/software/OpenVINO/openvino_2022.3.1.9227/runtime/lib/intel64/Release)
+    set(OPENVINO_INCLUDE_DIRS D:/software/OpenVINO2024.1/runtime/include)
+    set(OPENVINO_LIBRARY_DIRS D:/software/OpenVINO2024.1/runtime/lib/intel64/Release)
     include_directories(${OPENVINO_INCLUDE_DIRS})
     link_directories(${OPENVINO_LIBRARY_DIRS})
 
@@ -39,8 +39,8 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
     include_directories(${CUDA_INCLUDE_DIRS})
     link_directories(${CUDA_LIB_PATH})
 
-    add_executable(yolov5 ${SRCS})
-    target_link_libraries(yolov5 CUDA::cudart ${LIBTORCH_LIBRARY_DIRS}/*.lib ${ORT_LIBRARY_DIRS}/*.lib ${OPENCV_LIBRARY_DIRS}/*.lib ${OPENVINO_LIBRARY_DIRS}/*.lib ${TRT_LIBRARY_DIRS}/*.lib) 
+    add_executable(yolo ${SRCS})
+    target_link_libraries(yolo CUDA::cudart ${LIBTORCH_LIBRARY_DIRS}/*.lib ${ORT_LIBRARY_DIRS}/*.lib ${OPENCV_LIBRARY_DIRS}/*.lib ${OPENVINO_LIBRARY_DIRS}/*.lib ${TRT_LIBRARY_DIRS}/*.lib) 
 
 ENDIF()
 
@@ -49,32 +49,32 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
     find_package(OpenCV REQUIRED)
     include_directories(${OpenCV_INCLUDE_DIRS} ${OpenCV2_INCLUDE_DIRS})
 
-    set(Torch_DIR /docker_share/libtorch1.8.0_cuda11.1/share/cmake/Torch)
+    set(Torch_DIR /home/libtorch2.2.2_cuda11.8/share/cmake/Torch)
     find_package(Torch REQUIRED)
     include_directories(${TORCH_INCLUDE_DIRS})
 
-    set(ORT_INCLUDE_DIRS /docker_share/onnxruntime-linux-x64-gpu-1.12.1/include)
-    set(ORT_LIBRARY_DIRS /docker_share/onnxruntime-linux-x64-gpu-1.12.1/lib)
+    set(ORT_INCLUDE_DIRS /home/onnxruntime-linux-x64-gpu-1.12.1/include)
+    set(ORT_LIBRARY_DIRS /home/onnxruntime-linux-x64-gpu-1.12.1/lib)
     include_directories(${ORT_INCLUDE_DIRS})
 
-    set(OPENVINO_INCLUDE_DIRS /docker_share/openvino2022.3.1/runtime/include)
-    set(OPENVINO_LIBRARY_DIRS /docker_share/openvino2022.3.1/runtime/lib/intel64)
+    set(OPENVINO_INCLUDE_DIRS /home/openvino2024.1.0/runtime/include)
+    set(OPENVINO_LIBRARY_DIRS /home/openvino2024.1.0/runtime/lib/intel64)
     include_directories(${OPENVINO_INCLUDE_DIRS})
 
-    set(TRT_INCLUDE_DIRS /docker_share/TensorRT-8.2.1.8/include)
-    set(TRT_LIBRARY_DIRS /docker_share/TensorRT-8.2.1.8/lib)
+    set(TRT_INCLUDE_DIRS /home/TensorRT-8.2.1.8/include)
+    set(TRT_LIBRARY_DIRS /home/TensorRT-8.2.1.8/lib)
     include_directories(${TRT_INCLUDE_DIRS})
     link_directories(${TRT_LIBRARY_DIRS})
 
     find_package(CUDA REQUIRED)
     include_directories(${CUDA_INCLUDE_DIRS})
     
-    cuda_add_executable(yolov5 ${SRCS})
-    target_link_libraries(yolov5 ${OpenCV_LIBRARIES})  
-    target_link_libraries(yolov5 ${TORCH_LIBRARIES})
-    target_link_libraries(yolov5 ${ORT_LIBRARY_DIRS}/libonnxruntime.so)
-    target_link_libraries(yolov5 ${OPENVINO_LIBRARY_DIRS}/libopenvino.so ${OPENVINO_LIBRARY_DIRS}/libopenvino_intel_cpu_plugin.so ${OPENVINO_LIBRARY_DIRS}/libopenvino_intel_gpu_plugin.so ${OPENVINO_LIBRARY_DIRS}/libopenvino_gapi_preproc.so)
-    target_link_libraries(yolov5 ${CUDA_LIBRARIES})
-    target_link_libraries(yolov5 nvinfer)
+    cuda_add_executable(yolo ${SRCS})
+    target_link_libraries(yolo ${OpenCV_LIBRARIES})  
+    target_link_libraries(yolo ${TORCH_LIBRARIES})
+    target_link_libraries(yolo ${ORT_LIBRARY_DIRS}/libonnxruntime.so)
+    target_link_libraries(yolo ${OPENVINO_LIBRARY_DIRS}/libopenvino.so ${OPENVINO_LIBRARY_DIRS}/libopenvino_intel_cpu_plugin.so ${OPENVINO_LIBRARY_DIRS}/libopenvino_intel_gpu_plugin.so)
+    target_link_libraries(yolo ${CUDA_LIBRARIES})
+    target_link_libraries(yolo nvinfer)
   
 ENDIF()
