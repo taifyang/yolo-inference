@@ -8,6 +8,10 @@ set(CMAKE_BUILD_TYPE "Release")
 
 aux_source_directory(. SRCS)
 
+option(SAVE_RESULT "save result" OFF)
+
+option(SHOW_RESULT "show result" OFF)
+
 
 IF (CMAKE_SYSTEM_NAME MATCHES "Windows")   
     set(LIBTORCH_INCLUDE_DIRS D:/software/libtorch/include D:/software/libtorch/include/torch/csrc/api/include)
@@ -39,6 +43,14 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Windows")
     include_directories(${CUDA_INCLUDE_DIRS})
     link_directories(${CUDA_LIB_PATH})
 
+    if(SAVE_RESULT)
+        add_compile_options(-D_SAVE_RESULT)
+    ENDIF()
+
+    if(SHOW_RESULT)
+        add_compile_options(-D_SHOW_RESULT)
+    ENDIF()
+
     add_executable(yolo ${SRCS})
     target_link_libraries(yolo CUDA::cudart ${LIBTORCH_LIBRARY_DIRS}/*.lib ${ORT_LIBRARY_DIRS}/*.lib ${OPENCV_LIBRARY_DIRS}/*.lib ${OPENVINO_LIBRARY_DIRS}/*.lib ${TRT_LIBRARY_DIRS}/*.lib) 
 
@@ -68,6 +80,14 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
 
     find_package(CUDA REQUIRED)
     include_directories(${CUDA_INCLUDE_DIRS})
+
+    IF(SAVE_RESULT)
+        add_compile_options(-D_SAVE_RESULT)
+    ENDIF()
+
+    if(SHOW_RESULT)
+        add_compile_options(-D_SHOW_RESULT)
+    ENDIF()
     
     cuda_add_executable(yolo ${SRCS})
     target_link_libraries(yolo ${OpenCV_LIBRARIES})  

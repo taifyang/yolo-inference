@@ -7,8 +7,8 @@
 #include "yolo_tensorrt.h"
 #include <chrono>
 
-//#define SAVE_RESULT
-//#define SHOW_RESULT
+//#define _SAVE_RESULT
+//#define _SHOW_RESULT
 
 
 void YOLO::infer(const std::string input_path, char* argv[])
@@ -37,21 +37,21 @@ void YOLO::infer(const std::string input_path, char* argv[])
 	{
 		cv::VideoCapture cap(input_path);
 
-#ifdef SAVE_RESULT
+#ifdef _SAVE_RESULT
 		cv::VideoWriter wri;
 		std::string video_name = std::string(argv[1])+std::string(argv[2])+std::string(argv[3])+std::string(argv[4])+".avi";
 		std::cout << video_name << " ";
 		wri.open(video_name, cv::VideoWriter::fourcc('M', 'P', '4', '2'), 30, cv::Size(1280, 720));
-#endif // SAVE_RESULT
+#endif // _SAVE_RESULT
 
 		auto start = std::chrono::steady_clock::now();
 
 		while (
-#ifdef SHOW_RESULT
+#ifdef _SHOW_RESULT
 			cv::waitKey(1) < 0
 #else
 			1
-#endif // SHOW_RESULT
+#endif // _SHOW_RESULT
 			)
 		{
 			cap.read(m_image);
@@ -65,13 +65,13 @@ void YOLO::infer(const std::string input_path, char* argv[])
 			process();
 			post_process();
 
-#ifdef SAVE_RESULT
+#ifdef _SAVE_RESULT
 			wri << m_result;
-#endif // SAVE_RESULT
+#endif // _SAVE_RESULT
 
-#ifdef SHOW_RESULT
+#ifdef _SHOW_RESULT
 			cv::imshow("result", m_result);
-#endif // SHOW_RESULT
+#endif // _SHOW_RESULT
 		}	
 
 		auto end = std::chrono::steady_clock::now();	
@@ -80,9 +80,9 @@ void YOLO::infer(const std::string input_path, char* argv[])
 		cap.release();
 		cv::destroyAllWindows();
 
-#ifdef SAVE_RESULT
+#ifdef _SAVE_RESULT
 		wri.release();
-#endif // SAVE_RESULT
+#endif // _SAVE_RESULT
 	}
 	else
 	{
