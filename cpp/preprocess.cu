@@ -1,8 +1,6 @@
 //https://github.com/wang-xinyu/tensorrtx/blob/master/yolov5/src/preprocess.cu
 
-
-#include "preprocess.h"
-
+#include "preprocess.cuh"
 
 __global__ void warpaffine_kernel( uint8_t* src, int src_line_size, int src_width, int src_height, 
 	float* dst, int dst_width,  int dst_height, uint8_t const_value_st, AffineMatrix d2s, int edge) 
@@ -91,7 +89,6 @@ __global__ void warpaffine_kernel( uint8_t* src, int src_line_size, int src_widt
     *pdst_c1 = c1;
     *pdst_c2 = c2;
 }
-
 
 void preprocess_kernel_img(uint8_t* src, int src_width, int src_height, float* dst, int dst_width, int dst_height, float* affine_matrix, cudaStream_t stream)
 {

@@ -1,36 +1,29 @@
 #pragma once
 
-
-#include "yolo.h"
 #include <cuda_runtime.h>
+#include "yolo_classification.h"
+#include "yolo_detection.h"
+#include "yolo_segmentation.h"
+#include "utils.h"
+
+#ifdef _YOLO_TENSORRT
+
 #include <NvInfer.h>
 #include <NvInferRuntime.h>
 	
+//#define _CUDA_PREPROCESS	
+//#define _CUDA_POSTPROCESS
+//
+//#ifdef _CUDA_POSTPROCESS
+//	#define _CUDA_PREPROCESS
+//#endif // CUDA_POSTPROCESS
 
-#define MAX_IMAGE_INPUT_SIZE_THRESH sizeof(float) * input_numel
-#define MAX_IMAGE_BBOX 1024
-#define CUDA_PREPROCESS
-#define CUDA_POSTPROCESS
-
-#ifdef CUDA_POSTPROCESS
-	#define CUDA_PREPROCESS
-#endif // CUDA_POSTPROCESS
-
-
-class YOLO_TensorRT : public YOLO
+class YOLO_TensorRT : virtual public YOLO
 {
 public:
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
 
-	void release();
-
-private:
-	void pre_process();
-
-	void process();
-
-	void post_process();
-
+protected:
 	Algo_Type m_algo;
 
 	Model_Type m_model;
@@ -39,27 +32,116 @@ private:
 
 	cudaStream_t m_stream;
 
+	float* m_input_device;
+
+	const int m_max_input_size = sizeof(float) * m_input_numel;
+
+	const int m_max_image_bbox = 1024;
+};
+
+class YOLO_TensorRT_Classification : public YOLO_TensorRT, public YOLO_Classification
+{
+public:
+	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
+
+private:
+	void pre_process();
+
+	void process();
+
+	void post_process();
+
+	void release();
+
 	float* m_bindings[2];
 
-	float* m_inputs_device;
+	float* m_input_host;
 
-	float* m_outputs_device;
+	float* m_output_host;
 
-#ifndef CUDA_PREPROCESS
-	float* m_inputs_host;
+	float* m_output_device;
+};
+
+class YOLO_TensorRT_Detection : public YOLO_TensorRT, public YOLO_Detection
+{
+public:
+	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
+
+private:
+	void pre_process();
+
+	void process();
+
+	void post_process();
+
+	void release();
+
+	float* m_bindings[2];
+
+#ifndef _CUDA_PREPROCESS
+	float* m_input_host;
 #else
-	uint8_t* m_inputs_host;
-#endif // !CUDA_PREPROCESS
+	uint8_t* m_input_host;
+#endif // !_CUDA_PREPROCESS
 
-#ifdef CUDA_PREPROCESS
+	float* m_output_host;
+
+	float* m_output_device;
+
+#ifdef _CUDA_PREPROCESS
 	float* m_affine_matrix_host;
 
 	float* m_affine_matrix_device;
-#endif // CUDA_PREPROCESS
+#endif // _CUDA_PREPROCESS
 
-#ifdef CUDA_POSTPROCESS
-	float* m_outputs_box_host;
+#ifdef _CUDA_POSTPROCESS
+	float* m_output_box_host;
 
-	float* m_outputs_box_device;
-#endif // CUDA_POSTPROCESS
+	float* m_output_box_device;
+#endif // _CUDA_POSTPROCESS
 };
+
+class YOLO_TensorRT_Segmentation : public YOLO_TensorRT, public YOLO_Segmentation
+{
+public:
+	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
+
+private:
+	void pre_process();
+
+	void process();
+
+	void post_process();
+
+	void release();
+
+	float* m_bindings[3];
+
+#ifndef _CUDA_PREPROCESS
+	float* m_input_host;
+#else
+	uint8_t* m_input_host;
+#endif // !_CUDA_PREPROCESS
+
+	float* m_output0_host;
+
+	float* m_output1_host;
+
+	float* m_output0_device;
+
+	float* m_output1_device;
+
+#ifdef _CUDA_PREPROCESS
+	float* m_affine_matrix_host;
+
+	float* m_affine_matrix_device;
+#endif // _CUDA_PREPROCESS
+
+#ifdef _CUDA_POSTPROCESS
+	float* m_output_box_host;
+
+	float* m_output_box_device;
+#endif // _CUDA_POSTPROCESS
+};
+
+#endif // _YOLO_TensorRT
