@@ -1,5 +1,4 @@
-#include "decode.h"
- 
+#include "decode.cuh"
 
 dim3 grid_dims(int numJobs) 
 {
@@ -7,19 +6,16 @@ dim3 grid_dims(int numJobs)
 	return dim3(((numJobs + numBlockThreads - 1) / (float)numBlockThreads));
 }
 
-
 dim3 block_dims(int numJobs) 
 {
 	return numJobs < GPU_BLOCK_THREADS ? numJobs : GPU_BLOCK_THREADS;
 }
-
 
 static __device__ void affine_project(float* matrix, float x, float y, float* ox, float* oy) 
 {
 	*ox = matrix[0] * x + matrix[1] * y + matrix[2];
 	*oy = matrix[3] * x + matrix[4] * y + matrix[5];
 }
-
 
 static __global__ void decode_kernel_yolov5(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float* invert_affine_matrix, float* parray, int max_objects)
 {
@@ -73,7 +69,6 @@ static __global__ void decode_kernel_yolov5(float* predict, int num_bboxes, int 
 	*pout_item++ = 1; // 1 = keep, 0 = ignore
 }
 
-
 static __global__ void decode_kernel_yolov8(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float* invert_affine_matrix, float* parray, int max_objects)
 {
 	int position = blockDim.x * blockIdx.x + threadIdx.x;
@@ -120,7 +115,6 @@ static __global__ void decode_kernel_yolov8(float* predict, int num_bboxes, int 
 	*pout_item++ = 1; // 1 = keep, 0 = ignore
 }
 
-
 static __device__ float box_iou(float aleft, float atop, float aright, float abottom, float bleft, float btop, float bright, float bbottom) 
 {
 	float cleft = max(aleft, bleft);
@@ -136,7 +130,6 @@ static __device__ float box_iou(float aleft, float atop, float aright, float abo
 	float b_area = max(0.0f, bright - bleft) * max(0.0f, bbottom - btop);
 	return c_area / (a_area + b_area - c_area);
 }
-
 
 static __global__ void nms_kernel(float* bboxes, int max_objects, float threshold) 
 {
@@ -168,7 +161,6 @@ static __global__ void nms_kernel(float* bboxes, int max_objects, float threshol
 	}
 }
 
-
 void decode_kernel_invoker(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float* invert_affine_matrix, float* parray, int max_objects, cudaStream_t stream, Algo_Type algo_type)
 {
 	auto grid = grid_dims(num_bboxes);
@@ -182,7 +174,6 @@ void decode_kernel_invoker(float* predict, int num_bboxes, int num_classes, floa
 		decode_kernel_yolov8 << <grid, block, 0, stream >> > (predict, num_bboxes, num_classes, confidence_threshold, invert_affine_matrix, parray, max_objects);
 	}
 }
-
 
 void nms_kernel_invoker(float* parray, float nms_threshold, int max_objects, cudaStream_t stream)
 {

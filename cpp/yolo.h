@@ -1,42 +1,14 @@
 #pragma once
 
+//#define _YOLO_LIBTORCH
+//#define _YOLO_ONNXRUNTIME
+//#define _YOLO_OPENCV
+//#define _YOLO_OPENVINO
+//#define _YOLO_TENSORRT
 
 #include <iostream>
 #include <fstream>
 #include <opencv2/opencv.hpp>
-
-
-const std::vector<std::string> class_names = {
-	"person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light",
-	"fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
-	"elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee",
-	"skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard",
-	"tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple",
-	"sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch",
-	"potted plant", "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone",
-	"microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear",
-	"hair drier", "toothbrush" };			
-
-const int input_width = 640;
-
-const int input_height = 640;
-
-const float score_threshold = 0.2;
-
-const float nms_threshold = 0.5;
-
-const float confidence_threshold = 0.2;
-
-const int input_numel = 1 * 3 * input_width * input_height;
-
-const int num_classes = class_names.size();
-
-
-enum Algo_Type
-{
-	YOLOv5,
-	YOLOv8,
-};
 
 enum Backend_Type
 {
@@ -45,6 +17,19 @@ enum Backend_Type
 	OpenCV,
 	OpenVINO,
 	TensorRT,
+};
+
+enum Task_Type
+{
+	Classification,
+	Detection,
+	Segmentation,
+};
+
+enum Algo_Type
+{
+	YOLOv5,
+	YOLOv8,
 };
 
 enum Device_Type
@@ -60,18 +45,19 @@ enum Model_Type
 	INT8,
 };
 
-
 class YOLO
 {
 public:
+	virtual ~YOLO() {};	//不加此句会导致虚拟继承内存泄漏
+
 	virtual void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path) = 0;
 
-	void infer(const std::string input_path, char* argv[]);
+	void infer(const std::string file_path, char* argv[], bool save_result = true, bool show_result = true);
 
 	virtual void release() {};
-	
+
 protected:
-	virtual void pre_process() = 0;	
+	virtual void pre_process() = 0;
 
 	virtual void process() = 0;
 
@@ -81,29 +67,28 @@ protected:
 
 	cv::Mat m_result;
 
-	float* m_outputs_host;
+	int m_input_width = 640;
 
-	int m_output_numprob;
+	int m_input_height = 640;
 
-	int m_output_numbox;
-
-	int m_output_numel;
+	int m_input_numel = 1 * 3 * m_input_width * m_input_height;
 };
 
-class  BackendFactory
+class  CreateFactory
 {
 public:
 	typedef std::unique_ptr<YOLO>(*CreateFunction)();
 
-	static BackendFactory& instance();
+	static CreateFactory& instance();
 
-	void register_backend(const Backend_Type& backend_type, CreateFunction create_function);
+	void register_class(const Backend_Type& backend_type, const Task_Type& task_type, CreateFunction create_function);
 
-	std::unique_ptr<YOLO> create(const Backend_Type& backend_type);
+	std::unique_ptr<YOLO> create(const Backend_Type& backend_type, const Task_Type& task_type);
 
 private:
-	BackendFactory();
+	CreateFactory();
 
-	std::map<Backend_Type, CreateFunction> m_backend_registry;
+	//std::map<Backend_Type, CreateFunction> m_backend_registry;
+	std::vector<std::vector<CreateFunction>> m_create_registry;
 };
 
