@@ -1,33 +1,24 @@
 import openvino as ov
-from yolo import *
-from utils import *
+from backends.yolo import *
+from backends.utils import *
 
 
 class YOLO_OpenVINO(YOLO):
-    def __init__(self, algo_type:Algo_Type, device_type:Device_Type, model_type:Model_Type, model_path:str) -> None:
+    def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__()
-        assert os.path.exists(model_path), "model not exists!"
+        assert os.path.exists(model_path), 'model not exists!'
         core = ov.Core()
         model  = core.read_model(model_path)
         self.algo_type = algo_type
-        self.compiled_model = core.compile_model(model, device_name="GPU" if device_type==Device_Type.GPU else "CPU")
-            
-    @abstractclassmethod       
-    def pre_process(self) -> None:
-        pass
+        self.compiled_model = core.compile_model(model, device_name='GPU' if device_type=='GPU' else 'CPU')
         
     def process(self) -> None:
         self.output = self.compiled_model({0: self.input})
 
-             
-    @abstractclassmethod         
-    def post_process(self) -> None:
-        pass
 
-
-class YOLO_OpenVINO_Classification(YOLO_OpenVINO):
+class YOLO_OpenVINO_Classify(YOLO_OpenVINO):
     def pre_process(self) -> None:
-        if self.algo_type == Algo_Type.YOLOv5:
+        if self.algo_type == 'YOLOv5':
             crop_size = min(self.image.shape[0], self.image.shape[1])
             left = (self.image.shape[1] - crop_size) // 2
             top = (self.image.shape[0] - crop_size) // 2
@@ -36,7 +27,7 @@ class YOLO_OpenVINO_Classification(YOLO_OpenVINO):
             input = input / 255.0
             input = input - np.array([0.406, 0.456, 0.485])
             input = input / np.array([0.225, 0.224, 0.229])
-        if self.algo_type == Algo_Type.YOLOv8:
+        if self.algo_type == 'YOLOv8':
             self.input_shape = (224, 224)
             if self.image.shape[1] > self.image.shape[0]:
                 self.image = cv2.resize(self.image, (self.input_shape[0]*self.image.shape[1]//self.image.shape[0], self.input_shape[0]))
@@ -54,13 +45,13 @@ class YOLO_OpenVINO_Classification(YOLO_OpenVINO):
     def post_process(self) -> None:
         output = self.output[self.compiled_model.output(0)]
         output = np.squeeze(output).astype(dtype=np.float32)
-        if self.algo_type == Algo_Type.YOLOv5:
-            print("class:", np.argmax(output), " scores:", np.exp(np.max(output))/np.sum(np.exp(output)))
-        if self.algo_type == Algo_Type.YOLOv8:
-            print("class:", np.argmax(output), " scores:", np.max(output))
+        if self.algo_type == 'YOLOv5':
+            print('class:', np.argmax(output), ' scores:', np.exp(np.max(output))/np.sum(np.exp(output)))
+        if self.algo_type == 'YOLOv8':
+            print('class:', np.argmax(output), ' scores:', np.max(output))
        
     
-class YOLO_OpenVINO_Detection(YOLO_OpenVINO):
+class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
     def pre_process(self) -> None:
         input = letterbox(self.image, self.input_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB和HWC2CHW
@@ -73,7 +64,7 @@ class YOLO_OpenVINO_Detection(YOLO_OpenVINO):
         boxes = []
         scores = []
         class_ids = []
-        if self.algo_type == Algo_Type.YOLOv5:
+        if self.algo_type == 'YOLOv5':
             output = output[output[..., 4] > self.confidence_threshold]
             classes_scores = output[..., 5:85]     
             for i in range(output.shape[0]):
@@ -87,7 +78,7 @@ class YOLO_OpenVINO_Detection(YOLO_OpenVINO):
                     scores.append(output[i][4])
                     class_ids.append(output[i][5])   
                     output[i][5:] *= obj_score
-        if self.algo_type == Algo_Type.YOLOv8: 
+        if self.algo_type == 'YOLOv8': 
             for i in range(output.shape[0]):
                 classes_scores = output[..., 4:]     
                 class_id = np.argmax(classes_scores[i])
@@ -105,7 +96,7 @@ class YOLO_OpenVINO_Detection(YOLO_OpenVINO):
         self.result = draw(self.image, boxes)     
         
         
-class YOLO_OpenVINO_Segmentation(YOLO_OpenVINO):
+class YOLO_OpenVINO_Segment(YOLO_OpenVINO):
     def pre_process(self) -> None:
         input = letterbox(self.image, self.input_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB和HWC2CHW
@@ -119,7 +110,7 @@ class YOLO_OpenVINO_Segmentation(YOLO_OpenVINO):
         scores = []
         class_ids = []
         preds = []
-        if self.algo_type == Algo_Type.YOLOv5:
+        if self.algo_type == 'YOLOv5':
             output0 = output0[output0[..., 4] > self.confidence_threshold]
             classes_scores = output0[..., 5:85]     
             for i in range(output0.shape[0]):
@@ -134,7 +125,7 @@ class YOLO_OpenVINO_Segmentation(YOLO_OpenVINO):
                     class_ids.append(output0[i][5])   
                     output0[i][5:] *= obj_score
                     preds.append(output0[i])
-        if self.algo_type == Algo_Type.YOLOv8: 
+        if self.algo_type == 'YOLOv8': 
             for i in range(output0.shape[0]):
                 classes_scores = output0[..., 4:84]     
                 class_id = np.argmax(classes_scores[i])

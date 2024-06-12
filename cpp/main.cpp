@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
 	yolo->release();
 	return 0;
 
-	//std::unique_ptr<YOLO> yolo = CreateFactory::instance().create(Backend_Type::TensorRT, Task_Type::Segmentation);
+	//std::unique_ptr<YOLO> yolo = CreateFactory::instance().create(Backend_Type::TensorRT, Task_Type::Segment);
 	//yolo->init(Algo_Type::YOLOv5, Device_Type::GPU, Model_Type::FP32, "yolov5n_seg_fp32.engine");
 	//yolo->infer("bus.jpg", argv, true, true);
 	//yolo->release();

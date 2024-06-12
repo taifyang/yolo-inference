@@ -1,7 +1,4 @@
 #include "yolo_tensorrt.h"
-
-#ifdef _YOLO_TENSORRT
-
 #include "preprocess.cuh"
 #include "decode.cuh"
 
@@ -52,7 +49,7 @@ void YOLO_TensorRT::init(const Algo_Type algo_type, const Device_Type device_typ
 	m_execution_context = engine->createExecutionContext();
 }
 
-void YOLO_TensorRT_Classification::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
+void YOLO_TensorRT_Classify::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
 	YOLO_TensorRT::init(algo_type, device_type, model_type, model_path);
 
@@ -73,7 +70,7 @@ void YOLO_TensorRT_Classification::init(const Algo_Type algo_type, const Device_
 	m_bindings[1] = m_output_device;
 }
 
-void YOLO_TensorRT_Detection::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
+void YOLO_TensorRT_Detect::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
 	YOLO_TensorRT::init(algo_type, device_type, model_type, model_path);
 
@@ -110,7 +107,7 @@ void YOLO_TensorRT_Detection::init(const Algo_Type algo_type, const Device_Type 
 #endif // _CUDA_POSTPROCESS
 }
 
-void YOLO_TensorRT_Segmentation::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
+void YOLO_TensorRT_Segment::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
 	YOLO_TensorRT::init(algo_type, device_type, model_type, model_path);
 
@@ -147,7 +144,7 @@ void YOLO_TensorRT_Segmentation::init(const Algo_Type algo_type, const Device_Ty
 #endif // _CUDA_PREPROCESS
 }
 
-void YOLO_TensorRT_Classification::pre_process()
+void YOLO_TensorRT_Classify::pre_process()
 {
 	cv::Mat crop_image;
 	if (m_algo == YOLOv5)
@@ -195,7 +192,7 @@ void YOLO_TensorRT_Classification::pre_process()
 	cudaMemcpyAsync(m_input_device, m_input_host, sizeof(float) * m_input_numel, cudaMemcpyHostToDevice, m_stream);
 }
 
-void YOLO_TensorRT_Detection::pre_process()
+void YOLO_TensorRT_Detect::pre_process()
 {
 #ifdef _CUDA_PREPROCESS
 	cudaMemcpyAsync(m_input_host, m_image.data, sizeof(uint8_t) * 3 * m_image.cols * m_image.rows, cudaMemcpyHostToDevice, m_stream);
@@ -221,7 +218,7 @@ void YOLO_TensorRT_Detection::pre_process()
 #endif // _CUDA_PREPROCESS
 }
 
-void YOLO_TensorRT_Segmentation::pre_process()
+void YOLO_TensorRT_Segment::pre_process()
 {
 #ifdef _CUDA_PREPROCESS
 	cudaMemcpyAsync(m_input_host, m_image.data, sizeof(uint8_t) * 3 * m_image.cols * m_image.rows, cudaMemcpyHostToDevice, m_stream);
@@ -246,7 +243,7 @@ void YOLO_TensorRT_Segmentation::pre_process()
 #endif // _CUDA_PREPROCESS
 }
 
-void YOLO_TensorRT_Classification::process()
+void YOLO_TensorRT_Classify::process()
 {
 	m_execution_context->enqueueV2((void**)m_bindings, m_stream, nullptr);
 
@@ -254,7 +251,7 @@ void YOLO_TensorRT_Classification::process()
 	cudaStreamSynchronize(m_stream);
 }
 
-void YOLO_TensorRT_Detection::process()
+void YOLO_TensorRT_Detect::process()
 {
 	m_execution_context->enqueueV2((void**)m_bindings, m_stream, nullptr);
 
@@ -264,7 +261,7 @@ void YOLO_TensorRT_Detection::process()
 #endif // !_CUDA_POSTPROCESS
 }
 
-void YOLO_TensorRT_Segmentation::process()
+void YOLO_TensorRT_Segment::process()
 {
 	m_execution_context->enqueueV2((void**)m_bindings, m_stream, nullptr);
 
@@ -273,7 +270,7 @@ void YOLO_TensorRT_Segmentation::process()
 	cudaStreamSynchronize(m_stream);
 }
 
-void YOLO_TensorRT_Classification::post_process()
+void YOLO_TensorRT_Classify::post_process()
 {
 	std::vector<float> scores;
 	float sum = 0.0f;
@@ -293,14 +290,14 @@ void YOLO_TensorRT_Classification::post_process()
 	draw_result(label);
 }
 
-void YOLO_TensorRT_Detection::post_process()
+void YOLO_TensorRT_Detect::post_process()
 {
 	std::vector<cv::Rect> boxes;
 	std::vector<float> scores;
 	std::vector<int> class_ids;
 
 #ifdef _CUDA_POSTPROCESS
-	cudaMemset(m_output_box_device, 0, sizeof(float) * (NUM_BOX_ELEMENT * m_max_image_bbox + 1));	//不加此句会出问题
+	cudaMemset(m_output_box_device, 0, sizeof(float) * (NUM_BOX_ELEMENT * m_max_image_bbox + 1));	//涓嶅姞姝ゅ彞浼氬嚭闂
 	decode_kernel_invoker(m_output_device, m_output_numbox, class_num, confidence_threshold, m_affine_matrix_device, m_output_box_device, m_max_image_bbox, m_stream, m_algo);
 	nms_kernel_invoker(m_output_box_device, nms_threshold, m_max_image_bbox, m_stream);
 	cudaMemcpyAsync(m_output_box_host, m_output_box_device, sizeof(float) * (NUM_BOX_ELEMENT * m_max_image_bbox + 1), cudaMemcpyDeviceToHost, m_stream);
@@ -383,7 +380,7 @@ void YOLO_TensorRT_Detection::post_process()
 #endif // _CUDA_POSTPROCESS
 }
 
-void YOLO_TensorRT_Segmentation::post_process()
+void YOLO_TensorRT_Segment::post_process()
 {
 	std::vector<cv::Rect> boxes;
 	std::vector<float> scores;
@@ -475,14 +472,14 @@ void YOLO_TensorRT_Segmentation::post_process()
 	draw_result(output);
 }
 
-void YOLO_TensorRT_Classification::release()
+void YOLO_TensorRT_Classify::release()
 {
 	cudaStreamDestroy(m_stream);
 	cudaFree(m_input_device);
 	cudaFree(m_output_device);
 }
 
-void YOLO_TensorRT_Detection::release()
+void YOLO_TensorRT_Detect::release()
 {
 	cudaStreamDestroy(m_stream);
 	cudaFree(m_input_device);
@@ -499,7 +496,7 @@ void YOLO_TensorRT_Detection::release()
 #endif // _CUDA_POSTPROCESS
 }
 
-void YOLO_TensorRT_Segmentation::release()
+void YOLO_TensorRT_Segment::release()
 {
 	cudaStreamDestroy(m_stream);
 	cudaFree(m_input_device);
@@ -511,5 +508,3 @@ void YOLO_TensorRT_Segmentation::release()
 	cudaFreeHost(m_affine_matrix_host);
 #endif // _CUDA_PREPROCESS
 }
-
-#endif // _YOLO_TensorRT

@@ -21,9 +21,9 @@ enum Backend_Type
 
 enum Task_Type
 {
-	Classification,
-	Detection,
-	Segmentation,
+	Classify,
+	Detect,
+	Segment,
 };
 
 enum Algo_Type
@@ -48,7 +48,7 @@ enum Model_Type
 class YOLO
 {
 public:
-	virtual ~YOLO() {};	//���Ӵ˾�ᵼ������̳��ڴ�й©
+	virtual ~YOLO() {};	//这句代码保证虚拟继承析构的时候不会内存泄漏
 
 	virtual void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path) = 0;
 

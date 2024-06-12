@@ -1,17 +1,17 @@
 #pragma once
 
-#include "yolo_detection.h"
+#include "yolo_detect.h"
 
-//ÍøÂçÊä³öÏà¹Ø²ÎÊı
+//ç½‘ç»œè¾“å‡ºç›¸å…³å‚æ•°
 struct OutputSeg
 {
-	int id;             //½á¹ûÀà±ğid
-	float confidence;   //½á¹ûÖÃĞÅ¶È
-	cv::Rect box;       //¾ØĞÎ¿ò
-	cv::Mat boxMask;    //¾ØĞÎ¿òÄÚmask£¬½ÚÊ¡ÄÚ´æ¿Õ¼äºÍ¼Ó¿ìËÙ¶È
+	int id;             //ç»“æœç±»åˆ«id
+	float confidence;   //ç»“æœç½®ä¿¡åº¦
+	cv::Rect box;       //çŸ©å½¢æ¡†
+	cv::Mat boxMask;    //çŸ©å½¢æ¡†å†…maskï¼ŒèŠ‚çœå†…å­˜ç©ºé—´å’ŒåŠ å¿«é€Ÿåº¦
 };
 
-//ÑÚÄ¤Ïà¹Ø²ÎÊı
+//æ©è†œç›¸å…³å‚æ•°
 struct MaskParams
 {
 	int segChannels = 32;
@@ -24,7 +24,7 @@ struct MaskParams
 	cv::Vec4d params;
 };
 
-class YOLO_Segmentation : public YOLO_Detection
+class YOLO_Segment : public YOLO_Detect
 {
 protected:
 	void GetMask(const cv::Mat& maskProposals, const cv::Mat& mask_protos, OutputSeg& output, const MaskParams& maskParams)

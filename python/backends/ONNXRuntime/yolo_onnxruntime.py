@@ -1,15 +1,15 @@
 import onnxruntime
-from yolo import *
-from utils import *
+from backends.yolo import *
+from backends.utils import *
 
 
 class YOLO_ONNXRuntime(YOLO):
-    def __init__(self, algo_type:Algo_Type, device_type:Device_Type, model_type:Model_Type, model_path:str) -> None:
+    def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__()
         assert os.path.exists(model_path), "model not exists!"
-        if device_type == Device_Type.CPU:
+        if device_type == 'CPU':
             self.onnx_session = onnxruntime.InferenceSession(model_path, providers=['CPUExecutionProvider'])
-        elif device_type == Device_Type.GPU:
+        elif device_type == 'GPU':
             self.onnx_session = onnxruntime.InferenceSession(model_path, providers=['CUDAExecutionProvider'])
         self.algo_type = algo_type
         self.model_type = model_type
@@ -21,22 +21,14 @@ class YOLO_ONNXRuntime(YOLO):
         for node in self.onnx_session.get_outputs():
             self.output_name.append(node.name)
         self.input = {}
-    
-    @abstractclassmethod       
-    def pre_process(self) -> None:
-        pass
         
     def process(self) -> None:
         self.output = self.onnx_session.run(None, self.input)
-    
-    @abstractclassmethod         
-    def post_process(self) -> None:
-        pass
 
 
-class YOLO_ONNXRuntime_Classification(YOLO_ONNXRuntime):           
+class YOLO_ONNXRuntime_Classify(YOLO_ONNXRuntime):           
     def pre_process(self) -> None:
-        if self.algo_type == Algo_Type.YOLOv5:
+        if self.algo_type == 'YOLOv5':
             crop_size = min(self.image.shape[0], self.image.shape[1])
             left = (self.image.shape[1] - crop_size) // 2
             top = (self.image.shape[0] - crop_size) // 2
@@ -45,7 +37,7 @@ class YOLO_ONNXRuntime_Classification(YOLO_ONNXRuntime):
             input = input / 255.0
             input = input - np.array([0.406, 0.456, 0.485])
             input = input / np.array([0.225, 0.224, 0.229])
-        if self.algo_type == Algo_Type.YOLOv8:
+        if self.algo_type == 'YOLOv8':
             self.input_shape = (224, 224)
             if self.image.shape[1] > self.image.shape[0]:
                 self.image = cv2.resize(self.image, (self.input_shape[0]*self.image.shape[1]//self.image.shape[0], self.input_shape[0]))
@@ -58,29 +50,29 @@ class YOLO_ONNXRuntime_Classification(YOLO_ONNXRuntime):
             input = cv2.resize(crop_image, self.input_shape)
             input = input / 255.0
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB和HWC2CHW
-        if self.model_type == Model_Type.FP32 or self.model_type == Model_Type.INT8:
+        if self.model_type == 'FP32' or self.model_type == 'INT8':
             input = np.expand_dims(input, axis=0).astype(dtype=np.float32)
-        elif self.model_type == Model_Type.FP16:
+        elif self.model_type == 'FP16':
             input = np.expand_dims(input, axis=0).astype(dtype=np.float16)
         for name in self.input_name:
             self.input[name] = input
             
     def post_process(self) -> None:
         output = np.squeeze(self.output).astype(dtype=np.float32)
-        if self.algo_type == Algo_Type.YOLOv5:
+        if self.algo_type == 'YOLOv5':
             print("class:", np.argmax(output), " scores:", np.exp(np.max(output))/np.sum(np.exp(output)))
-        if self.algo_type == Algo_Type.YOLOv8:
+        if self.algo_type == 'YOLOv8':
             print("class:", np.argmax(output), " scores:", np.max(output))
 
 
-class YOLO_ONNXRuntime_Detection(YOLO_ONNXRuntime):
+class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
     def pre_process(self) -> None:
         input = letterbox(self.image, self.input_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB和HWC2CHW
         input = input / 255.0
-        if self.model_type == Model_Type.FP32 or self.model_type == Model_Type.INT8:
+        if self.model_type == 'FP32' or self.model_type == 'INT8':
             input = np.expand_dims(input, axis=0).astype(dtype=np.float32)
-        elif self.model_type == Model_Type.FP16:
+        elif self.model_type == 'FP16':
             input = np.expand_dims(input, axis=0).astype(dtype=np.float16)
         for name in self.input_name:
             self.input[name] = input
@@ -90,7 +82,7 @@ class YOLO_ONNXRuntime_Detection(YOLO_ONNXRuntime):
         boxes = []
         scores = []
         class_ids = []
-        if self.algo_type == Algo_Type.YOLOv5:
+        if self.algo_type == 'YOLOv5':
             output = output[output[..., 4] > self.confidence_threshold]
             classes_scores = output[..., 5:85]     
             for i in range(output.shape[0]):
@@ -104,7 +96,7 @@ class YOLO_ONNXRuntime_Detection(YOLO_ONNXRuntime):
                     scores.append(output[i][4])
                     class_ids.append(output[i][5])   
                     output[i][5:] *= obj_score
-        if self.algo_type == Algo_Type.YOLOv8: 
+        if self.algo_type == 'YOLOv8': 
             for i in range(output.shape[0]):
                 classes_scores = output[..., 4:]     
                 class_id = np.argmax(classes_scores[i])
@@ -122,14 +114,14 @@ class YOLO_ONNXRuntime_Detection(YOLO_ONNXRuntime):
         self.result = draw(self.image, boxes)
         
         
-class YOLO_ONNXRuntime_Segmentation(YOLO_ONNXRuntime):
+class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
     def pre_process(self) -> None:
         input = letterbox(self.image, self.input_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB和HWC2CHW
         input = input / 255.0
-        if self.model_type == Model_Type.FP32 or self.model_type == Model_Type.INT8:
+        if self.model_type == 'FP32' or self.model_type == 'INT8':
             input = np.expand_dims(input, axis=0).astype(dtype=np.float32)
-        elif self.model_type == Model_Type.FP16:
+        elif self.model_type == 'FP16':
             input = np.expand_dims(input, axis=0).astype(dtype=np.float16)
         for name in self.input_name:
             self.input[name] = input
@@ -140,7 +132,7 @@ class YOLO_ONNXRuntime_Segmentation(YOLO_ONNXRuntime):
         scores = []
         class_ids = []
         preds = []
-        if self.algo_type == Algo_Type.YOLOv5:
+        if self.algo_type == 'YOLOv5':
             output = output[output[..., 4] > self.confidence_threshold]
             classes_scores = output[..., 5:85]     
             for i in range(output.shape[0]):
@@ -155,7 +147,7 @@ class YOLO_ONNXRuntime_Segmentation(YOLO_ONNXRuntime):
                     class_ids.append(output[i][5])   
                     output[i][5:] *= obj_score
                     preds.append(output[i])
-        if self.algo_type == Algo_Type.YOLOv8: 
+        if self.algo_type == 'YOLOv8': 
             for i in range(output.shape[0]):
                 classes_scores = output[..., 4:84]     
                 class_id = np.argmax(classes_scores[i])

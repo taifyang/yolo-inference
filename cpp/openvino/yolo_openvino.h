@@ -1,34 +1,42 @@
 #pragma once
 
-#include "yolo_classification.h"
-#include "yolo_detection.h"
-#include "yolo_segmentation.h"
+#include "yolo_classify.h"
+#include "yolo_detect.h"
+#include "yolo_segment.h"
 #include "utils.h"
+#include <openvino/openvino.hpp> 
 
-#ifdef _YOLO_OPENCV
-
-#include <opencv2/opencv.hpp>
-
-class YOLO_OpenCV : virtual public YOLO
+class YOLO_OpenVINO : virtual public YOLO
 {
 public:
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
 
 protected:
-	void process();
-
 	Algo_Type m_algo;
 
-	cv::dnn::Net m_net;
+	ov::InferRequest m_infer_request;
+
+	ov::Output<const ov::Node> m_input_port;
 
 	cv::Mat m_input;
+};
 
-	std::vector<cv::Mat> m_output;
+class YOLO_OpenVINO_Classify : public YOLO_OpenVINO, public YOLO_Classify
+{
+public:
+	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
+
+private:
+	void pre_process();
+
+	void process();
+
+	void post_process();
 
 	float* m_output_host;
 };
 
-class YOLO_OpenCV_Classification : public YOLO_OpenCV, public YOLO_Classification
+class YOLO_OpenVINO_Detect : public YOLO_OpenVINO, public YOLO_Detect
 {
 public:
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
@@ -36,10 +44,14 @@ public:
 private:
 	void pre_process();
 
+	void process();
+
 	void post_process();
+
+	float* m_output_host;
 };
 
-class YOLO_OpenCV_Detection : public YOLO_OpenCV, public YOLO_Detection
+class YOLO_OpenVINO_Segment : public YOLO_OpenVINO, public YOLO_Segment
 {
 public:
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
@@ -47,18 +59,11 @@ public:
 private:
 	void pre_process();
 
-	void post_process();
-};
-
-class YOLO_OpenCV_Segmentation : public YOLO_OpenCV, public YOLO_Segmentation
-{
-public:
-	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
-
-private:
-	void pre_process();
+	void process();
 
 	void post_process();
-};
 
-#endif // _YOLO_OpenCV
+	float* m_output0_host;
+
+	float* m_output1_host;
+};

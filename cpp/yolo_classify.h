@@ -3,7 +3,7 @@
 #include "yolo.h"
 #include "utils.h"
 
-class YOLO_Classification : virtual public YOLO
+class YOLO_Classify : virtual public YOLO
 {
 protected:
 	void draw_result(std::string label)

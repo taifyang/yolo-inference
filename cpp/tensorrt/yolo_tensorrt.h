@@ -1,13 +1,10 @@
 #pragma once
 
 #include <cuda_runtime.h>
-#include "yolo_classification.h"
-#include "yolo_detection.h"
-#include "yolo_segmentation.h"
+#include "yolo_classify.h"
+#include "yolo_detect.h"
+#include "yolo_segment.h"
 #include "utils.h"
-
-#ifdef _YOLO_TENSORRT
-
 #include <NvInfer.h>
 #include <NvInferRuntime.h>
 	
@@ -39,7 +36,7 @@ protected:
 	const int m_max_image_bbox = 1024;
 };
 
-class YOLO_TensorRT_Classification : public YOLO_TensorRT, public YOLO_Classification
+class YOLO_TensorRT_Classify : public YOLO_TensorRT, public YOLO_Classify
 {
 public:
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
@@ -62,7 +59,7 @@ private:
 	float* m_output_device;
 };
 
-class YOLO_TensorRT_Detection : public YOLO_TensorRT, public YOLO_Detection
+class YOLO_TensorRT_Detect : public YOLO_TensorRT, public YOLO_Detect
 {
 public:
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
@@ -101,7 +98,7 @@ private:
 #endif // _CUDA_POSTPROCESS
 };
 
-class YOLO_TensorRT_Segmentation : public YOLO_TensorRT, public YOLO_Segmentation
+class YOLO_TensorRT_Segment : public YOLO_TensorRT, public YOLO_Segment
 {
 public:
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
@@ -143,5 +140,3 @@ private:
 	float* m_output_box_device;
 #endif // _CUDA_POSTPROCESS
 };
-
-#endif // _YOLO_TensorRT

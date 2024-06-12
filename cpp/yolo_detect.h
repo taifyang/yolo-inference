@@ -3,7 +3,7 @@
 #include "yolo.h"
 #include "utils.h"
 
-class YOLO_Detection : virtual public YOLO
+class YOLO_Detect : virtual public YOLO
 {
 protected:
 	void LetterBox(cv::Mat& input_image, cv::Mat& output_image, cv::Vec4d& params, cv::Size shape = cv::Size(640, 640), cv::Scalar color = cv::Scalar(114, 114, 114))
