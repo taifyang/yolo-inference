@@ -1,33 +1,25 @@
 import cv2
-from yolo import *
-from utils import *
+from backends.yolo import *
+from backends.utils import *
 
 
 class YOLO_OpenCV(YOLO):
-    def __init__(self, algo_type:Algo_Type, device_type:Device_Type, model_type:Model_Type, model_path:str) -> None:
+    def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__()
-        assert os.path.exists(model_path), "model not exists!"
+        assert os.path.exists(model_path), 'model not exists!'
         self.net = cv2.dnn.readNet(model_path)
         self.algo_type = algo_type
-        if device_type == Device_Type.GPU:
+        if device_type == 'GPU':
             self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
             self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
-    
-    @abstractclassmethod        
-    def pre_process(self) -> None:
-        pass
         
     def process(self) -> None:
         self.output = self.net.forward()
-    
-    @abstractclassmethod  
-    def post_process(self) -> None:
-        pass
 
 
-class YOLO_OpenCV_Classification(YOLO_OpenCV):
+class YOLO_OpenCV_Classify(YOLO_OpenCV):
     def pre_process(self) -> None:
-        if self.algo_type == Algo_Type.YOLOv5:
+        if self.algo_type == 'YOLOv5':
             crop_size = min(self.image.shape[0], self.image.shape[1])
             left = (self.image.shape[1] - crop_size) // 2
             top = (self.image.shape[0] - crop_size) // 2
@@ -36,7 +28,7 @@ class YOLO_OpenCV_Classification(YOLO_OpenCV):
             input = input / 255.0
             input = input - np.array([0.406, 0.456, 0.485])
             input = input / np.array([0.225, 0.224, 0.229])
-        if self.algo_type == Algo_Type.YOLOv8:
+        if self.algo_type == 'YOLOv8':
             self.input_shape = (224, 224)
             if self.image.shape[1] > self.image.shape[0]:
                 self.image = cv2.resize(self.image, (self.input_shape[0]*self.image.shape[1]//self.image.shape[0], self.input_shape[0]))
@@ -54,13 +46,13 @@ class YOLO_OpenCV_Classification(YOLO_OpenCV):
     
     def post_process(self) -> None:
         output = np.squeeze(self.output).astype(dtype=np.float32)
-        if self.algo_type == Algo_Type.YOLOv5:
-            print("class:", np.argmax(output), " scores:", np.exp(np.max(output))/np.sum(np.exp(output)))
-        if self.algo_type == Algo_Type.YOLOv8:
-            print("class:", np.argmax(output), " scores:", np.max(output))
+        if self.algo_type == 'YOLOv5':
+            print('class:', np.argmax(output), ' scores:', np.exp(np.max(output))/np.sum(np.exp(output)))
+        if self.algo_type == 'YOLOv8':
+            print('class:', np.argmax(output), ' scores:', np.max(output))
     
 
-class YOLO_OpenCV_Detection(YOLO_OpenCV):
+class YOLO_OpenCV_Detect(YOLO_OpenCV):
     def pre_process(self) -> None:
         input = letterbox(self.image, self.input_shape)
         self.input = cv2.dnn.blobFromImage(input, 1/255., size=self.input_shape, swapRB=True, crop=False)
@@ -71,13 +63,13 @@ class YOLO_OpenCV_Detection(YOLO_OpenCV):
         scores = []
         class_ids = []
         for i in range(self.output.shape[1]):
-            if self.algo_type == Algo_Type.YOLOv5:
+            if self.algo_type == 'YOLOv5':
                 data = self.output[0][i]
                 objness = data[4]
                 if objness < self.confidence_threshold:
                     continue
                 score = data[5:] * objness
-            if self.algo_type == Algo_Type.YOLOv8:
+            if self.algo_type == 'YOLOv8':
                 data = self.output[0][i, ...]
                 score = data[4:]
                 objness = 1

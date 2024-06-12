@@ -1,42 +1,32 @@
 #pragma once
 
-#include "yolo_classification.h"
-#include "yolo_detection.h"
-#include "yolo_segmentation.h"
+#include "yolo_classify.h"
+#include "yolo_detect.h"
+#include "yolo_segment.h"
 #include "utils.h"
+#include <torch/script.h>
+#include <torch/torch.h>
 
-#ifdef _YOLO_ONNXRUNTIME
-
-#include <onnxruntime_cxx_api.h>
-
-class YOLO_ONNXRuntime : virtual public YOLO
-{
+class YOLO_Libtorch : virtual public YOLO
+{	
 public:
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
-
-	void release();
 
 protected:
 	Algo_Type m_algo;
 
+	torch::DeviceType m_device;
+
 	Model_Type m_model;
 
-	Ort::Env m_env;
+	torch::jit::script::Module module;
 
-	Ort::Session* m_session;
+	std::vector<torch::jit::IValue> m_input;
 
-	std::vector<float> m_input;
-
-	std::vector<uint16_t> m_input_fp16;
-
-	std::vector<uint16_t> m_output_fp16;
-
-	std::vector<const char*> m_input_names;
-
-	std::vector<const char*> m_output_names;
+	torch::jit::IValue m_output;
 };
 
-class YOLO_ONNXRuntime_Classification : public YOLO_ONNXRuntime, public YOLO_Classification
+class YOLO_Libtorch_Classify : public YOLO_Libtorch, public YOLO_Classify
 {
 public:
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
@@ -51,7 +41,7 @@ private:
 	float* m_output_host;
 };
 
-class YOLO_ONNXRuntime_Detection : public YOLO_ONNXRuntime, public YOLO_Detection
+class YOLO_Libtorch_Detect : public YOLO_Libtorch, public YOLO_Detect
 {
 public:
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
@@ -66,7 +56,7 @@ private:
 	float* m_output_host;
 };
 
-class YOLO_ONNXRuntime_Segmentation : public YOLO_ONNXRuntime, public YOLO_Segmentation
+class YOLO_Libtorch_Segment : public YOLO_Libtorch, public YOLO_Segment
 {
 public:
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
@@ -81,10 +71,4 @@ private:
 	float* m_output0_host;
 
 	float* m_output1_host;
-
-	std::vector<uint16_t> m_output0_fp16;
-
-	std::vector<uint16_t> m_output1_fp16;
 };
-
-#endif // _YOLO_ONNXRuntime

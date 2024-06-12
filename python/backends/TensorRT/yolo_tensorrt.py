@@ -1,37 +1,25 @@
 import tensorrt as trt
 import pycuda.autoinit 
 import pycuda.driver as cuda  
-from yolo import *
-from utils import *
+from backends.yolo import *
+from backends.utils import *
 
 
 class YOLO_TensorRT(YOLO):
-    def __init__(self, algo_type:Algo_Type, device_type:Device_Type, model_type:Model_Type, model_path:str) -> None:
+    def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__()
-        assert os.path.exists(model_path), "model not exists!"
-        assert device_type == Device_Type.GPU, "only support GPU!"
+        assert os.path.exists(model_path), 'model not exists!'
+        assert device_type == 'GPU', 'only support GPU!'
         self.algo_type = algo_type
         self.model_type = model_type
         logger = trt.Logger(trt.Logger.ERROR)
-        with open(model_path, "rb") as f, trt.Runtime(logger) as runtime:
+        with open(model_path, 'rb') as f, trt.Runtime(logger) as runtime:
             self.engine = runtime.deserialize_cuda_engine(f.read())
         self.stream = cuda.Stream()
-            
-    @abstractclassmethod       
-    def pre_process(self) -> None:
-        pass
-    
-    @abstractclassmethod    
-    def process(self) -> None:
-        pass
-    
-    @abstractclassmethod         
-    def post_process(self) -> None:
-        pass
    
         
-class YOLO_TensorRT_Classification(YOLO_TensorRT):
-    def __init__(self, algo_type:Algo_Type, device_type:Device_Type, model_type:Model_Type, model_path:str) -> None:
+class YOLO_TensorRT_Classify(YOLO_TensorRT):
+    def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__(algo_type, device_type, model_type, model_path)
         context = self.engine.create_execution_context()
         self.input_host = cuda.pagelocked_empty(trt.volume(context.get_binding_shape(0)), dtype=np.float32)
@@ -40,7 +28,7 @@ class YOLO_TensorRT_Classification(YOLO_TensorRT):
         self.output_device = cuda.mem_alloc(self.output_host.nbytes)
         
     def pre_process(self) -> None:
-        if self.algo_type == Algo_Type.YOLOv5:
+        if self.algo_type == 'YOLOv5':
             crop_size = min(self.image.shape[0], self.image.shape[1])
             left = (self.image.shape[1] - crop_size) // 2
             top = (self.image.shape[0] - crop_size) // 2
@@ -49,7 +37,7 @@ class YOLO_TensorRT_Classification(YOLO_TensorRT):
             input = input / 255.0
             input = input - np.array([0.406, 0.456, 0.485])
             input = input / np.array([0.225, 0.224, 0.229])
-        if self.algo_type == Algo_Type.YOLOv8:
+        if self.algo_type == 'YOLOv8':
             self.input_shape = (224, 224)
             if self.image.shape[1] > self.image.shape[0]:
                 self.image = cv2.resize(self.image, (self.input_shape[0]*self.image.shape[1]//self.image.shape[0], self.input_shape[0]))
@@ -75,14 +63,14 @@ class YOLO_TensorRT_Classification(YOLO_TensorRT):
             
     def post_process(self) -> None:
         output = np.squeeze(self.output).astype(dtype=np.float32)
-        if self.algo_type == Algo_Type.YOLOv5:
-            print("class:", np.argmax(output), " scores:", np.exp(np.max(output))/np.sum(np.exp(output)))
-        if self.algo_type == Algo_Type.YOLOv8:
-            print("class:", np.argmax(output), " scores:", np.max(output))
+        if self.algo_type == 'YOLOv5':
+            print('class:', np.argmax(output), ' scores:', np.exp(np.max(output))/np.sum(np.exp(output)))
+        if self.algo_type == 'YOLOv8':
+            print('class:', np.argmax(output), ' scores:', np.max(output))
     
     
-class YOLO_TensorRT_Detection(YOLO_TensorRT):
-    def __init__(self, algo_type:Algo_Type, device_type:Device_Type, model_type:Model_Type, model_path:str) -> None:
+class YOLO_TensorRT_Detect(YOLO_TensorRT):
+    def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__(algo_type, device_type, model_type, model_path)
         context = self.engine.create_execution_context()
         self.input_host = cuda.pagelocked_empty(trt.volume(context.get_binding_shape(0)), dtype=np.float32)
@@ -110,7 +98,7 @@ class YOLO_TensorRT_Detection(YOLO_TensorRT):
         boxes = []
         scores = []
         class_ids = []
-        if self.algo_type == Algo_Type.YOLOv5:
+        if self.algo_type == 'YOLOv5':
             output = output[output[..., 4] > self.confidence_threshold]
             classes_scores = output[..., 5:85]     
             for i in range(output.shape[0]):
@@ -124,7 +112,7 @@ class YOLO_TensorRT_Detection(YOLO_TensorRT):
                     scores.append(output[i][4])
                     class_ids.append(output[i][5])   
                     output[i][5:] *= obj_score
-        if self.algo_type == Algo_Type.YOLOv8: 
+        if self.algo_type == 'YOLOv8': 
             for i in range(output.shape[0]):
                 classes_scores = output[..., 4:]     
                 class_id = np.argmax(classes_scores[i])
@@ -142,8 +130,8 @@ class YOLO_TensorRT_Detection(YOLO_TensorRT):
         self.result = draw(self.image, boxes)
         
              
-class YOLO_TensorRT_Segmentation(YOLO_TensorRT):
-    def __init__(self, algo_type:Algo_Type, device_type:Device_Type, model_type:Model_Type, model_path:str) -> None:
+class YOLO_TensorRT_Segment(YOLO_TensorRT):
+    def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__(algo_type, device_type, model_type, model_path)
         context = self.engine.create_execution_context()
         self.input_host = cuda.pagelocked_empty(trt.volume(context.get_binding_shape(0)), dtype=np.float32)
@@ -176,7 +164,7 @@ class YOLO_TensorRT_Segmentation(YOLO_TensorRT):
         scores = []
         class_ids = []
         preds = []
-        if self.algo_type == Algo_Type.YOLOv5:
+        if self.algo_type == 'YOLOv5':
             output1 = output1[output1[..., 4] > self.confidence_threshold]
             classes_scores = output1[..., 5:85]     
             for i in range(output1.shape[0]):
@@ -191,7 +179,7 @@ class YOLO_TensorRT_Segmentation(YOLO_TensorRT):
                     class_ids.append(output1[i][5])   
                     output1[i][5:] *= obj_score
                     preds.append(output1[i])
-        if self.algo_type == Algo_Type.YOLOv8: 
+        if self.algo_type == 'YOLOv8': 
             for i in range(output1.shape[0]):
                 classes_scores = output1[..., 4:84]     
                 class_id = np.argmax(classes_scores[i])

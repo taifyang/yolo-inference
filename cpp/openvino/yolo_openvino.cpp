@@ -1,8 +1,6 @@
-#include "yolo_opencv.h"
+#include "yolo_openvino.h"
 
-#ifdef _YOLO_OPENCV
-
-void YOLO_OpenCV::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
+void YOLO_OpenVINO::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
 	if (algo_type != YOLOv5 && algo_type != YOLOv8)
 	{
@@ -11,40 +9,15 @@ void YOLO_OpenCV::init(const Algo_Type algo_type, const Device_Type device_type,
 	}
 	m_algo = algo_type;
 
-	if (algo_type == YOLOv8 && device_type == GPU)
-	{
-		std::cout << "YOLOv8 not supported GPU yet!" << std::endl;
-		std::exit(-1);
-	}
-
-	if (model_type != FP32 && model_type != FP16)
-	{
-		std::cout << "unsupported model type!" << std::endl;
-		std::exit(-1);
-	}
-	m_net = cv::dnn::readNet(model_path);
-	if (device_type == CPU)
-	{
-		m_net.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
-		m_net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
-	}
-	if (device_type == GPU)
-	{
-		m_net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
-		if (model_type == FP32)
-		{
-			m_net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
-		}
-		if (model_type == FP16)
-		{
-			m_net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA_FP16);
-		}
-	}
+	ov::Core core; //Initialize OpenVINO Runtime Core 
+	auto compiled_model = core.compile_model(model_path, device_type == GPU ? "GPU" : "CPU"); //Compile the Model 
+	m_infer_request = compiled_model.create_infer_request(); //Create an Inference Request 
+	m_input_port = compiled_model.input(); //Get input port for model with one input
 }
 
-void YOLO_OpenCV_Classification::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
+void YOLO_OpenVINO_Classify::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	YOLO_OpenCV::init(algo_type, device_type, model_type, model_path);
+	YOLO_OpenVINO::init(algo_type, device_type, model_type, model_path);
 
 	if (m_algo == YOLOv8)
 	{
@@ -54,9 +27,9 @@ void YOLO_OpenCV_Classification::init(const Algo_Type algo_type, const Device_Ty
 	}
 }
 
-void YOLO_OpenCV_Detection::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
+void YOLO_OpenVINO_Detect::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	YOLO_OpenCV::init(algo_type, device_type, model_type, model_path);
+	YOLO_OpenVINO::init(algo_type, device_type, model_type, model_path);
 
 	if (m_algo == YOLOv5)
 	{
@@ -72,9 +45,9 @@ void YOLO_OpenCV_Detection::init(const Algo_Type algo_type, const Device_Type de
 	}
 }
 
-void YOLO_OpenCV_Segmentation::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
+void YOLO_OpenVINO_Segment::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	YOLO_OpenCV::init(algo_type, device_type, model_type, model_path);
+	YOLO_OpenVINO::init(algo_type, device_type, model_type, model_path);
 
 	if (m_algo == YOLOv5)
 	{
@@ -92,7 +65,7 @@ void YOLO_OpenCV_Segmentation::init(const Algo_Type algo_type, const Device_Type
 	}
 }
 
-void YOLO_OpenCV_Classification::pre_process()
+void YOLO_OpenVINO_Classify::pre_process()
 {
 	cv::Mat crop_image;
 	if (m_algo == YOLOv5)
@@ -129,32 +102,46 @@ void YOLO_OpenCV_Classification::pre_process()
 	cv::dnn::blobFromImage(crop_image, m_input, 1, cv::Size(crop_image.cols, crop_image.rows), cv::Scalar(), true, false);
 }
 
-void YOLO_OpenCV_Detection::pre_process()
+void YOLO_OpenVINO_Detect::pre_process()
 {
-	//LetterBox
 	cv::Mat letterbox;
 	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_width, m_input_height));
-
 	cv::dnn::blobFromImage(letterbox, m_input, 1. / 255., cv::Size(m_input_width, m_input_height), cv::Scalar(), true, false);
 }
 
-void YOLO_OpenCV_Segmentation::pre_process()
+void YOLO_OpenVINO_Segment::pre_process()
 {
-	//LetterBox
 	cv::Mat letterbox;
 	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_width, m_input_height));
-
 	cv::dnn::blobFromImage(letterbox, m_input, 1. / 255., cv::Size(m_input_width, m_input_height), cv::Scalar(), true, false);
-}	
-
-void YOLO_OpenCV::process()
-{
-	m_net.setInput(m_input);
-	m_net.forward(m_output, m_net.getUnconnectedOutLayersNames());
-	m_output_host = (float*)m_output[0].data;
 }
 
-void YOLO_OpenCV_Classification::post_process()
+void YOLO_OpenVINO_Classify::process()
+{
+	ov::Tensor input_tensor(m_input_port.get_element_type(), m_input_port.get_shape(), m_input.ptr(0)); //Create tensor from external memory
+	m_infer_request.set_input_tensor(input_tensor); // Set input tensor for model with one input
+	m_infer_request.infer(); //Start inference
+	m_output_host = (float*)m_infer_request.get_output_tensor(0).data();  //Get the inference result 
+}
+
+void YOLO_OpenVINO_Detect::process()
+{
+	ov::Tensor input_tensor(m_input_port.get_element_type(), m_input_port.get_shape(), m_input.ptr(0)); //Create tensor from external memory
+	m_infer_request.set_input_tensor(input_tensor); // Set input tensor for model with one input
+	m_infer_request.infer(); //Start inference
+	m_output_host = (float*)m_infer_request.get_output_tensor(0).data();  //Get the inference result 
+}
+
+void YOLO_OpenVINO_Segment::process()
+{
+	ov::Tensor input_tensor(m_input_port.get_element_type(), m_input_port.get_shape(), m_input.ptr(0)); //Create tensor from external memory
+	m_infer_request.set_input_tensor(input_tensor); // Set input tensor for model with one input
+	m_infer_request.infer(); //Start inference
+	m_output0_host = (float*)m_infer_request.get_output_tensor(0).data();  //Get the inference result 
+	m_output1_host = (float*)m_infer_request.get_output_tensor(1).data();
+}
+
+void YOLO_OpenVINO_Classify::post_process()
 {
 	std::vector<float> scores;
 	float sum = 0.0f;
@@ -174,7 +161,7 @@ void YOLO_OpenCV_Classification::post_process()
 	draw_result(label);
 }
 
-void YOLO_OpenCV_Detection::post_process()
+void YOLO_OpenVINO_Detect::post_process()
 {
 	std::vector<cv::Rect> boxes;
 	std::vector<float> scores;
@@ -230,7 +217,7 @@ void YOLO_OpenCV_Detection::post_process()
 	}
 }
 
-void YOLO_OpenCV_Segmentation::post_process()
+void YOLO_OpenVINO_Segment::post_process()
 {
 	std::vector<cv::Rect> boxes;
 	std::vector<float> scores;
@@ -239,7 +226,7 @@ void YOLO_OpenCV_Segmentation::post_process()
 
 	for (int i = 0; i < m_output_numbox; ++i)
 	{
-		float* ptr = m_output_host + i * m_output_numprob;
+		float* ptr = m_output0_host + i * m_output_numprob;
 		int class_id;
 		float score;
 		if (m_algo == YOLOv5)
@@ -305,15 +292,15 @@ void YOLO_OpenCV_Segmentation::post_process()
 		output.push_back(result);
 	}
 
-	m_mask_params.params = m_params;	
+	m_mask_params.params = m_params;
 	m_mask_params.srcImgShape = m_image.size();
-
+	int shape[4] = { 1, m_mask_params.segChannels, m_mask_params.segWidth, m_mask_params.segHeight, };
+	cv::Mat output_mat1 = cv::Mat::zeros(4, shape, CV_32FC1);
+	std::copy(m_output1_host, m_output1_host + m_output_numseg, (float*)output_mat1.data);
 	for (int i = 0; i < temp_mask_proposals.size(); ++i)
 	{
-		GetMask(cv::Mat(temp_mask_proposals[i]).t(), m_output[1], output[i], m_mask_params);
+		GetMask(cv::Mat(temp_mask_proposals[i]).t(), output_mat1, output[i], m_mask_params);
 	}
 
 	draw_result(output);
 }
-
-#endif // _YOLO_OpenCV

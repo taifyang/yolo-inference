@@ -1,7 +1,5 @@
 #include "yolo_onnxruntime.h"
 
-#ifdef _YOLO_ONNXRUNTIME
-
 void YOLO_ONNXRuntime::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
 	if (algo_type != YOLOv5 && algo_type != YOLOv8)
@@ -38,7 +36,7 @@ void YOLO_ONNXRuntime::init(const Algo_Type algo_type, const Device_Type device_
 #endif
 }
 
-void YOLO_ONNXRuntime_Classification::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
+void YOLO_ONNXRuntime_Classify::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
 	YOLO_ONNXRuntime::init(algo_type, device_type, model_type, model_path);
 
@@ -67,7 +65,7 @@ void YOLO_ONNXRuntime_Classification::init(const Algo_Type algo_type, const Devi
 	m_output_host = (float*)malloc(sizeof(float) * class_num);
 }
 
-void YOLO_ONNXRuntime_Detection::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
+void YOLO_ONNXRuntime_Detect::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
 	YOLO_ONNXRuntime::init(algo_type, device_type, model_type, model_path);
 
@@ -102,7 +100,7 @@ void YOLO_ONNXRuntime_Detection::init(const Algo_Type algo_type, const Device_Ty
 	m_output_host = (float*)malloc(sizeof(float) * m_output_numdet);
 }
 
-void YOLO_ONNXRuntime_Segmentation::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
+void YOLO_ONNXRuntime_Segment::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
 	YOLO_ONNXRuntime::init(algo_type, device_type, model_type, model_path);
 
@@ -143,7 +141,7 @@ void YOLO_ONNXRuntime_Segmentation::init(const Algo_Type algo_type, const Device
 	m_output1_host = (float*)malloc(sizeof(float) * m_output_numseg);
 }
 
-void YOLO_ONNXRuntime_Classification::pre_process()
+void YOLO_ONNXRuntime_Classify::pre_process()
 {
 	cv::Mat crop_image;
 	if (m_algo == YOLOv5)
@@ -199,7 +197,7 @@ void YOLO_ONNXRuntime_Classification::pre_process()
 	}
 }
 
-void YOLO_ONNXRuntime_Detection::pre_process()
+void YOLO_ONNXRuntime_Detect::pre_process()
 {
 	cv::Mat letterbox;
 	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_width, m_input_height));
@@ -223,7 +221,7 @@ void YOLO_ONNXRuntime_Detection::pre_process()
 	}
 }
 
-void YOLO_ONNXRuntime_Segmentation::pre_process()
+void YOLO_ONNXRuntime_Segment::pre_process()
 {
 	cv::Mat letterbox;
 	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_width, m_input_height));
@@ -247,7 +245,7 @@ void YOLO_ONNXRuntime_Segmentation::pre_process()
 	}
 }
 
-void YOLO_ONNXRuntime_Classification::process()
+void YOLO_ONNXRuntime_Classify::process()
 {
 	//input_tensor
 	auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
@@ -279,7 +277,7 @@ void YOLO_ONNXRuntime_Classification::process()
 	}
 }
 
-void YOLO_ONNXRuntime_Detection::process()
+void YOLO_ONNXRuntime_Detect::process()
 {
 	//input_tensor
 	std::vector<int64_t> input_node_dims = { 1, m_image.channels(), m_input_width, m_input_height };
@@ -310,7 +308,7 @@ void YOLO_ONNXRuntime_Detection::process()
 	}
 }
 
-void YOLO_ONNXRuntime_Segmentation::process()
+void YOLO_ONNXRuntime_Segment::process()
 {
 	//input_tensor
 	std::vector<int64_t> input_node_dims = { 1, m_image.channels(), m_input_width, m_input_height };
@@ -347,7 +345,7 @@ void YOLO_ONNXRuntime_Segmentation::process()
 	}
 }
 
-void YOLO_ONNXRuntime_Classification::post_process()
+void YOLO_ONNXRuntime_Classify::post_process()
 {
 	std::vector<float> scores;
 	float sum = 0.0f;
@@ -367,7 +365,7 @@ void YOLO_ONNXRuntime_Classification::post_process()
 	draw_result(label);
 }
 
-void YOLO_ONNXRuntime_Detection::post_process()
+void YOLO_ONNXRuntime_Detect::post_process()
 {
 	std::vector<cv::Rect> boxes;
 	std::vector<float> scores;
@@ -423,7 +421,7 @@ void YOLO_ONNXRuntime_Detection::post_process()
 	}
 }
 
-void YOLO_ONNXRuntime_Segmentation::post_process()
+void YOLO_ONNXRuntime_Segment::post_process()
 {
 	std::vector<cv::Rect> boxes;
 	std::vector<float> scores;
@@ -516,5 +514,3 @@ void YOLO_ONNXRuntime::release()
 	m_session->release();
 	m_env.release();
 }
-
-#endif // _YOLO_ONNXRuntime
