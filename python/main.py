@@ -1,19 +1,26 @@
+'''
+Author: taifyang 58515915+taifyang@users.noreply.github.com
+Date: 2024-06-12 22:23:07
+LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+LastEditTime: 2024-06-18 22:27:05
+Description: 调用demo
+'''
 import argparse
 from backends.yolo import *
 
 
 def parse_args():
-    parser = argparse.ArgumentParser('yolo_inference')
+    parser = argparse.ArgumentParser()
     parser.add_argument('--algo_type', default='YOLOv8', type=str, help='YOLOv5, YOLOv8')
-    parser.add_argument('--backend_type', default='TensorRT', type=str, help='ONNXRuntime, OpenCV, OpenVINO, TensorRT')
+    parser.add_argument('--backend_type', default='ONNXRuntime', type=str, help='ONNXRuntime, OpenCV, OpenVINO, TensorRT')
     parser.add_argument('--task_type', default='Detect', type=str, help='Classify, Detect, Segment')
     parser.add_argument('--device_type',  default='GPU', type=str, help='CPU, GPU')
     parser.add_argument('--model_type',  default='FP32', type=str, help='FP32, FP16, INT8')
-    parser.add_argument('--model_path', default='yolov8n_fp32.engine', type=str, help='the path of model')
+    parser.add_argument('--model_path', default='yolov8n_fp32.onnx', type=str, help='the path of model')
     parser.add_argument('--input_path', default='bus.jpg', type=str, help='save result')
     parser.add_argument('--output_path', default='', type=str, help='save result')
-    parser.add_argument('--show_result', default=True, type=bool, help='show result')
     parser.add_argument('--save_result', default=True, type=bool, help='save result')
+    parser.add_argument('--show_result', default=True, type=bool, help='show result')
     return parser.parse_args()
 
 
@@ -25,4 +32,4 @@ if __name__ == '__main__':
     
     yolo = YOLO().task_map()[args.backend_type][args.task_type] 
     yolo = yolo(args.algo_type, args.device_type, args.model_type, args.model_path)
-    yolo.infer(args.input_path, args.output_path, args.show_result, args.save_result)
+    yolo.infer(args.input_path, args.output_path, args.save_result, args.show_result)

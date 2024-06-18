@@ -1,3 +1,12 @@
+/*
+ * @Author: taifyang 58515915+taifyang@users.noreply.github.com
+ * @Date: 2024-06-12 09:26:41
+ * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditTime: 2024-06-17 21:34:25
+ * @FilePath: \cpp\utils.cpp
+ * @Description: 功能函数实现
+ */
+
 #include "utils.h"
 
 uint16_t float32_to_float16(float value)

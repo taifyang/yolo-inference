@@ -1,3 +1,12 @@
+/*
+ * @Author: taifyang 58515915+taifyang@users.noreply.github.com
+ * @Date: 2024-06-12 09:26:41
+ * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditTime: 2024-06-17 22:54:56
+ * @FilePath: \cpp\opencv\yolo_opencv.cpp
+ * @Description: yolo算法的opencv推理框架实现
+ */
+
 #include "yolo_opencv.h"
 
 void YOLO_OpenCV::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
@@ -149,11 +158,12 @@ void YOLO_OpenCV::process()
 {
 	m_net.setInput(m_input);
 	m_net.forward(m_output, m_net.getUnconnectedOutLayersNames());
-	m_output_host = (float*)m_output[0].data;
 }
 
 void YOLO_OpenCV_Classify::post_process()
 {
+	m_output_host = (float*)m_output[0].data;
+
 	std::vector<float> scores;
 	float sum = 0.0f;
 	for (size_t i = 0; i < class_num; i++)
@@ -174,6 +184,8 @@ void YOLO_OpenCV_Classify::post_process()
 
 void YOLO_OpenCV_Detect::post_process()
 {
+	m_output_host = (float*)m_output[0].data;
+
 	std::vector<cv::Rect> boxes;
 	std::vector<float> scores;
 	std::vector<int> class_ids;
@@ -230,6 +242,8 @@ void YOLO_OpenCV_Detect::post_process()
 
 void YOLO_OpenCV_Segment::post_process()
 {
+	m_output_host = (float*)m_output[0].data;
+
 	std::vector<cv::Rect> boxes;
 	std::vector<float> scores;
 	std::vector<int> class_ids;

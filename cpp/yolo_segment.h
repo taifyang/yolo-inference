@@ -1,8 +1,19 @@
+/*
+ * @Author: taifyang 58515915+taifyang@users.noreply.github.com
+ * @Date: 2024-06-12 09:26:41
+ * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditTime: 2024-06-17 21:48:25
+ * @FilePath: \cpp\yolo_segment.h
+ * @Description: 分割算法类
+ */
+
 #pragma once
 
 #include "yolo_detect.h"
 
-//网络输出相关参数
+/**
+ * @description: 网络输出相关参数
+ */
 struct OutputSeg
 {
 	int id;             //结果类别id
@@ -11,7 +22,9 @@ struct OutputSeg
 	cv::Mat boxMask;    //矩形框内mask，节省内存空间和加快速度
 };
 
-//掩膜相关参数
+/**
+ * @description: 掩膜相关参数
+ */
 struct MaskParams
 {
 	int segChannels = 32;
@@ -24,9 +37,20 @@ struct MaskParams
 	cv::Vec4d params;
 };
 
+/**
+ * @description: 分割算法抽象类
+ */
 class YOLO_Segment : public YOLO_Detect
 {
 protected:
+	/**
+	 * @description: 					获取掩码
+	 * @param {Mat&} maskProposals		掩码候选
+	 * @param {Mat&} mask_protos		输入掩码
+	 * @param {OutputSeg&} output		输出掩码
+	 * @param {MaskParams&} maskParams	掩码参数
+	 * @return {*}
+	 */
 	void GetMask(const cv::Mat& maskProposals, const cv::Mat& mask_protos, OutputSeg& output, const MaskParams& maskParams)
 	{
 		int seg_channels = maskParams.segChannels;
@@ -89,6 +113,10 @@ protected:
 		output.boxMask = mask;
 	}
 
+	/**
+	 * @description: 						画出结果
+	 * @param {vector<OutputSeg>} result	分割结果
+	 */	
 	void draw_result(std::vector<OutputSeg> result)
 	{
 		srand(time(0));
@@ -109,7 +137,25 @@ protected:
 		addWeighted(m_result, 0.5, mask, 0.5, 0, m_result);
 	}
 
+	/**
+	 * @description: 掩码参数
+	 */
 	MaskParams m_mask_params;
 
+	/**
+	 * @description: 输出分割尺寸
+	 */	
 	int m_output_numseg;
+
+	 /**
+	 * @description: 模型输出
+	 * @return {*}
+	 */
+	float* m_output0_host;
+
+	/**
+	 * @description: 模型输出
+	 * @return {*}
+	 */
+	float* m_output1_host;
 };

@@ -1,8 +1,24 @@
+'''
+Author: taifyang 58515915+taifyang@users.noreply.github.com
+Date: 2024-06-12 22:23:07
+LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+LastEditTime: 2024-06-18 21:06:08
+Description: 工具函数
+'''
+
 import cv2
 import numpy as np
 from backends.yolo import *
 
 
+'''
+description:                NMS非最大值抑制
+param {*} boxes             目标包围盒
+param {*} scores            目标得分
+param {*} score_threshold   得分阈值
+param {*} nms_threshold     IOU阈值
+return {*}                  目标索引
+'''
 def nms(boxes, scores, score_threshold, nms_threshold):
     x1 = boxes[:, 0]
     y1 = boxes[:, 1]
@@ -28,6 +44,11 @@ def nms(boxes, scores, score_threshold, nms_threshold):
     return keep
 
 
+'''
+description:    xywh格式包围盒转x1y1x2y2格式包围盒
+param {*} x     xywh格式包围盒
+return {*}      x1y1x2y2格式包围盒
+'''
 def xywh2xyxy(x):
     y = np.copy(x)
     y[:, 0] = x[:, 0] - x[:, 2] / 2
@@ -37,6 +58,13 @@ def xywh2xyxy(x):
     return y
 
 
+'''
+description:        letterbox图像处理
+param {*} im        输入图像
+param {*} new_shape 变换尺寸
+param {*} color     填充颜色
+return {*}          输出图像
+'''
 def letterbox(im, new_shape=(416, 416), color=(114, 114, 114)):
     # Resize and pad image while meeting stride-multiple constraints
     shape = im.shape[:2]  # current shape [height, width]
@@ -56,6 +84,13 @@ def letterbox(im, new_shape=(416, 416), color=(114, 114, 114)):
     return im
 
 
+'''
+description:            缩放包围盒
+param {*} boxes         包围盒
+param {*} input_shape   原图像尺寸
+param {*} output_shape  新图像尺寸
+return {*}              缩放后的包围盒
+'''
 def scale_boxes(boxes, input_shape, output_shape):
     # Rescale boxes (xyxy) from self.input_shape to shape
     gain = min(input_shape[0] / output_shape[0], input_shape[1] / output_shape[1])  # gain  = old / new
@@ -68,6 +103,12 @@ def scale_boxes(boxes, input_shape, output_shape):
     return boxes
 
 
+'''
+description:    裁剪掩码
+param {*} masks 输入掩码
+param {*} boxes 包围盒
+return {*}      裁剪后的掩码
+'''
 def crop_mask(masks, boxes):
     n, h, w = masks.shape
     x1, y1, x2, y2 = np.split(boxes[..., :4], 4, axis=1)
@@ -78,6 +119,13 @@ def crop_mask(masks, boxes):
     return cropped_masks
 
 
+'''
+description:            缩放掩码
+param {*} mask          输入掩码
+param {*} input_shape   原图像尺寸
+param {*} output_shape  新图像尺寸
+return {*}              缩放后的掩码
+'''
 def scale_mask(mask, input_shape, output_shape):
     gain = min(input_shape[0] / output_shape[0], input_shape[1] / output_shape[1])  # gain  = old / new
     pad = (input_shape[1] - output_shape[1] * gain) / 2, (input_shape[0] - output_shape[0] * gain) / 2  # wh padding
@@ -86,6 +134,14 @@ def scale_mask(mask, input_shape, output_shape):
     return mask
 
 
+'''
+description:            画出结果
+param {*} image         输入图像
+param {*} preds         预测
+param {*} masks         掩码
+param {*} input_shape   输入图像尺寸
+return {*}              可视化结果
+'''
 def draw(image, preds, masks=[], input_shape=(640,640)):
     image_copy = image.copy()   
     preds = scale_boxes(preds, input_shape, image.shape)

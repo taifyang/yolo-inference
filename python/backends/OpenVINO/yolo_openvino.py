@@ -3,7 +3,19 @@ from backends.yolo import *
 from backends.utils import *
 
 
+'''
+description: yolo算法openvino推理框架实现类
+'''
 class YOLO_OpenVINO(YOLO):
+    '''
+    description:            构造方法
+    param {*} self
+    param {str} algo_type   算法类型
+    param {str} device_type 设备类型
+    param {str} model_type  模型精度
+    param {str} model_path  模型路径
+    return {*}
+    '''    
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__()
         assert os.path.exists(model_path), 'model not exists!'
@@ -11,12 +23,25 @@ class YOLO_OpenVINO(YOLO):
         model  = core.read_model(model_path)
         self.algo_type = algo_type
         self.compiled_model = core.compile_model(model, device_name='GPU' if device_type=='GPU' else 'CPU')
-        
+    
+    '''
+    description:    模型推理
+    param {*} self
+    return {*}
+    '''       
     def process(self) -> None:
         self.output = self.compiled_model({0: self.input})
 
 
+'''
+description: yolo分类算法openvino推理框架实现类
+'''
 class YOLO_OpenVINO_Classify(YOLO_OpenVINO):
+    '''
+    description:    模型前处理
+    param {*} self
+    return {*}
+    '''    
     def pre_process(self) -> None:
         if self.algo_type == 'YOLOv5':
             crop_size = min(self.image.shape[0], self.image.shape[1])
@@ -41,7 +66,12 @@ class YOLO_OpenVINO_Classify(YOLO_OpenVINO):
             input = input / 255.0
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB和HWC2CHW
         self.input = np.expand_dims(input, axis=0)
-            
+    
+    '''
+    description:    模型后处理
+    param {*} self
+    return {*}
+    '''           
     def post_process(self) -> None:
         output = self.output[self.compiled_model.output(0)]
         output = np.squeeze(output).astype(dtype=np.float32)
@@ -50,14 +80,27 @@ class YOLO_OpenVINO_Classify(YOLO_OpenVINO):
         if self.algo_type == 'YOLOv8':
             print('class:', np.argmax(output), ' scores:', np.max(output))
        
-    
+ 
+'''
+description: yolo检测算法openvino推理框架实现类
+'''   
 class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
+    '''
+    description:    模型前处理
+    param {*} self
+    return {*}
+    '''    
     def pre_process(self) -> None:
         input = letterbox(self.image, self.input_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB和HWC2CHW
         input = input / 255.0
         self.input = np.expand_dims(input, axis=0)
-        
+    
+    '''
+    description:    模型后处理
+    param {*} self
+    return {*}
+    '''        
     def post_process(self) -> None:
         output = self.output[self.compiled_model.output(0)]
         output = np.squeeze(output).astype(dtype=np.float32)
@@ -88,21 +131,35 @@ class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
                     boxes.append(output[i, :6])
                     scores.append(output[i][4])
                     class_ids.append(output[i][5])               
-        boxes = np.array(boxes)
-        boxes = xywh2xyxy(boxes)
-        scores = np.array(scores)
-        indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
-        boxes = boxes[indices]
-        self.result = draw(self.image, boxes)     
+        if len(boxes):   
+            boxes = np.array(boxes)
+            boxes = xywh2xyxy(boxes)
+            scores = np.array(scores)
+            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
+            boxes = boxes[indices]
+            self.result = draw(self.image, boxes)     
         
-        
+
+'''
+description: yolo分割算法openvino推理框架实现类
+'''       
 class YOLO_OpenVINO_Segment(YOLO_OpenVINO):
+    '''
+    description:    模型前处理
+    param {*} self
+    return {*}
+    '''    
     def pre_process(self) -> None:
         input = letterbox(self.image, self.input_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB和HWC2CHW
         input = input / 255.0
         self.input = np.expand_dims(input, axis=0)
-            
+    
+    '''
+    description:    模型后处理
+    param {*} self
+    return {*}
+    '''           
     def post_process(self) -> None:
         output0 = self.output[self.compiled_model.output(0)]
         output0 = np.squeeze(output0).astype(dtype=np.float32)
@@ -135,24 +192,25 @@ class YOLO_OpenVINO_Segment(YOLO_OpenVINO):
                     boxes.append(output0[i, :6])
                     scores.append(output0[i][4])
                     class_ids.append(output0[i][5])      
-                    preds.append(output0[i])         
-        boxes = np.array(boxes)
-        boxes = xywh2xyxy(boxes)
-        scores = np.array(scores)
-        indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
-        boxes = boxes[indices]
+                    preds.append(output0[i])  
+        if len(boxes):       
+            boxes = np.array(boxes)
+            boxes = xywh2xyxy(boxes)
+            scores = np.array(scores)
+            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
+            boxes = boxes[indices]
+            
+            masks_in = np.array(preds)[indices][..., -32:]
+            output1 = self.output[self.compiled_model.output(1)]
+            proto = np.squeeze(output1).astype(dtype=np.float32)
+            c, mh, mw = proto.shape 
+            masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)
+            
+            downsampled_bboxes = boxes.copy()
+            downsampled_bboxes[:, 0] *= mw / self.input_shape[0]
+            downsampled_bboxes[:, 2] *= mw / self.input_shape[0]
+            downsampled_bboxes[:, 3] *= mh / self.input_shape[1]
+            downsampled_bboxes[:, 1] *= mh / self.input_shape[1]
         
-        masks_in = np.array(preds)[indices][..., -32:]
-        output1 = self.output[self.compiled_model.output(1)]
-        proto = np.squeeze(output1).astype(dtype=np.float32)
-        c, mh, mw = proto.shape 
-        masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)
-        
-        downsampled_bboxes = boxes.copy()
-        downsampled_bboxes[:, 0] *= mw / self.input_shape[0]
-        downsampled_bboxes[:, 2] *= mw / self.input_shape[0]
-        downsampled_bboxes[:, 3] *= mh / self.input_shape[1]
-        downsampled_bboxes[:, 1] *= mh / self.input_shape[1]
-    
-        masks = crop_mask(masks, downsampled_bboxes)
-        self.result = draw(self.image, boxes, masks)
+            masks = crop_mask(masks, downsampled_bboxes)
+            self.result = draw(self.image, boxes, masks)

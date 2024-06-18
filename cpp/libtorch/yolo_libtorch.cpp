@@ -1,3 +1,12 @@
+/*
+ * @Author: taifyang 58515915+taifyang@users.noreply.github.com
+ * @Date: 2024-06-12 09:26:41
+ * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditTime: 2024-06-17 22:19:04
+ * @FilePath: \cpp\libtorch\yolo_libtorch.cpp
+ * @Description: yolo算法的libtorch推理框架实现
+ */
+
 #include "yolo_libtorch.h"
 
 void YOLO_Libtorch::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)

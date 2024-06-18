@@ -1,11 +1,32 @@
+/*
+ * @Author: taifyang 58515915+taifyang@users.noreply.github.com
+ * @Date: 2024-06-12 09:26:41
+ * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditTime: 2024-06-17 21:46:28
+ * @FilePath: \cpp\yolo_detect.h
+ * @Description: 检测算法类
+ */
+
 #pragma once
 
 #include "yolo.h"
 #include "utils.h"
 
+/**
+ * @description: 检测算法抽象类
+ */
 class YOLO_Detect : virtual public YOLO
 {
 protected:
+	/**
+	 * @description: 				LetterBox图像处理
+	 * @param {Mat&} input_image	输入图像
+	 * @param {Mat&} output_image	输出图像
+	 * @param {Vec4d&} params		变换参数
+	 * @param {Size} shape			变换尺寸
+	 * @param {Scalar} color		填充颜色
+	 * @return {*}
+	 */
 	void LetterBox(cv::Mat& input_image, cv::Mat& output_image, cv::Vec4d& params, cv::Size shape = cv::Size(640, 640), cv::Scalar color = cv::Scalar(114, 114, 114))
 	{
 		float r = std::min((float)shape.height / (float)input_image.rows, (float)shape.width / (float)input_image.cols);
@@ -33,6 +54,15 @@ protected:
 		cv::copyMakeBorder(output_image, output_image, top, bottom, left, right, cv::BORDER_CONSTANT, color);
 	}
 
+	/**
+	 * @description: 						NMS非极大值抑
+	 * @param {vector<cv::Rect>} & boxes	目标包围盒
+	 * @param {vector<float>} &	scores		目标得分		
+	 * @param {float} score_threshold		得分阈值
+	 * @param {float} nms_threshold			IOU阈值
+	 * @param {vector<int>} & indices		目标索引
+	 * @return {*}
+	 */
 	void nms(std::vector<cv::Rect> & boxes, std::vector<float> & scores, float score_threshold, float nms_threshold, std::vector<int> & indices)
 	{
 		assert(boxes.size() == scores.size());
@@ -88,6 +118,12 @@ protected:
 		}
 	}
 
+	/**
+	 * @description: 		包围盒缩放
+	 * @param {Rect&} box	目标包围盒
+	 * @param {Size} size	图像尺寸
+	 * @return {*}
+	 */
 	void scale_box(cv::Rect& box, cv::Size size)
 	{
 		float gain = std::min(m_input_width * 1.0 / size.width, m_input_height * 1.0 / size.height);
@@ -101,25 +137,60 @@ protected:
 		box.height /= gain;
 	}
 
+	/**
+	 * @description: 			画出结果
+	 * @param {string} label	类别标签
+	 * @param {Rect} box		包围盒
+	 * @return {*}
+	 */
 	void draw_result(std::string label, cv::Rect box)
 	{
 		cv::rectangle(m_result, box, cv::Scalar(255, 0, 0), 1);
 		cv::putText(m_result, label, cv::Point(box.x, box.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 1);
 	}
 
+	/**
+	 * @description: 检测类别数
+	 */	
 	int class_num = 80;
 
+	/**
+	 * @description: 得分阈值
+	 */
 	float score_threshold = 0.2;
 
+	/**
+	 * @description: IOU阈值
+	 */
 	float nms_threshold = 0.5;
 
+	/**
+	 * @description: 置信度阈值
+	 */
 	float confidence_threshold = 0.2;
 
+	/**
+	 * @description: LetterBox参数
+	 */
 	cv::Vec4d m_params;
 
+	/**
+	 * @description: 输出特征维度
+	 */
 	int m_output_numprob;
 
+	/**
+	 * @description: 输出特征图包围盒数
+	 */
 	int m_output_numbox;
 
+	/**
+	 * @description: 输出特征图尺寸
+	 */
 	int m_output_numdet;
+
+	/**
+	 * @description: 模型输出
+	 */
+	float* m_output_host;
 };
