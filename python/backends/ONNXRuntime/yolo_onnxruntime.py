@@ -1,9 +1,29 @@
+'''
+Author: taifyang 58515915+taifyang@users.noreply.github.com
+Date: 2024-06-12 22:23:07
+LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+LastEditTime: 2024-06-18 21:56:16
+Description: yolo算法onnxruntime推理框架实现
+'''
+
 import onnxruntime
 from backends.yolo import *
 from backends.utils import *
 
 
+'''
+description: yolo算法onnxruntime推理框架实现类
+'''
 class YOLO_ONNXRuntime(YOLO):
+    '''
+    description:            构造方法
+    param {*} self
+    param {str} algo_type   算法类型
+    param {str} device_type 设备类型
+    param {str} model_type  模型精度
+    param {str} model_path  模型路径
+    return {*}
+    '''    
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__()
         assert os.path.exists(model_path), "model not exists!"
@@ -21,12 +41,25 @@ class YOLO_ONNXRuntime(YOLO):
         for node in self.onnx_session.get_outputs():
             self.output_name.append(node.name)
         self.input = {}
-        
+    
+    '''
+    description:    模型推理
+    param {*} self
+    return {*}
+    '''    
     def process(self) -> None:
         self.output = self.onnx_session.run(None, self.input)
 
 
-class YOLO_ONNXRuntime_Classify(YOLO_ONNXRuntime):           
+'''
+description: yolo分类算法onnxruntime推理框架实现类
+'''
+class YOLO_ONNXRuntime_Classify(YOLO_ONNXRuntime):   
+    '''
+    description:    模型前处理
+    param {*} self
+    return {*}
+    '''            
     def pre_process(self) -> None:
         if self.algo_type == 'YOLOv5':
             crop_size = min(self.image.shape[0], self.image.shape[1])
@@ -56,7 +89,12 @@ class YOLO_ONNXRuntime_Classify(YOLO_ONNXRuntime):
             input = np.expand_dims(input, axis=0).astype(dtype=np.float16)
         for name in self.input_name:
             self.input[name] = input
-            
+    
+    '''
+    description:    模型后处理
+    param {*} self
+    return {*}
+    '''           
     def post_process(self) -> None:
         output = np.squeeze(self.output).astype(dtype=np.float32)
         if self.algo_type == 'YOLOv5':
@@ -65,7 +103,15 @@ class YOLO_ONNXRuntime_Classify(YOLO_ONNXRuntime):
             print("class:", np.argmax(output), " scores:", np.max(output))
 
 
+'''
+description: yolo检测算法onnxruntime推理框架实现类
+'''
 class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
+    '''
+    description:    模型前处理
+    param {*} self
+    return {*}
+    '''    
     def pre_process(self) -> None:
         input = letterbox(self.image, self.input_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB和HWC2CHW
@@ -76,7 +122,12 @@ class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
             input = np.expand_dims(input, axis=0).astype(dtype=np.float16)
         for name in self.input_name:
             self.input[name] = input
-            
+    
+    '''
+    description:    模型后处理
+    param {*} self
+    return {*}
+    '''         
     def post_process(self) -> None:
         output = np.squeeze(self.output[0]).astype(dtype=np.float32)
         boxes = []
@@ -106,15 +157,24 @@ class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
                     boxes.append(output[i, :6])
                     scores.append(output[i][4])
                     class_ids.append(output[i][5])                  
-        boxes = np.array(boxes)
-        boxes = xywh2xyxy(boxes)
-        scores = np.array(scores)
-        indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
-        boxes = boxes[indices]
-        self.result = draw(self.image, boxes)
-        
-        
+        if len(boxes):   
+            boxes = np.array(boxes)
+            boxes = xywh2xyxy(boxes)
+            scores = np.array(scores)
+            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
+            boxes = boxes[indices]
+            self.result = draw(self.image, boxes)
+            
+
+'''
+description: yolo分割算法onnxruntime推理框架实现类
+'''      
 class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
+    '''
+    description:    模型前处理
+    param {*} self
+    return {*}
+    '''    
     def pre_process(self) -> None:
         input = letterbox(self.image, self.input_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB和HWC2CHW
@@ -125,7 +185,12 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
             input = np.expand_dims(input, axis=0).astype(dtype=np.float16)
         for name in self.input_name:
             self.input[name] = input
-            
+    
+    '''
+    description:    模型后处理
+    param {*} self
+    return {*}
+    '''           
     def post_process(self) -> None:
         output = np.squeeze(self.output[0]).astype(dtype=np.float32)
         boxes = []
@@ -158,22 +223,23 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
                     scores.append(output[i][4])
                     class_ids.append(output[i][5])    
                     preds.append(output[i])           
-        boxes = np.array(boxes)
-        boxes = xywh2xyxy(boxes)
-        scores = np.array(scores)
-        indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
-        boxes = boxes[indices]
+        if len(boxes):   
+            boxes = np.array(boxes)
+            boxes = xywh2xyxy(boxes)
+            scores = np.array(scores)
+            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
+            boxes = boxes[indices]
+            
+            masks_in = np.array(preds)[indices][..., -32:]
+            proto= np.squeeze(self.output[1]).astype(dtype=np.float32)
+            c, mh, mw = proto.shape 
+            masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)
+            
+            downsampled_bboxes = boxes.copy()
+            downsampled_bboxes[:, 0] *= mw / self.input_shape[0]
+            downsampled_bboxes[:, 2] *= mw / self.input_shape[0]
+            downsampled_bboxes[:, 3] *= mh / self.input_shape[1]
+            downsampled_bboxes[:, 1] *= mh / self.input_shape[1]
         
-        masks_in = np.array(preds)[indices][..., -32:]
-        proto= np.squeeze(self.output[1]).astype(dtype=np.float32)
-        c, mh, mw = proto.shape 
-        masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)
-        
-        downsampled_bboxes = boxes.copy()
-        downsampled_bboxes[:, 0] *= mw / self.input_shape[0]
-        downsampled_bboxes[:, 2] *= mw / self.input_shape[0]
-        downsampled_bboxes[:, 3] *= mh / self.input_shape[1]
-        downsampled_bboxes[:, 1] *= mh / self.input_shape[1]
-    
-        masks = crop_mask(masks, downsampled_bboxes)
-        self.result = draw(self.image, boxes, masks)
+            masks = crop_mask(masks, downsampled_bboxes)
+            self.result = draw(self.image, boxes, masks)

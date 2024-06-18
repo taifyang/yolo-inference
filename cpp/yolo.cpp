@@ -1,3 +1,12 @@
+/*
+ * @Author: taifyang 58515915+taifyang@users.noreply.github.com
+ * @Date: 2024-06-12 09:26:41
+ * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditTime: 2024-06-17 21:25:58
+ * @FilePath: \cpp\yolo.cpp
+ * @Description: YOLO类实现
+ */
+
 #include <chrono>
 #include "yolo.h"
 #include "utils.h"
@@ -22,7 +31,7 @@
 	#include "yolo_tensorrt.h"
 #endif // _YOLO_TensorRT
 
-void YOLO::infer(const std::string file_path, char* argv[], bool save_result, bool show_result)
+void YOLO::infer(const std::string file_path, bool save_result, bool show_result, char* argv[])
 {
 	std::string suffix = file_path.substr(file_path.size() - 4);
 	if (suffix == ".bmp" || suffix == ".jpg" || suffix == ".png")
@@ -127,12 +136,6 @@ void CreateFactory::register_class(const Backend_Type& backend_type, const Task_
 
 std::unique_ptr<YOLO> CreateFactory::create(const Backend_Type& backend_type, const Task_Type& task_type)
 {
-	//if (m_backend_registry.find(backend_type) == m_backend_registry.end())
-	//{
-	//	std::cout << "unsupported backend type!" << std::endl;
-	//	std::exit(-1);
-	//}
-
 	if (backend_type >= m_create_registry.size())
 	{
 		std::cout << "unsupported backend type!" << std::endl;

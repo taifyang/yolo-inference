@@ -1,18 +1,39 @@
+'''
+Author: taifyang 58515915+taifyang@users.noreply.github.com
+Date: 2024-06-12 22:23:07
+LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+LastEditTime: 2024-06-18 21:00:48
+FilePath: \python\backends\yolo.py
+Description: YOLO接口类
+'''
+
 import os
 import cv2
 import time
-from enum import Enum
 import backends
     
 
+'''
+description: YOLO接口类
+'''
 class YOLO:  
+    '''
+    description:    构造方法
+    param {*} self
+    return {*}
+    '''    
     def __init__(self) -> None:
         super().__init__()
-        self.score_threshold = 0.2
-        self.nms_threshold = 0.5
-        self.confidence_threshold = 0.2  
-        self.input_shape = (640, 640) 
-        
+        self.score_threshold = 0.2      #得分阈值
+        self.nms_threshold = 0.5        #NMS阈值
+        self.confidence_threshold = 0.2 #置信度阈值    
+        self.input_shape = (640, 640)   #输入图像尺寸
+    
+    '''
+    description:    任务映射表
+    param {*} self
+    return {*}      算法类实例
+    '''    
     def task_map(self):
         return {
             'ONNXRuntime':{
@@ -37,10 +58,20 @@ class YOLO:
             },
         }
     
-    def infer(self, input_path:str, output_path:str, show_result:bool, save_result:bool) -> None:
+    '''
+    description:                推理接口
+    param {*} self
+    param {str} input_path      输入路径
+    param {str} output_path     输出路径
+    param {bool} save_result    保存结果
+    param {bool} show_result    显示结果
+    return {*}
+    '''    
+    def infer(self, input_path:str, output_path:str, save_result:bool, show_result:bool) -> None:
         assert os.path.exists(input_path), 'input not exists!'
         if input_path.endswith('.bmp') or input_path.endswith('.jpg') or input_path.endswith('.png'):
             self.image = cv2.imread(input_path)
+            self.result = self.image.copy()
             self.pre_process()
             self.process()
             self.post_process()

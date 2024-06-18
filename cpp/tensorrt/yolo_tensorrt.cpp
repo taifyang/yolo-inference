@@ -1,3 +1,12 @@
+/*
+ * @Author: taifyang 58515915+taifyang@users.noreply.github.com
+ * @Date: 2024-06-12 09:26:41
+ * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditTime: 2024-06-17 23:06:52
+ * @FilePath: \cpp\tensorrt\yolo_tensorrt.cpp
+ * @Description: yolo算法的tensorrt推理框架实现
+ */
+
 #include "yolo_tensorrt.h"
 #include "preprocess.cuh"
 #include "decode.cuh"

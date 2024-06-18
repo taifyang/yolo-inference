@@ -5,7 +5,19 @@ from backends.yolo import *
 from backends.utils import *
 
 
+'''
+description: yolo算法tensorrt推理框架实现类
+'''
 class YOLO_TensorRT(YOLO):
+    '''
+    description:            构造方法
+    param {*} self
+    param {str} algo_type   算法类型
+    param {str} device_type 设备类型
+    param {str} model_type  模型精度
+    param {str} model_path  模型路径
+    return {*}
+    '''    
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__()
         assert os.path.exists(model_path), 'model not exists!'
@@ -17,8 +29,20 @@ class YOLO_TensorRT(YOLO):
             self.engine = runtime.deserialize_cuda_engine(f.read())
         self.stream = cuda.Stream()
    
-        
+
+'''
+description: yolo分类算法tensorrt推理框架实现类
+'''        
 class YOLO_TensorRT_Classify(YOLO_TensorRT):
+    '''
+    description:            构造方法
+    param {*} self
+    param {str} algo_type   算法类型
+    param {str} device_type 设备类型
+    param {str} model_type  模型精度
+    param {str} model_path  模型路径
+    return {*}
+    '''    
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__(algo_type, device_type, model_type, model_path)
         context = self.engine.create_execution_context()
@@ -26,7 +50,12 @@ class YOLO_TensorRT_Classify(YOLO_TensorRT):
         self.output_host = cuda.pagelocked_empty(trt.volume(context.get_binding_shape(1)), dtype=np.float32)
         self.input_device = cuda.mem_alloc(self.input_host.nbytes)
         self.output_device = cuda.mem_alloc(self.output_host.nbytes)
-        
+    
+    '''
+    description:    模型前处理
+    param {*} self
+    return {*}
+    '''       
     def pre_process(self) -> None:
         if self.algo_type == 'YOLOv5':
             crop_size = min(self.image.shape[0], self.image.shape[1])
@@ -52,7 +81,12 @@ class YOLO_TensorRT_Classify(YOLO_TensorRT):
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB和HWC2CHW
         input = np.expand_dims(input, axis=0) 
         np.copyto(self.input_host, input.ravel())
-        
+    
+    '''
+    description:    模型推理
+    param {*} self
+    return {*}
+    '''       
     def process(self) -> None:
         with self.engine.create_execution_context() as context:
             cuda.memcpy_htod_async(self.input_device, self.input_host, self.stream)
@@ -60,7 +94,12 @@ class YOLO_TensorRT_Classify(YOLO_TensorRT):
             cuda.memcpy_dtoh_async(self.output_host, self.output_device, self.stream)
             self.stream.synchronize()  
             self.output = self.output_host.reshape(context.get_binding_shape(1)) 
-            
+    
+    '''
+    description:    模型后处理
+    param {*} self
+    return {*}
+    '''          
     def post_process(self) -> None:
         output = np.squeeze(self.output).astype(dtype=np.float32)
         if self.algo_type == 'YOLOv5':
@@ -68,8 +107,20 @@ class YOLO_TensorRT_Classify(YOLO_TensorRT):
         if self.algo_type == 'YOLOv8':
             print('class:', np.argmax(output), ' scores:', np.max(output))
     
-    
+ 
+'''
+description: yolo检测算法tensorrt推理框架实现类
+'''   
 class YOLO_TensorRT_Detect(YOLO_TensorRT):
+    '''
+    description:            构造方法
+    param {*} self
+    param {str} algo_type   算法类型
+    param {str} device_type 设备类型
+    param {str} model_type  模型精度
+    param {str} model_path  模型路径
+    return {*}
+    '''    
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__(algo_type, device_type, model_type, model_path)
         context = self.engine.create_execution_context()
@@ -77,14 +128,24 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
         self.output_host = cuda.pagelocked_empty(trt.volume(context.get_binding_shape(1)), dtype=np.float32)
         self.input_device = cuda.mem_alloc(self.input_host.nbytes)
         self.output_device = cuda.mem_alloc(self.output_host.nbytes)
-        
+    
+    '''
+    description:    模型前处理
+    param {*} self
+    return {*}
+    '''       
     def pre_process(self) -> None:
         input = letterbox(self.image, self.input_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  
         input = input / 255.0
         input = np.expand_dims(input, axis=0) 
         np.copyto(self.input_host, input.ravel())
-        
+    
+    '''
+    description:    模型推理
+    param {*} self
+    return {*}
+    '''        
     def process(self) -> None:
         with self.engine.create_execution_context() as context:
             cuda.memcpy_htod_async(self.input_device, self.input_host, self.stream)
@@ -92,7 +153,12 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
             cuda.memcpy_dtoh_async(self.output_host, self.output_device, self.stream)
             self.stream.synchronize()  
             self.output = self.output_host.reshape(context.get_binding_shape(1)) 
-        
+    
+    '''
+    description:    模型后处理
+    param {*} self
+    return {*}
+    '''       
     def post_process(self) -> None:
         output = np.squeeze(self.output[0]).astype(dtype=np.float32)
         boxes = []
@@ -122,15 +188,28 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
                     boxes.append(output[i, :6])
                     scores.append(output[i][4])
                     class_ids.append(output[i][5])               
-        boxes = np.array(boxes)
-        boxes = xywh2xyxy(boxes)
-        scores = np.array(scores)
-        indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
-        boxes = boxes[indices]
-        self.result = draw(self.image, boxes)
+        if len(boxes):      
+            boxes = np.array(boxes)
+            boxes = xywh2xyxy(boxes)
+            scores = np.array(scores)
+            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
+            boxes = boxes[indices]
+            self.result = draw(self.image, boxes)
         
-             
+
+'''
+description: yolo分割算法tensorrt推理框架实现类
+'''             
 class YOLO_TensorRT_Segment(YOLO_TensorRT):
+    '''
+    description:            构造方法
+    param {*} self
+    param {str} algo_type   算法类型
+    param {str} device_type 设备类型
+    param {str} model_type  模型精度
+    param {str} model_path  模型路径
+    return {*}
+    '''    
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__(algo_type, device_type, model_type, model_path)
         context = self.engine.create_execution_context()
@@ -140,14 +219,24 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
         self.input_device = cuda.mem_alloc(self.input_host.nbytes)
         self.output0_device = cuda.mem_alloc(self.output0_host.nbytes)
         self.output1_device = cuda.mem_alloc(self.output1_host.nbytes)
-        
+    
+    '''
+    description:    模型前处理
+    param {*} self
+    return {*}
+    '''        
     def pre_process(self) -> None:
         input = letterbox(self.image, self.input_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  
         input = input / 255.0
         input = np.expand_dims(input, axis=0) 
         np.copyto(self.input_host, input.ravel())
-        
+    
+    '''
+    description:    模型推理
+    param {*} self
+    return {*}
+    '''        
     def process(self) -> None:
         with self.engine.create_execution_context() as context:
             cuda.memcpy_htod_async(self.input_device, self.input_host, self.stream)
@@ -157,7 +246,12 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
             self.stream.synchronize()  
             self.output0 = self.output0_host.reshape(context.get_binding_shape(1)) 
             self.output1 = self.output1_host.reshape(context.get_binding_shape(2)) 
-            
+    
+    '''
+    description:    模型后处理
+    param {*} self
+    return {*}
+    '''            
     def post_process(self) -> None:
         output1 = np.squeeze(self.output1).astype(dtype=np.float32)
         boxes = []
@@ -189,23 +283,24 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
                     boxes.append(output1[i, :6])
                     scores.append(output1[i][4])
                     class_ids.append(output1[i][5])   
-                    preds.append(output1[i])            
-        boxes = np.array(boxes)
-        boxes = xywh2xyxy(boxes)
-        scores = np.array(scores)
-        indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
-        boxes = boxes[indices]
+                    preds.append(output1[i])      
+        if len(boxes):        
+            boxes = np.array(boxes)
+            boxes = xywh2xyxy(boxes)
+            scores = np.array(scores)
+            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
+            boxes = boxes[indices]
+     
+            masks_in = np.array(preds)[indices][..., -32:]
+            proto= np.squeeze(self.output0).astype(dtype=np.float32)
+            c, mh, mw = proto.shape 
+            masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)
+            
+            downsampled_bboxes = boxes.copy()
+            downsampled_bboxes[:, 0] *= mw / self.input_shape[0]
+            downsampled_bboxes[:, 2] *= mw / self.input_shape[0]
+            downsampled_bboxes[:, 3] *= mh / self.input_shape[1]
+            downsampled_bboxes[:, 1] *= mh / self.input_shape[1]
         
-        masks_in = np.array(preds)[indices][..., -32:]
-        proto= np.squeeze(self.output0).astype(dtype=np.float32)
-        c, mh, mw = proto.shape 
-        masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)
-        
-        downsampled_bboxes = boxes.copy()
-        downsampled_bboxes[:, 0] *= mw / self.input_shape[0]
-        downsampled_bboxes[:, 2] *= mw / self.input_shape[0]
-        downsampled_bboxes[:, 3] *= mh / self.input_shape[1]
-        downsampled_bboxes[:, 1] *= mh / self.input_shape[1]
-    
-        masks = crop_mask(masks, downsampled_bboxes)
-        self.result = draw(self.image, boxes, masks)
+            masks = crop_mask(masks, downsampled_bboxes)
+            self.result = draw(self.image, boxes, masks)
