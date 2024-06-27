@@ -1,9 +1,14 @@
 cmake_minimum_required(VERSION 3.16)
+
 project(yolo LANGUAGES C CXX CUDA)
+
 file(GLOB SRCS ${CMAKE_CURRENT_SOURCE_DIR}/*.h ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-set(CMAKE_CXX_STANDARD 17)
+
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_BUILD_TYPE "Release")
+
 option(HAVE_LIBTORCH "build _YOLO_LIBTORCH" ON)
 option(HAVE_ONNXRUNTIME "build _YOLO_ONNXRUNTIME" ON)
 option(HAVE_OPENCV "build _YOLO_OPENCV" ON)
@@ -68,6 +73,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Windows")
         include_directories(${LIBTORCH_INCLUDE_DIRS})
         link_directories(${LIBTORCH_LIBRARY_DIRS})
         target_link_libraries(yolo ${LIBTORCH_LIBRARY_DIRS}/*.lib)
+        target_link_options(yolo PRIVATE "/INCLUDE:\"?ignore_this_library_placeholder@@YAHXZ\"")
     endif()
 
     if(HAVE_ONNXRUNTIME)
