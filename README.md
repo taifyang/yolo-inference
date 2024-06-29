@@ -25,7 +25,7 @@ make
 ```
 
 C++ test on Windows10:
-|        Model        |        Task        |        Device        |        Precision        | Libtorch | ONNXRuntime | OpenCV | OpenVINO | TensorRT |
+|       Model       |       Task       |       Device       |       Precision       | Libtorch | ONNXRuntime | OpenCV | OpenVINO | TensorRT |
 | :-----------------: | :----------------: | :------------------: | :---------------------: | :------: | :---------: | :----: | :------: | :------: |
 | YOLOv5 | Classification | CPU | FP32 | 34ms | 21ms | 29ms | 9ms | ×
 | YOLOv5 | Classification | GPU | FP32 | 6ms | 9ms | 7ms | 30ms | 5ms
@@ -79,7 +79,7 @@ pip install -r requirements.txt
 ```
 
 Python test on Windows10:
-|        Model        |        Task        |        Device        |        Precision        | ONNXRuntime | OpenCV | OpenVINO | TensorRT |
+|       Model       |       Task       |       Device       |       Precision       | ONNXRuntime | OpenCV | OpenVINO | TensorRT |
 | :-----------------: | :----------------: | :------------------: | :---------------------: | :---------: | :----: | :------: | :------: |
 | YOLOv5 | Classification | CPU | FP32 | 21ms | 38ms | 27ms | ×
 | YOLOv5 | Classification | GPU | FP32 | 14ms | ? | 36ms | 19ms
