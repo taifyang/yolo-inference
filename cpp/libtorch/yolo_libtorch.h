@@ -2,7 +2,7 @@
  * @Author: taifyang 58515915+taifyang@users.noreply.github.com
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-06-17 22:17:20
+ * @LastEditTime: 2024-06-29 16:25:47
  * @FilePath: \cpp\libtorch\yolo_libtorch.h
  * @Description: yolo算法的libtorch推理框架头文件
  */

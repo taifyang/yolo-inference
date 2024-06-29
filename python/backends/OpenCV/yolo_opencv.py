@@ -2,7 +2,7 @@
 Author: taifyang 58515915+taifyang@users.noreply.github.com
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2024-06-18 21:54:07
+LastEditTime: 2024-06-29 20:03:07
 Description:  yolo算法opencv推理框架实现
 '''
 import cv2
@@ -16,7 +16,7 @@ description: yolo算法opencv推理框架实现类
 class YOLO_OpenCV(YOLO):
     '''
     description:            构造方法
-    param {*} self
+    param {*} self          类的实例
     param {str} algo_type   算法类型
     param {str} device_type 设备类型
     param {str} model_type  模型精度
@@ -34,7 +34,7 @@ class YOLO_OpenCV(YOLO):
     
     '''
     description:    模型推理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''       
     def process(self) -> None:
@@ -46,7 +46,7 @@ description: yolo分类算法opencv推理框架实现类
 class YOLO_OpenCV_Classify(YOLO_OpenCV):
     '''
     description:    模型前处理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''    
     def pre_process(self) -> None:
@@ -77,14 +77,14 @@ class YOLO_OpenCV_Classify(YOLO_OpenCV):
     
     '''
     description:    模型后处理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''    
     def post_process(self) -> None:
         output = np.squeeze(self.output).astype(dtype=np.float32)
-        if self.algo_type == 'YOLOv5':
+        if self.algo_type == 'YOLOv5' and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.exp(np.max(output))/np.sum(np.exp(output)))
-        if self.algo_type == 'YOLOv8':
+        if self.algo_type == 'YOLOv8' and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.max(output))
     
 
@@ -94,7 +94,7 @@ description: yolo检测算法opencv推理框架实现类
 class YOLO_OpenCV_Detect(YOLO_OpenCV):
     '''
     description:    模型前处理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''    
     def pre_process(self) -> None:
@@ -104,7 +104,7 @@ class YOLO_OpenCV_Detect(YOLO_OpenCV):
     
     '''
     description:    模型后处理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''     
     def post_process(self) -> None:
@@ -135,5 +135,6 @@ class YOLO_OpenCV_Detect(YOLO_OpenCV):
             for i in indices:
                 output.append(np.array([boxes[i][0], boxes[i][1], boxes[i][2], boxes[i][3], scores[i], class_ids[i]]))
             boxes = np.array(output)
-            self.result = draw(self.image, boxes)
+            if self.draw_result:
+                self.result = draw(self.image, boxes)
 

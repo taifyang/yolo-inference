@@ -2,7 +2,7 @@
  * @Author: taifyang 58515915+taifyang@users.noreply.github.com
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-06-17 21:46:28
+ * @LastEditTime: 2024-06-29 16:15:02
  * @FilePath: \cpp\yolo_detect.h
  * @Description: 检测算法类
  */
@@ -11,6 +11,16 @@
 
 #include "yolo.h"
 #include "utils.h"
+
+/**
+ * @description: 检测网络输出相关参数
+ */
+struct OutputDet
+{
+	int id;             //结果类别id
+	float score;   		//结果得分
+	cv::Rect box;       //矩形框
+};
 
 /**
  * @description: 检测算法抽象类
@@ -143,10 +153,18 @@ protected:
 	 * @param {Rect} box		包围盒
 	 * @return {*}
 	 */
-	void draw_result(std::string label, cv::Rect box)
+	void draw_result(std::vector<OutputDet> output_det)
 	{
-		cv::rectangle(m_result, box, cv::Scalar(255, 0, 0), 1);
-		cv::putText(m_result, label, cv::Point(box.x, box.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 1);
+		for (int i = 0; i < output_det.size(); i++)
+		{
+			OutputDet output = output_det[i];
+			int idx = output.id;
+			float score = output.score;
+			cv::Rect box = output.box;
+			std::string label = "class" + std::to_string(idx) + ":" + cv::format("%.2f", score);
+			cv::rectangle(m_result, box, cv::Scalar(255, 0, 0), 1);
+			cv::putText(m_result, label, cv::Point(box.x, box.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 1);
+		}
 	}
 
 	/**
@@ -193,4 +211,9 @@ protected:
 	 * @description: 模型输出
 	 */
 	float* m_output_host;
+
+	/**
+	 * @description: 检测模型输出
+	 */
+	std::vector<OutputDet> m_output_det;
 };

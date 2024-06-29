@@ -2,7 +2,7 @@
 Author: taifyang 58515915+taifyang@users.noreply.github.com
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2024-06-18 21:00:48
+LastEditTime: 2024-06-29 20:26:01
 FilePath: \python\backends\yolo.py
 Description: YOLO接口类
 '''
@@ -19,7 +19,7 @@ description: YOLO接口类
 class YOLO:  
     '''
     description:    构造方法
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''    
     def __init__(self) -> None:
@@ -60,7 +60,7 @@ class YOLO:
     
     '''
     description:                推理接口
-    param {*} self
+    param {*} self              类的实例
     param {str} input_path      输入路径
     param {str} output_path     输出路径
     param {bool} save_result    保存结果
@@ -69,12 +69,19 @@ class YOLO:
     '''    
     def infer(self, input_path:str, output_path:str, save_result:bool, show_result:bool) -> None:
         assert os.path.exists(input_path), 'input not exists!'
+        self.draw_result = save_result or show_result
         if input_path.endswith('.bmp') or input_path.endswith('.jpg') or input_path.endswith('.png'):
             self.image = cv2.imread(input_path)
             self.result = self.image.copy()
-            self.pre_process()
-            self.process()
-            self.post_process()
+            
+            for i in range(10):
+                start = time.perf_counter()
+                self.pre_process()
+                self.process()
+                self.post_process()
+                end = time.perf_counter()
+                print((end-start)*1000, 'ms')  
+            
             if save_result and output_path!='':
                 cv2.imwrite(output_path, self.result)
             if show_result:
@@ -82,7 +89,7 @@ class YOLO:
                 cv2.waitKey(0)
         elif input_path.endswith('.mp4'):
             cap = cv2.VideoCapture(input_path)
-            start = time.time()
+            start = time.perf_counter()
             if save_result and output_path!='':
                 fourcc = cv2.VideoWriter_fourcc(*'XVID')
                 wri = cv2.VideoWriter(output_path, fourcc, 30.0, (1280,720))
@@ -99,7 +106,7 @@ class YOLO:
                     cv2.waitKey(1)
                 if save_result and output_path!='':
                     wri.write(self.result)
-            end = time.time()
+            end = time.perf_counter()
             print((end-start)*1000, 'ms')                         
             
     

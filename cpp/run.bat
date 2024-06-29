@@ -1,7 +1,3 @@
-mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-cmake --build . --config Release
-
 yolo.exe 0 0 0 0 0 "yolov5n_cls_fp32.torchscript"
 yolo.exe 0 0 0 1 0 "yolov5n_cls_fp32.torchscript"
 yolo.exe 0 0 0 1 1 "yolov5n_cls_fp16.torchscript"

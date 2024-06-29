@@ -2,7 +2,7 @@
  * @Author: taifyang 58515915+taifyang@users.noreply.github.com
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-06-17 21:25:58
+ * @LastEditTime: 2024-06-29 16:54:01
  * @FilePath: \cpp\yolo.cpp
  * @Description: YOLO类实现
  */
@@ -33,6 +33,7 @@
 
 void YOLO::infer(const std::string file_path, bool save_result, bool show_result, char* argv[])
 {
+	m_draw_result = save_result || show_result;
 	std::string suffix = file_path.substr(file_path.size() - 4);
 	if (suffix == ".bmp" || suffix == ".jpg" || suffix == ".png")
 	{
@@ -44,9 +45,18 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 		}
 		m_result = m_image.clone();
 
-		pre_process();
-		process();
-		post_process();
+		for(int i=0; i<10; ++i)
+		{
+			auto start = std::chrono::steady_clock::now();
+		
+			pre_process();
+			process();
+			post_process();
+
+			auto end = std::chrono::steady_clock::now();	
+			std::chrono::duration<double> duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);		
+			std::cout << duration.count() * 1000 << "ms" << std::endl;
+		}
 
 		if (save_result)
 		{
