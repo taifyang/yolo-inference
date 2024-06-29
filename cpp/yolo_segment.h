@@ -2,7 +2,7 @@
  * @Author: taifyang 58515915+taifyang@users.noreply.github.com
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-06-17 21:48:25
+ * @LastEditTime: 2024-06-29 16:28:24
  * @FilePath: \cpp\yolo_segment.h
  * @Description: 分割算法类
  */
@@ -12,12 +12,12 @@
 #include "yolo_detect.h"
 
 /**
- * @description: 网络输出相关参数
+ * @description: 分割网络输出相关参数
  */
 struct OutputSeg
 {
 	int id;             //结果类别id
-	float confidence;   //结果置信度
+	float score;   		//结果得分
 	cv::Rect box;       //矩形框
 	cv::Mat boxMask;    //矩形框内mask，节省内存空间和加快速度
 };
@@ -117,7 +117,7 @@ protected:
 	 * @description: 						画出结果
 	 * @param {vector<OutputSeg>} result	分割结果
 	 */	
-	void draw_result(std::vector<OutputSeg> result)
+	void draw_result(std::vector<OutputSeg> output_seg)
 	{
 		srand(time(0));
 		std::vector<cv::Scalar> color;
@@ -127,13 +127,14 @@ protected:
 		}
 
 		cv::Mat mask = m_result.clone();
-		for (int i = 0; i < result.size(); i++)
+		for (int i = 0; i < output_seg.size(); i++)
 		{
-			cv::rectangle(m_result, result[i].box, cv::Scalar(255, 0, 0), 1);
-			mask(result[i].box).setTo(color[result[i].id], result[i].boxMask);
-			std::string label = "class" + std::to_string(result[i].id) + ":" + cv::format("%.2f", result[i].confidence);
-			cv::putText(m_result, label, cv::Point(result[i].box.x, result[i].box.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 1);
+			cv::rectangle(m_result, output_seg[i].box, cv::Scalar(255, 0, 0), 1);
+			mask(output_seg[i].box).setTo(color[output_seg[i].id], output_seg[i].boxMask);
+			std::string label = "class" + std::to_string(output_seg[i].id) + ":" + cv::format("%.2f", output_seg[i].score);
+			cv::putText(m_result, label, cv::Point(output_seg[i].box.x, output_seg[i].box.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 1);
 		}
+		
 		addWeighted(m_result, 0.5, mask, 0.5, 0, m_result);
 	}
 
@@ -158,4 +159,9 @@ protected:
 	 * @return {*}
 	 */
 	float* m_output1_host;
+
+	/**
+	 * @description: 分割模型输出
+	 */
+	std::vector<OutputSeg> m_output_seg;
 };

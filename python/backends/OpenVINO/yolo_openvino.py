@@ -9,7 +9,7 @@ description: yolo算法openvino推理框架实现类
 class YOLO_OpenVINO(YOLO):
     '''
     description:            构造方法
-    param {*} self
+    param {*} self          类的实例
     param {str} algo_type   算法类型
     param {str} device_type 设备类型
     param {str} model_type  模型精度
@@ -26,7 +26,7 @@ class YOLO_OpenVINO(YOLO):
     
     '''
     description:    模型推理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''       
     def process(self) -> None:
@@ -39,7 +39,7 @@ description: yolo分类算法openvino推理框架实现类
 class YOLO_OpenVINO_Classify(YOLO_OpenVINO):
     '''
     description:    模型前处理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''    
     def pre_process(self) -> None:
@@ -69,15 +69,15 @@ class YOLO_OpenVINO_Classify(YOLO_OpenVINO):
     
     '''
     description:    模型后处理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''           
     def post_process(self) -> None:
         output = self.output[self.compiled_model.output(0)]
         output = np.squeeze(output).astype(dtype=np.float32)
-        if self.algo_type == 'YOLOv5':
+        if self.algo_type == 'YOLOv5' and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.exp(np.max(output))/np.sum(np.exp(output)))
-        if self.algo_type == 'YOLOv8':
+        if self.algo_type == 'YOLOv8' and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.max(output))
        
  
@@ -87,7 +87,7 @@ description: yolo检测算法openvino推理框架实现类
 class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
     '''
     description:    模型前处理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''    
     def pre_process(self) -> None:
@@ -98,7 +98,7 @@ class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
     
     '''
     description:    模型后处理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''        
     def post_process(self) -> None:
@@ -137,7 +137,8 @@ class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
             scores = np.array(scores)
             indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
             boxes = boxes[indices]
-            self.result = draw(self.image, boxes)     
+            if self.draw_result:
+                self.result = draw(self.image, boxes)     
         
 
 '''
@@ -146,7 +147,7 @@ description: yolo分割算法openvino推理框架实现类
 class YOLO_OpenVINO_Segment(YOLO_OpenVINO):
     '''
     description:    模型前处理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''    
     def pre_process(self) -> None:
@@ -157,7 +158,7 @@ class YOLO_OpenVINO_Segment(YOLO_OpenVINO):
     
     '''
     description:    模型后处理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''           
     def post_process(self) -> None:
@@ -213,4 +214,5 @@ class YOLO_OpenVINO_Segment(YOLO_OpenVINO):
             downsampled_bboxes[:, 1] *= mh / self.input_shape[1]
         
             masks = crop_mask(masks, downsampled_bboxes)
-            self.result = draw(self.image, boxes, masks)
+            if self.draw_result:
+                self.result = draw(self.image, boxes, masks)

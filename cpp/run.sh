@@ -1,6 +1,6 @@
 mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j
+make
 
 ./yolo 0 0 0 0 0 "yolov5n_cls_fp32.torchscript"
 ./yolo 0 0 0 1 0 "yolov5n_cls_fp32.torchscript"

@@ -2,7 +2,7 @@
 Author: taifyang 58515915+taifyang@users.noreply.github.com
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2024-06-18 22:27:05
+LastEditTime: 2024-06-29 20:13:00
 Description: 调用demo
 '''
 import argparse
@@ -19,8 +19,8 @@ def parse_args():
     parser.add_argument('--model_path', default='yolov8n_fp32.onnx', type=str, help='the path of model')
     parser.add_argument('--input_path', default='bus.jpg', type=str, help='save result')
     parser.add_argument('--output_path', default='', type=str, help='save result')
-    parser.add_argument('--save_result', default=True, type=bool, help='save result')
-    parser.add_argument('--show_result', default=True, type=bool, help='show result')
+    parser.add_argument('--save_result', default=False, type=bool, help='save result')
+    parser.add_argument('--show_result', default=False, type=bool, help='show result')
     return parser.parse_args()
 
 

@@ -2,7 +2,7 @@
  * @Author: taifyang 58515915+taifyang@users.noreply.github.com
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-06-17 22:19:04
+ * @LastEditTime: 2024-06-29 16:37:20
  * @FilePath: \cpp\libtorch\yolo_libtorch.cpp
  * @Description: yolo算法的libtorch推理框架实现
  */
@@ -276,13 +276,14 @@ void YOLO_Libtorch_Classify::post_process()
 	}
 	int id = std::distance(scores.begin(), std::max_element(scores.begin(), scores.end()));
 
-	std::string label;
+	m_output_cls.id = id;
 	if (m_algo == YOLOv5)
-		label = "class" + std::to_string(id) + ":" + cv::format("%.2f", exp(scores[id]) / sum);
+		m_output_cls.score = exp(scores[id]) / sum;
 	if (m_algo == YOLOv8)
-		label = "class" + std::to_string(id) + ":" + cv::format("%.2f", scores[id]);
+		m_output_cls.score = scores[id];
 
-	draw_result(label);
+	if(m_draw_result)
+		draw_result(m_output_cls);
 }
 
 void YOLO_Libtorch_Detect::post_process()
@@ -332,13 +333,19 @@ void YOLO_Libtorch_Detect::post_process()
 
 	std::vector<int> indices;
 	nms(boxes, scores, score_threshold, nms_threshold, indices);
+
+	m_output_det.clear();
+	m_output_det.resize(indices.size());
 	for (int i = 0; i < indices.size(); i++)
 	{
-		int idx = indices[i];
-		cv::Rect box = boxes[idx];
-		std::string label = "class" + std::to_string(class_ids[idx]) + ":" + cv::format("%.2f", scores[idx]);
-		draw_result(label, box);
+		OutputDet output;
+		output.id = indices[i];
+		output.score = scores[i];
+		output.box = boxes[i];
 	}
+
+	if(m_draw_result)
+		draw_result(m_output_det);
 }
 
 void YOLO_Libtorch_Segment::post_process()
@@ -402,18 +409,19 @@ void YOLO_Libtorch_Segment::post_process()
 	std::vector<int> indices;
 	nms(boxes, scores, score_threshold, nms_threshold, indices);
 
-	std::vector<OutputSeg> output;
+	m_output_seg.clear();
+	m_output_seg.resize(indices.size());
 	std::vector<std::vector<float>> temp_mask_proposals;
 	cv::Rect holeImgRect(0, 0, m_image.cols, m_image.rows);
 	for (int i = 0; i < indices.size(); ++i)
 	{
 		int idx = indices[i];
-		OutputSeg result;
-		result.id = class_ids[idx];
-		result.confidence = scores[idx];
-		result.box = boxes[idx] & holeImgRect;
+		OutputSeg output;
+		output.id = class_ids[idx];
+		output.score = scores[idx];
+		output.box = boxes[idx] & holeImgRect;
 		temp_mask_proposals.push_back(picked_proposals[idx]);
-		output.push_back(result);
+		m_output_seg[i] = output;
 	}
 
 	m_mask_params.params = m_params;
@@ -423,8 +431,9 @@ void YOLO_Libtorch_Segment::post_process()
 	std::copy(m_output1_host, m_output1_host + m_output_numseg, (float*)output_mat1.data);
 	for (int i = 0; i < temp_mask_proposals.size(); ++i)
 	{
-		GetMask(cv::Mat(temp_mask_proposals[i]).t(), output_mat1, output[i], m_mask_params);
+		GetMask(cv::Mat(temp_mask_proposals[i]).t(), output_mat1, m_output_seg[i], m_mask_params);
 	}
 
-	draw_result(output);
+	if(m_draw_result)
+		draw_result(m_output_seg);
 }

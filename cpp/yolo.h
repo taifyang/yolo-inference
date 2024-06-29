@@ -160,6 +160,8 @@ protected:
 	 * @description: 模型精度
 	 */
 	Model_Type m_model;
+
+	bool m_draw_result;
 };
 
 /**

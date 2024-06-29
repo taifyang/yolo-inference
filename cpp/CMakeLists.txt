@@ -6,6 +6,8 @@ file(GLOB SRCS ${CMAKE_CURRENT_SOURCE_DIR}/*.h ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+add_definitions(-w)
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_BUILD_TYPE "Release")
 

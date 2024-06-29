@@ -2,7 +2,7 @@
 Author: taifyang 58515915+taifyang@users.noreply.github.com
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2024-06-18 21:56:16
+LastEditTime: 2024-06-29 20:03:59
 Description: yolo算法onnxruntime推理框架实现
 '''
 
@@ -17,7 +17,7 @@ description: yolo算法onnxruntime推理框架实现类
 class YOLO_ONNXRuntime(YOLO):
     '''
     description:            构造方法
-    param {*} self
+    param {*} self          类的实例
     param {str} algo_type   算法类型
     param {str} device_type 设备类型
     param {str} model_type  模型精度
@@ -44,7 +44,7 @@ class YOLO_ONNXRuntime(YOLO):
     
     '''
     description:    模型推理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''    
     def process(self) -> None:
@@ -57,7 +57,7 @@ description: yolo分类算法onnxruntime推理框架实现类
 class YOLO_ONNXRuntime_Classify(YOLO_ONNXRuntime):   
     '''
     description:    模型前处理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''            
     def pre_process(self) -> None:
@@ -92,14 +92,14 @@ class YOLO_ONNXRuntime_Classify(YOLO_ONNXRuntime):
     
     '''
     description:    模型后处理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''           
     def post_process(self) -> None:
         output = np.squeeze(self.output).astype(dtype=np.float32)
-        if self.algo_type == 'YOLOv5':
+        if self.algo_type == 'YOLOv5' and self.draw_result:
             print("class:", np.argmax(output), " scores:", np.exp(np.max(output))/np.sum(np.exp(output)))
-        if self.algo_type == 'YOLOv8':
+        if self.algo_type == 'YOLOv8' and self.draw_result:
             print("class:", np.argmax(output), " scores:", np.max(output))
 
 
@@ -109,7 +109,7 @@ description: yolo检测算法onnxruntime推理框架实现类
 class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
     '''
     description:    模型前处理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''    
     def pre_process(self) -> None:
@@ -125,7 +125,7 @@ class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
     
     '''
     description:    模型后处理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''         
     def post_process(self) -> None:
@@ -163,7 +163,8 @@ class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
             scores = np.array(scores)
             indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
             boxes = boxes[indices]
-            self.result = draw(self.image, boxes)
+            if self.draw_result:
+                self.result = draw(self.image, boxes)
             
 
 '''
@@ -172,7 +173,7 @@ description: yolo分割算法onnxruntime推理框架实现类
 class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
     '''
     description:    模型前处理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''    
     def pre_process(self) -> None:
@@ -188,7 +189,7 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
     
     '''
     description:    模型后处理
-    param {*} self
+    param {*} self  类的实例
     return {*}
     '''           
     def post_process(self) -> None:
@@ -242,4 +243,5 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
             downsampled_bboxes[:, 1] *= mh / self.input_shape[1]
         
             masks = crop_mask(masks, downsampled_bboxes)
-            self.result = draw(self.image, boxes, masks)
+            if self.draw_result:
+                self.result = draw(self.image, boxes, masks)
