@@ -24,7 +24,7 @@ make
 ./run.sh
 ```
 
-C++ test on Windows10:
+C++ test on Windows10: (CPU i7-12700, GPU RTX3070, RAM 32GB)
 |       Model       |       Task       |       Device       |       Precision       | Libtorch | ONNXRuntime | OpenCV | OpenVINO | TensorRT |
 | :-----------------: | :----------------: | :------------------: | :---------------------: | :------: | :---------: | :----: | :------: | :------: |
 | YOLOv5 | Classify | CPU | FP32 | 34ms | 21ms | 29ms | 9ms | ×
@@ -78,7 +78,7 @@ pip install -r requirements.txt
 ./run.sh
 ```
 
-Python test on Windows10:
+Python test on Windows10: (CPU i7-12700, GPU RTX3070, RAM 32GB)
 |       Model       |       Task       |       Device       |       Precision       | ONNXRuntime | OpenCV | OpenVINO | TensorRT |
 | :-----------------: | :----------------: | :------------------: | :---------------------: | :---------: | :----: | :------: | :------: |
 | YOLOv5 | Classify | CPU | FP32 | 21ms | 38ms | 27ms | ×
