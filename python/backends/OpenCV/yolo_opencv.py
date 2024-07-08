@@ -2,7 +2,7 @@
 Author: taifyang 58515915+taifyang@users.noreply.github.com
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2024-06-29 20:03:07
+LastEditTime: 2024-07-07 16:30:43
 Description:  yolo算法opencv推理框架实现
 '''
 import cv2
@@ -26,11 +26,18 @@ class YOLO_OpenCV(YOLO):
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__()
         assert os.path.exists(model_path), 'model not exists!'
+        assert model_type == 'FP32' or model_type == 'FP16', 'unsupported model type!'
         self.net = cv2.dnn.readNet(model_path)
         self.algo_type = algo_type
+        if device_type == 'CPU':
+            self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+            self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
         if device_type == 'GPU':
             self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-            self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+            if model_type == 'FP32':
+                self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+            if model_type == 'FP16':
+                self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA_FP16)
     
     '''
     description:    模型推理
@@ -50,6 +57,7 @@ class YOLO_OpenCV_Classify(YOLO_OpenCV):
     return {*}
     '''    
     def pre_process(self) -> None:
+        assert self.algo_type in ['YOLOv5', 'YOLOv8'], 'algo type not supported!'
         if self.algo_type == 'YOLOv5':
             crop_size = min(self.image.shape[0], self.image.shape[1])
             left = (self.image.shape[1] - crop_size) // 2
@@ -98,6 +106,7 @@ class YOLO_OpenCV_Detect(YOLO_OpenCV):
     return {*}
     '''    
     def pre_process(self) -> None:
+        assert self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9'], 'algo type not supported!'
         input = letterbox(self.image, self.input_shape)
         self.input = cv2.dnn.blobFromImage(input, 1/255., size=self.input_shape, swapRB=True, crop=False)
         self.net.setInput(self.input)
@@ -112,16 +121,16 @@ class YOLO_OpenCV_Detect(YOLO_OpenCV):
         scores = []
         class_ids = []
         for i in range(self.output.shape[1]):
-            if self.algo_type == 'YOLOv5':
+            if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7']:
                 data = self.output[0][i]
                 objness = data[4]
                 if objness < self.confidence_threshold:
                     continue
                 score = data[5:] * objness
-            if self.algo_type == 'YOLOv8':
+            if self.algo_type in ['YOLOv8', 'YOLOv9']: 
                 data = self.output[0][i, ...]
                 score = data[4:]
-                objness = 1
+                objness = 1   
             _, _, _, max_score_index = cv2.minMaxLoc(score)
             max_id = max_score_index[1]
             if score[max_id] > self.score_threshold:
@@ -129,6 +138,7 @@ class YOLO_OpenCV_Detect(YOLO_OpenCV):
                 boxes.append(np.array([x-w/2, y-h/2, x+w/2, y+h/2]))
                 scores.append(score[max_id]*objness)
                 class_ids.append(max_id)
+                
         if len(boxes):   
             indices = cv2.dnn.NMSBoxes(boxes, scores, self.score_threshold, self.nms_threshold)
             output = []

@@ -16,13 +16,6 @@
 #include "utils.h"
 #include <NvInfer.h>
 #include <NvInferRuntime.h>
-	
-//#define _CUDA_PREPROCESS	
-//#define _CUDA_POSTPROCESS
-//
-//#ifdef _CUDA_POSTPROCESS
-//	#define _CUDA_PREPROCESS
-//#endif // CUDA_POSTPROCESS
 
 /**
  * @description: 
