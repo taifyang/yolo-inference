@@ -28,7 +28,7 @@ class YOLO:
         self.nms_threshold = 0.5        #NMS阈值
         self.confidence_threshold = 0.2 #置信度阈值    
         self.input_shape = (640, 640)   #输入图像尺寸
-    
+
     '''
     description:    任务映射表
     param {*} self

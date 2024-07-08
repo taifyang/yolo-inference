@@ -2,7 +2,7 @@
  * @Author: taifyang 58515915+taifyang@users.noreply.github.com
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-06-29 16:54:01
+ * @LastEditTime: 2024-07-07 16:24:31
  * @FilePath: \cpp\yolo.cpp
  * @Description: YOLO类实现
  */
@@ -33,6 +33,12 @@
 
 void YOLO::infer(const std::string file_path, bool save_result, bool show_result, char* argv[])
 {
+	if(!std::filesystem::exists(file_path))
+	{
+		std::cout << "file not exists!" << std::endl;
+		std::exit(-1);
+	}
+
 	m_draw_result = save_result || show_result;
 	std::string suffix = file_path.substr(file_path.size() - 4);
 	if (suffix == ".bmp" || suffix == ".jpg" || suffix == ".png")

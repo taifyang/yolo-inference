@@ -2,7 +2,7 @@
  * @Author: taifyang 58515915+taifyang@users.noreply.github.com
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-06-29 16:15:02
+ * @LastEditTime: 2024-07-07 15:12:08
  * @FilePath: \cpp\yolo_detect.h
  * @Description: 检测算法类
  */

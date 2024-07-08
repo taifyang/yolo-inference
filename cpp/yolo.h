@@ -2,21 +2,16 @@
  * @Author: taifyang 58515915+taifyang@users.noreply.github.com
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-06-18 22:39:32
+ * @LastEditTime: 2024-07-07 16:23:16
  * @FilePath: \cpp\yolo.h
  * @Description: yolo接口类头文件
  */
 
 #pragma once
 
-//#define _YOLO_LIBTORCH
-//#define _YOLO_ONNXRUNTIME
-//#define _YOLO_OPENCV
-//#define _YOLO_OPENVINO
-//#define _YOLO_TENSORRT
-
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 #include <opencv2/opencv.hpp>
 
 /**
@@ -47,7 +42,11 @@ enum Task_Type
 enum Algo_Type
 {
 	YOLOv5,
+	YOLOv6,
+	YOLOv7,
 	YOLOv8,
+	YOLOv9,
+	YOLOv10,
 };
 
 /**
