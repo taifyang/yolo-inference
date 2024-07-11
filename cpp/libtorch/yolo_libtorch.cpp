@@ -135,25 +135,25 @@ void YOLO_Libtorch_Classify::pre_process()
 
 		cv::cvtColor(crop_image, crop_image, cv::COLOR_BGR2RGB);
 	}
-
 	if (m_algo == YOLOv8)
 	{
+		cv::cvtColor(m_image, crop_image, cv::COLOR_BGR2RGB);
+
 		if (m_image.cols > m_image.rows)
-			cv::resize(m_image, m_image, cv::Size(m_input_height * m_image.cols / m_image.rows, m_input_height)); 
+			cv::resize(crop_image, crop_image, cv::Size(m_input_height * m_image.cols / m_image.rows, m_input_height));
 		else
-			cv::resize(m_image, m_image, cv::Size(m_input_width, m_input_width * m_image.rows / m_image.cols));
+			cv::resize(crop_image, crop_image, cv::Size(m_input_width, m_input_width * m_image.rows / m_image.cols));
 
 		//CenterCrop
-		int crop_size = std::min(m_image.cols, m_image.rows);
-		int left = (m_image.cols - crop_size) / 2, top = (m_image.rows - crop_size) / 2;
-		crop_image = m_image(cv::Rect(left, top, crop_size, crop_size));
+		int crop_size = std::min(crop_image.cols, crop_image.rows);
+		int  left = (crop_image.cols - crop_size) / 2, top = (crop_image.rows - crop_size) / 2;
+		crop_image = crop_image(cv::Rect(left, top, crop_size, crop_size));
 		cv::resize(crop_image, crop_image, cv::Size(m_input_width, m_input_height));
 
 		//Normalize
 		crop_image.convertTo(crop_image, CV_32FC3, 1. / 255.);
-
-		cv::cvtColor(m_image, m_image, cv::COLOR_BGR2RGB);
 	}
+
 
 	torch::Tensor input;
 	if (m_model == FP32)

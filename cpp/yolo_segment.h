@@ -126,7 +126,8 @@ protected:
 			color.push_back(cv::Scalar(rand() % 256, rand() % 256, rand() % 256));
 		}
 
-		cv::Mat mask = m_result.clone();
+		cv::Mat mask = m_image.clone();
+    	m_result = m_image.clone();
 		for (int i = 0; i < output_seg.size(); i++)
 		{
 			cv::rectangle(m_result, output_seg[i].box, cv::Scalar(255, 0, 0), 1);

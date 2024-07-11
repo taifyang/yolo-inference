@@ -1,7 +1,7 @@
 '''
-Author: taifyang 58515915+taifyang@users.noreply.github.com
+Author: taifyang 
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+LastEditors: taifyang 
 LastEditTime: 2024-06-29 20:26:01
 FilePath: \python\backends\yolo.py
 Description: YOLO接口类

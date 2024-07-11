@@ -2,7 +2,7 @@
  * @Author: taifyang 58515915+taifyang@users.noreply.github.com
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-07-07 15:57:56
+ * @LastEditTime: 2024-07-09 19:25:52
  * @FilePath: \cpp\tensorrt\yolo_tensorrt.cpp
  * @Description: yolo算法的tensorrt推理框架实现
  */
@@ -195,15 +195,17 @@ void YOLO_TensorRT_Classify::pre_process()
 	}
 	if (m_algo == YOLOv8)
 	{
+		cv::cvtColor(m_image, crop_image, cv::COLOR_BGR2RGB);
+
 		if (m_image.cols > m_image.rows)
-			cv::resize(m_image, m_image, cv::Size(m_input_height * m_image.cols / m_image.rows, m_input_height));
+			cv::resize(crop_image, crop_image, cv::Size(m_input_height * m_image.cols / m_image.rows, m_input_height));
 		else
-			cv::resize(m_image, m_image, cv::Size(m_input_width, m_input_width * m_image.rows / m_image.cols));
+			cv::resize(crop_image, crop_image, cv::Size(m_input_width, m_input_width * m_image.rows / m_image.cols));
 
 		//CenterCrop
-		int crop_size = std::min(m_image.cols, m_image.rows);
-		int left = (m_image.cols - crop_size) / 2, top = (m_image.rows - crop_size) / 2;
-		crop_image = m_image(cv::Rect(left, top, crop_size, crop_size));
+		int crop_size = std::min(crop_image.cols, crop_image.rows);
+		int  left = (crop_image.cols - crop_size) / 2, top = (crop_image.rows - crop_size) / 2;
+		crop_image = crop_image(cv::Rect(left, top, crop_size, crop_size));
 		cv::resize(crop_image, crop_image, cv::Size(m_input_width, m_input_height));
 
 		//Normalize
@@ -212,14 +214,14 @@ void YOLO_TensorRT_Classify::pre_process()
 
 	int image_area = crop_image.cols * crop_image.rows;
 	float* pimage = (float*)crop_image.data;
-	float* phost_b = m_input_host + image_area * 0;
+	float* phost_r = m_input_host + image_area * 0;
 	float* phost_g = m_input_host + image_area * 1;
-	float* phost_r = m_input_host + image_area * 2;
+	float* phost_b = m_input_host + image_area * 2;
 	for (int i = 0; i < image_area; ++i, pimage += 3)
 	{
-		*phost_r++ = pimage[0];
+		*phost_r++ = pimage[2];
 		*phost_g++ = pimage[1];
-		*phost_b++ = pimage[2];
+		*phost_b++ = pimage[0];
 	}
 
 	cudaMemcpyAsync(m_input_device, m_input_host, sizeof(float) * m_input_numel, cudaMemcpyHostToDevice, m_stream);
@@ -237,14 +239,14 @@ void YOLO_TensorRT_Detect::pre_process()
 
 	int image_area = letterbox.cols * letterbox.rows;
 	uchar* pimage = letterbox.data;
-	float* phost_b = m_input_host + image_area * 0;
+	float* phost_r = m_input_host + image_area * 0;
 	float* phost_g = m_input_host + image_area * 1;
-	float* phost_r = m_input_host + image_area * 2;
+	float* phost_b = m_input_host + image_area * 2;
 	for (int i = 0; i < letterbox.cols * letterbox.rows; ++i, pimage += 3)
 	{
-		*phost_r++ = pimage[0] / 255.0f;
+		*phost_r++ = pimage[2] / 255.0f;
 		*phost_g++ = pimage[1] / 255.0f;
-		*phost_b++ = pimage[2] / 255.0f;
+		*phost_b++ = pimage[0] / 255.0f;
 	}
 
 	cudaMemcpyAsync(m_input_device, m_input_host, sizeof(float) * m_input_numel, cudaMemcpyHostToDevice, m_stream);
@@ -262,14 +264,14 @@ void YOLO_TensorRT_Segment::pre_process()
 	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_width, m_input_height));
 	int image_area = letterbox.cols * letterbox.rows;
 	uchar* pimage = letterbox.data;
-	float* phost_b = m_input_host + image_area * 0;
+	float* phost_r = m_input_host + image_area * 0;
 	float* phost_g = m_input_host + image_area * 1;
-	float* phost_r = m_input_host + image_area * 2;
+	float* phost_b = m_input_host + image_area * 2;
 	for (int i = 0; i < letterbox.cols * letterbox.rows; ++i, pimage += 3)
 	{
-		*phost_r++ = pimage[0] / 255.0f;
+		*phost_r++ = pimage[2] / 255.0f;
 		*phost_g++ = pimage[1] / 255.0f;
-		*phost_b++ = pimage[2] / 255.0f;
+		*phost_b++ = pimage[0] / 255.0f;
 	}
 
 	cudaMemcpyAsync(m_input_device, m_input_host, sizeof(float) * m_input_numel, cudaMemcpyHostToDevice, m_stream);

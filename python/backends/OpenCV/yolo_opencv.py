@@ -1,10 +1,12 @@
 '''
-Author: taifyang 58515915+taifyang@users.noreply.github.com
+Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2024-07-07 16:30:43
-Description:  yolo算法opencv推理框架实现
+LastEditors: taifyang  
+LastEditTime: 2024-07-11 23:46:59
+FilePath: \python\backends\OpenCV\yolo_opencv.py
+Description: yolo算法opencv推理框架实现
 '''
+
 import cv2
 from backends.yolo import *
 from backends.utils import *

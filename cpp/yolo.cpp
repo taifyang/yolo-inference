@@ -49,7 +49,6 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 			std::cout << "read image empty!" << std::endl;
 			std::exit(-1);
 		}
-		m_result = m_image.clone();
 
 		for(int i=0; i<10; ++i)
 		{

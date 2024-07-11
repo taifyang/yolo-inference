@@ -1,10 +1,12 @@
 '''
-Author: taifyang 58515915+taifyang@users.noreply.github.com
+Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2024-07-07 00:28:22
-Description: yolo算法onnxruntime推理框架实现
+LastEditors: taifyang  
+LastEditTime: 2024-07-11 23:47:25
+FilePath: \python\backends\ONNXRuntime\yolo_onnxruntime.py
+Description: yolo算法onnxruntime推理框架实现类
 '''
+
 
 import onnxruntime
 from backends.yolo import *

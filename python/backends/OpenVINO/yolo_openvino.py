@@ -1,3 +1,12 @@
+'''
+Author: taifyang  
+Date: 2024-06-12 22:23:07
+LastEditors: taifyang  
+LastEditTime: 2024-07-11 23:45:34
+FilePath: \python\backends\OpenVINO\yolo_openvino.py
+Description: yolo算法openvino推理框架实现类
+'''
+
 import openvino as ov
 from backends.yolo import *
 from backends.utils import *
