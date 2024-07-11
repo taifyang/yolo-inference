@@ -155,6 +155,7 @@ protected:
 	 */
 	void draw_result(std::vector<OutputDet> output_det)
 	{
+    	m_result = m_image.clone();
 		for (int i = 0; i < output_det.size(); i++)
 		{
 			OutputDet output = output_det[i];

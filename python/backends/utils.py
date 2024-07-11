@@ -1,8 +1,8 @@
 '''
-Author: taifyang 58515915+taifyang@users.noreply.github.com
+Author: taifyang 
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2024-06-18 21:06:08
+LastEditors: taifyang
+LastEditTime: 2024-07-10 21:01:42
 Description: 工具函数
 '''
 
@@ -152,7 +152,7 @@ def draw(image, preds, masks=[], input_shape=(640,640)):
     for mask in masks:
         mask = cv2.resize(mask, input_shape, cv2.INTER_LINEAR)
         mask = scale_mask(mask, input_shape, image.shape)
-        image[mask >= 0.5] = [np.random.randint(0,256), np.random.randint(0,256), np.random.randint(0,256)]
+        image_copy[mask >= 0.5] = [np.random.randint(0,256), np.random.randint(0,256), np.random.randint(0,256)]
     result = (image*0.5 + image_copy*0.5).astype(np.uint8)
     
     for box, score, cl in zip(boxes, scores, classes):

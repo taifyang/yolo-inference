@@ -2,7 +2,7 @@
  * @Author: taifyang 58515915+taifyang@users.noreply.github.com
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-07-07 16:16:33
+ * @LastEditTime: 2024-07-09 19:27:23
  * @FilePath: \cpp\onnxruntime\yolo_onnxruntime.cpp
  * @Description: yolo算法的onnxruntime推理框架实现
  */
@@ -30,6 +30,12 @@ void YOLO_ONNXRuntime::init(const Algo_Type algo_type, const Device_Type device_
 	}
 	
 	m_model = model_type;
+
+	if(!std::filesystem::exists(model_path))
+	{
+		std::cout << "model not exists!" << std::endl;
+		std::exit(-1);
+	}
 
 #ifdef _WIN32
 	m_session = new Ort::Session(m_env, std::wstring(model_path.begin(), model_path.end()).c_str(), session_options);
@@ -187,20 +193,19 @@ void YOLO_ONNXRuntime_Classify::pre_process()
 
 		cv::cvtColor(crop_image, crop_image, cv::COLOR_BGR2RGB);
 	}
-
 	if (m_algo == YOLOv8)
 	{
-		cv::cvtColor(m_image, m_image, cv::COLOR_BGR2RGB);
+		cv::cvtColor(m_image, crop_image, cv::COLOR_BGR2RGB);
 
 		if (m_image.cols > m_image.rows)
-			cv::resize(m_image, m_image, cv::Size(m_input_height * m_image.cols / m_image.rows, m_input_height));
+			cv::resize(crop_image, crop_image, cv::Size(m_input_height * m_image.cols / m_image.rows, m_input_height));
 		else
-			cv::resize(m_image, m_image, cv::Size(m_input_width, m_input_width * m_image.rows / m_image.cols));
+			cv::resize(crop_image, crop_image, cv::Size(m_input_width, m_input_width * m_image.rows / m_image.cols));
 
 		//CenterCrop
-		int crop_size = std::min(m_image.cols, m_image.rows);
-		int  left = (m_image.cols - crop_size) / 2, top = (m_image.rows - crop_size) / 2;
-		crop_image = m_image(cv::Rect(left, top, crop_size, crop_size));
+		int crop_size = std::min(crop_image.cols, crop_image.rows);
+		int  left = (crop_image.cols - crop_size) / 2, top = (crop_image.rows - crop_size) / 2;
+		crop_image = crop_image(cv::Rect(left, top, crop_size, crop_size));
 		cv::resize(crop_image, crop_image, cv::Size(m_input_width, m_input_height));
 
 		//Normalize

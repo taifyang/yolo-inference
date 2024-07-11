@@ -1,3 +1,12 @@
+'''
+Author: taifyang  
+Date: 2024-06-12 22:23:07
+LastEditors: taifyang  
+LastEditTime: 2024-07-11 23:48:24
+FilePath: \python\backends\TensorRT\yolo_tensorrt.py
+Description: yolo算法tensorrt推理框架实现类
+'''
+
 import tensorrt as trt
 import pycuda.autoinit 
 import pycuda.driver as cuda  
@@ -15,7 +24,7 @@ class YOLO_TensorRT(YOLO):
     param {str} algo_type   算法类型
     param {str} device_type 设备类型
     param {str} model_type  模型精度
-    param {str} model_path  模型路径
+    param {str} model_path  模型路径 
     return {*}
     '''    
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
