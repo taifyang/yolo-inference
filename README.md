@@ -1,7 +1,7 @@
 # yolo-inference
-C++ and Python implementations of YOLOv5 and YOLOv8 inference.
+C++ and Python implementations of YOLOv5, YOLOv6, YOLOv7, YOLOv8, YOLOv9 and YOLOv10 inference.
 
-Supported model backends include Libtorch, ONNXRuntime, OpenCV, OpenVINO and TensorRTTensorRT. 
+Supported model backends include Libtorch, ONNXRuntime, OpenCV, OpenVINO and TensorRT. 
 
 Supported task types include Classify, Detect and Segment.
 
