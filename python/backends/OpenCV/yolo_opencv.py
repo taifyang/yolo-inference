@@ -47,7 +47,8 @@ class YOLO_OpenCV(YOLO):
     return {*}
     '''       
     def process(self) -> None:
-        self.output = self.net.forward()
+        self.output = self.net.forward(self.net.getUnconnectedOutLayersNames())
+
 
 '''
 description: yolo分类算法opencv推理框架实现类
@@ -150,3 +151,78 @@ class YOLO_OpenCV_Detect(YOLO_OpenCV):
             if self.draw_result:
                 self.result = draw(self.image, boxes)
 
+
+'''
+description: yolo分割算法opencv推理框架实现类
+'''    
+class YOLO_OpenCV_Segment(YOLO_OpenCV):
+    '''
+    description:    模型前处理
+    param {*} self  类的实例
+    return {*}
+    ''' 
+    def pre_process(self) -> None:
+        assert self.algo_type in ['YOLOv5', 'YOLOv8'], 'algo type not supported!'
+        input = letterbox(self.image, self.input_shape)
+        self.input = cv2.dnn.blobFromImage(input, 1/255., size=self.input_shape, swapRB=True, crop=False)
+        self.net.setInput(self.input)
+        
+    '''
+    description:    模型后处理
+    param {*} self  类的实例
+    return {*}
+    '''           
+    def post_process(self) -> None:
+        output = np.squeeze(self.output[0]).astype(dtype=np.float32)
+        boxes = []
+        scores = []
+        class_ids = []
+        preds = []
+        if self.algo_type == 'YOLOv5':
+            output = output[output[..., 4] > self.confidence_threshold]
+            classes_scores = output[..., 5:85]     
+            for i in range(output.shape[0]):
+                class_id = np.argmax(classes_scores[i])
+                obj_score = output[i][4]
+                cls_score = classes_scores[i][class_id]
+                output[i][4] = obj_score * cls_score
+                output[i][5] = class_id
+                if output[i][4] > self.score_threshold:
+                    boxes.append(output[i][:6])
+                    scores.append(output[i][4])
+                    class_ids.append(output[i][5])   
+                    output[i][5:] *= obj_score
+                    preds.append(output[i])
+        if self.algo_type == 'YOLOv8': 
+            for i in range(output.shape[0]):
+                classes_scores = output[..., 4:84]     
+                class_id = np.argmax(classes_scores[i])
+                output[i][4] = classes_scores[i][class_id]
+                output[i][5] = class_id
+                if output[i][4] > self.score_threshold:
+                    boxes.append(output[i, :6])
+                    scores.append(output[i][4])
+                    class_ids.append(output[i][5])    
+                    preds.append(output[i])     
+                          
+        if len(boxes):   
+            boxes = np.array(boxes)
+            boxes = xywh2xyxy(boxes)
+            scores = np.array(scores)
+            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
+            boxes = boxes[indices]
+            
+            masks_in = np.array(preds)[indices][..., -32:]
+            proto= np.squeeze(self.output[1]).astype(dtype=np.float32)
+            c, mh, mw = proto.shape 
+            masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)
+            
+            downsampled_bboxes = boxes.copy()
+            downsampled_bboxes[:, 0] *= mw / self.input_shape[0]
+            downsampled_bboxes[:, 2] *= mw / self.input_shape[0]
+            downsampled_bboxes[:, 3] *= mh / self.input_shape[1]
+            downsampled_bboxes[:, 1] *= mh / self.input_shape[1]
+        
+            masks = crop_mask(masks, downsampled_bboxes)
+            if self.draw_result:
+                self.result = draw(self.image, boxes, masks)
