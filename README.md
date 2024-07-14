@@ -121,15 +121,15 @@ Python test on Windows10(CPU i7-12700, GPU RTX3070):
 |       Model       |       Task       |       Device       |       Precision       | ONNXRuntime | OpenCV | OpenVINO | TensorRT |
 | :-----------------: | :----------------: | :------------------: | :---------------------: | :---------: | :----: | :------: | :------: |
 | YOLOv5n | Classify | CPU | FP32 | 21ms | 38ms | 27ms | ×
-| YOLOv5n | Classify | GPU | FP32 | 14ms | ? | 36ms | 19ms
+| YOLOv5n | Classify | GPU | FP32 | 14ms | 19ms | 36ms | 19ms
 | YOLOv5n | Classify | CPU | FP16 | 29ms | 38ms | 27ms | ×
-| YOLOv5n | Classify | GPU | FP16 | 15ms | ? | 39ms | 18ms
+| YOLOv5n | Classify | GPU | FP16 | 15ms | 16ms | 39ms | 18ms
 | YOLOv5n | Classify | CPU | INT8 | 34ms | × | ? | ×
 | YOLOv5n | Classify | GPU | INT8 | 38ms | × | ? | 18ms
 | YOLOv5n | Detect | CPU | FP32 | 29ms | 103ms | 31ms | ×
-| YOLOv5n | Detect | GPU | FP32 | 18ms | ? | 66ms | 17ms
+| YOLOv5n | Detect | GPU | FP32 | 18ms | 42ms | 66ms | 17ms
 | YOLOv5n | Detect | CPU | FP16 | 42ms | 103ms | 31ms | ×
-| YOLOv5n | Detect | GPU | FP16 | 19ms | ? | 63ms | 16ms
+| YOLOv5n | Detect | GPU | FP16 | 19ms | 41ms | 63ms | 16ms
 | YOLOv5n | Detect | CPU | INT8 | 61ms | × | 38ms | ×
 | YOLOv5n | Detect | GPU | INT8 | 53ms | × | 75ms | 16ms
 | YOLOv5n | Segment | CPU | FP32 | 39ms | ? | 46ms | ×
@@ -139,15 +139,15 @@ Python test on Windows10(CPU i7-12700, GPU RTX3070):
 | YOLOv5n | Segment | CPU | INT8 | 63ms | × | ? | ×
 | YOLOv5n | Segment | GPU | INT8 | 63ms | × | ? | 17ms
 | YOLOv8n | Classify | CPU | FP32 | 3ms | 5ms | 5ms | ×
-| YOLOv8n | Classify | GPU | FP32 | 2ms | ? | 17ms | 6ms
+| YOLOv8n | Classify | GPU | FP32 | 2ms | 3ms | 17ms | 6ms
 | YOLOv8n | Classify | CPU | FP16 | 6ms | 5ms | 4ms | ×
-| YOLOv8n | Classify | GPU | FP16 | 2ms | ? | 15ms | 5ms
+| YOLOv8n | Classify | GPU | FP16 | 2ms | 2ms | 15ms | 5ms
 | YOLOv8n | Classify | CPU | INT8 | 6ms | × | ? | ×
 | YOLOv8n | Classify | GPU | INT8 | 7ms | × | ? | 6ms
 | YOLOv8n | Detect | CPU | FP32 | 54ms | 88ms | 100ms | ×
-| YOLOv8n | Detect | GPU | FP32 | 35ms | ? | 90ms | 37ms
+| YOLOv8n | Detect | GPU | FP32 | 35ms | 31ms | 90ms | 37ms
 | YOLOv8n | Detect | CPU | FP16 | 75ms | 88ms | 98ms | ×
-| YOLOv8n | Detect | GPU | FP16 | 39ms | ? | 91ms | 34ms
+| YOLOv8n | Detect | GPU | FP16 | 39ms | 27ms | 91ms | 34ms
 | YOLOv8n | Detect | CPU | INT8 | 72ms | × | 50ms | ×
 | YOLOv8n | Detect | GPU | INT8 | 87ms | × | 73ms | 36ms
 | YOLOv8n | Segment | CPU | FP32 | 74ms | ? | 133ms | ×
