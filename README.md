@@ -112,7 +112,7 @@ pip install -r requirements.txt
 ```
 or
 ```bash
-# Windows 
+# Linux
 pip install -r requirements.txt
 ./run.sh
 ```
