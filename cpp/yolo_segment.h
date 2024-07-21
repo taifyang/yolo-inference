@@ -1,7 +1,7 @@
 /*
- * @Author: taifyang 58515915+taifyang@users.noreply.github.com
+ * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditors: taifyang 
  * @LastEditTime: 2024-06-29 16:28:24
  * @FilePath: \cpp\yolo_segment.h
  * @Description: 分割算法类

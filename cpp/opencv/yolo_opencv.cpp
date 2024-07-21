@@ -1,7 +1,7 @@
 /*
- * @Author: taifyang 58515915+taifyang@users.noreply.github.com
+ * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditors: taifyang 
  * @LastEditTime: 2024-07-07 16:27:40
  * @FilePath: \cpp\opencv\yolo_opencv.cpp
  * @Description: yolo算法的opencv推理框架实现

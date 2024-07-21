@@ -1,7 +1,7 @@
 /*
- * @Author: taifyang 58515915+taifyang@users.noreply.github.com
+ * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditors: taifyang 
  * @LastEditTime: 2024-06-17 21:34:25
  * @FilePath: \cpp\utils.cpp
  * @Description: 功能函数实现

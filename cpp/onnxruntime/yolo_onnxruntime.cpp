@@ -1,7 +1,7 @@
 /*
- * @Author: taifyang 58515915+taifyang@users.noreply.github.com
+ * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditors: taifyang 
  * @LastEditTime: 2024-07-09 19:27:23
  * @FilePath: \cpp\onnxruntime\yolo_onnxruntime.cpp
  * @Description: yolo算法的onnxruntime推理框架实现
