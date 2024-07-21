@@ -1,7 +1,7 @@
 /*
- * @Author: taifyang 58515915+taifyang@users.noreply.github.com
+ * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditors: taifyang 
  * @LastEditTime: 2024-06-17 23:32:19
  * @FilePath: \cpp\tensorrt\preprocess.cuh
  * @Description: 前处理的cuda实现头文件，见https://github.com/wang-xinyu/tensorrtx/blob/master/yolov5/src/preprocess.h
