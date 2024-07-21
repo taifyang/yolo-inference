@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 
- * @LastEditTime: 2024-07-07 16:23:16
+ * @LastEditTime: 2024-07-21 23:31:47
  * @FilePath: \cpp\yolo.h
  * @Description: yolo接口类头文件
  */
@@ -160,6 +160,9 @@ protected:
 	 */
 	Model_Type m_model;
 
+	/**
+	 * @description: 是否可视化结果
+	 */
 	bool m_draw_result;
 };
 
