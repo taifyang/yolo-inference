@@ -196,3 +196,8 @@ Python test Ubuntu22.04 in Docker(CPU i7-12700, GPU RTX3070):
 | YOLOv8n | Segment | GPU | FP16 | 73ms | 66ms | ? | 75ms
 | YOLOv8n | Segment | CPU | INT8 | 165ms | × | ? | ×
 | YOLOv8n | Segment | GPU | INT8 | 167ms | × | ? | 34ms
+
+You can get a docker image with:
+```bash
+docker pull taify/yolo_inference:latest
+```
