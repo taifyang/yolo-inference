@@ -44,7 +44,7 @@ class YOLO:
             'OpenCV':{
                 'Classify':backends.OpenCV.YOLO_OpenCV_Classify,
                 'Detect':backends.OpenCV.YOLO_OpenCV_Detect,
-                #'Segment':tasks.OpenCV.YOLO_OpenCV_Segment,
+                'Segment':tasks.OpenCV.YOLO_OpenCV_Segment,
             },
             'OpenVINO':{
                 'Classify':backends.OpenVINO.YOLO_OpenVINO_Classify,
