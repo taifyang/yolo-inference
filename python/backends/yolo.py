@@ -2,7 +2,7 @@
 Author: taifyang 
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang 
-LastEditTime: 2024-06-29 20:26:01
+LastEditTime: 2024-08-03 21:01:16
 FilePath: \python\backends\yolo.py
 Description: YOLO接口类
 '''
@@ -24,10 +24,11 @@ class YOLO:
     '''    
     def __init__(self) -> None:
         super().__init__()
-        self.score_threshold = 0.2      #得分阈值
-        self.nms_threshold = 0.5        #NMS阈值
-        self.confidence_threshold = 0.2 #置信度阈值    
-        self.input_shape = (640, 640)   #输入图像尺寸
+        self.class_num = 80		#类别数量
+        self.score_threshold = 0.2      	#得分阈值
+        self.nms_threshold = 0.5        	#NMS阈值
+        self.confidence_threshold = 0.2 	#置信度阈值    
+        self.input_shape = (640, 640)   	#输入图像尺寸
 
     '''
     description:    任务映射表
@@ -44,7 +45,7 @@ class YOLO:
             'OpenCV':{
                 'Classify':backends.OpenCV.YOLO_OpenCV_Classify,
                 'Detect':backends.OpenCV.YOLO_OpenCV_Detect,
-                'Segment':tasks.OpenCV.YOLO_OpenCV_Segment,
+                'Segment':backends.OpenCV.YOLO_OpenCV_Segment,
             },
             'OpenVINO':{
                 'Classify':backends.OpenVINO.YOLO_OpenVINO_Classify,

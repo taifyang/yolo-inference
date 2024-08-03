@@ -120,7 +120,7 @@ class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
         class_ids = []
         if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7']:
             output = output[output[..., 4] > self.confidence_threshold]
-            classes_scores = output[..., 5:85]     
+            classes_scores = output[..., 5:(5+self.class_num)]     
             for i in range(output.shape[0]):
                 class_id = np.argmax(classes_scores[i])
                 obj_score = output[i][4]
@@ -157,7 +157,7 @@ class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
                 indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
                 boxes = boxes[indices]
             if self.draw_result:
-                self.result = draw(self.image, boxes)
+                self.result = draw(self.image, boxes, self.input_shape)
         
 
 '''
@@ -190,7 +190,7 @@ class YOLO_OpenVINO_Segment(YOLO_OpenVINO):
         preds = []
         if self.algo_type == 'YOLOv5':
             output0 = output0[output0[..., 4] > self.confidence_threshold]
-            classes_scores = output0[..., 5:85]     
+            classes_scores = output0[..., 5:(5+self.class_num)]     
             for i in range(output0.shape[0]):
                 class_id = np.argmax(classes_scores[i])
                 obj_score = output0[i][4]
@@ -205,7 +205,7 @@ class YOLO_OpenVINO_Segment(YOLO_OpenVINO):
                     preds.append(output0[i])
         if self.algo_type == 'YOLOv8': 
             for i in range(output0.shape[0]):
-                classes_scores = output0[..., 4:84]     
+                classes_scores = output0[..., 4:(4+self.class_num)]     
                 class_id = np.argmax(classes_scores[i])
                 output0[i][4] = classes_scores[i][class_id]
                 output0[i][5] = class_id
@@ -235,4 +235,4 @@ class YOLO_OpenVINO_Segment(YOLO_OpenVINO):
         
             masks = crop_mask(masks, downsampled_bboxes)
             if self.draw_result:
-                self.result = draw(self.image, boxes, masks)
+                self.result = draw(self.image, boxes, masks, self.input_shape)
