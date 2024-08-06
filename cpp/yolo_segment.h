@@ -121,7 +121,7 @@ protected:
 	{
 		srand(time(0));
 		std::vector<cv::Scalar> color;
-		for (int i = 0; i < class_num; i++)
+		for (int i = 0; i < m_class_num; i++)
 		{
 			color.push_back(cv::Scalar(rand() % 256, rand() % 256, rand() % 256));
 		}

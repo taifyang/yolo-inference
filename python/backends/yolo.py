@@ -1,8 +1,8 @@
 '''
 Author: taifyang 
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang 
-LastEditTime: 2024-08-03 21:01:16
+LastEditors: taifyang
+LastEditTime: 2024-08-06 21:27:24
 FilePath: \python\backends\yolo.py
 Description: YOLO接口类
 '''
@@ -24,7 +24,7 @@ class YOLO:
     '''    
     def __init__(self) -> None:
         super().__init__()
-        self.class_num = 80		#类别数量
+        self.class_num = 80		            #类别数量
         self.score_threshold = 0.2      	#得分阈值
         self.nms_threshold = 0.5        	#NMS阈值
         self.confidence_threshold = 0.2 	#置信度阈值    

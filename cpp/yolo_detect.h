@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 
- * @LastEditTime: 2024-07-07 15:12:08
+ * @LastEditTime: 2024-08-06 21:18:21
  * @FilePath: \cpp\yolo_detect.h
  * @Description: 检测算法类
  */
@@ -90,7 +90,7 @@ protected:
 			box_conf.box = boxes[i];
 			box_conf.score = scores[i];
 			box_conf.id = i;
-			if (scores[i] > score_threshold)	boxes_scores.push_back(box_conf);
+			if (scores[i] > m_score_threshold)	boxes_scores.push_back(box_conf);
 		}
 
 		std::sort(boxes_scores.begin(), boxes_scores.end(), [](BoxScore a, BoxScore b) { return a.score > b.score; });
@@ -118,7 +118,7 @@ protected:
 				float inter = w * h;
 				float ovr = inter / (area[i] + area[j] - inter);
 
-				if (ovr >= nms_threshold)  isSuppressed[j] = true;
+				if (ovr >= m_nms_threshold)  isSuppressed[j] = true;
 			}
 		}
 
@@ -171,22 +171,22 @@ protected:
 	/**
 	 * @description: 检测类别数
 	 */	
-	int class_num = 80;
+	int m_class_num = 80;
 
 	/**
 	 * @description: 得分阈值
 	 */
-	float score_threshold = 0.2;
+	float m_score_threshold = 0.2;
 
 	/**
 	 * @description: IOU阈值
 	 */
-	float nms_threshold = 0.5;
+	float m_nms_threshold = 0.5;
 
 	/**
 	 * @description: 置信度阈值
 	 */
-	float confidence_threshold = 0.2;
+	float m_confidence_threshold = 0.2;
 
 	/**
 	 * @description: LetterBox参数

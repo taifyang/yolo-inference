@@ -1,8 +1,8 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 
- * @LastEditTime: 2024-06-29 16:25:47
+ * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditTime: 2024-08-06 21:20:25
  * @FilePath: \cpp\libtorch\yolo_libtorch.h
  * @Description: yolo算法的libtorch推理框架头文件
  */
@@ -41,7 +41,7 @@ protected:
 	/**
 	 * @description: 推理模块
 	 */
-	torch::jit::script::Module module;
+	torch::jit::script::Module m_module;
 
 	/**
 	 * @description: 模型输入

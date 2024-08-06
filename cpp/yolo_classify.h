@@ -43,7 +43,7 @@ protected:
 	/**
 	 * @description: 分类类别数
 	 */	
-	int class_num = 1000;
+	int m_class_num = 1000;
 
 	/**
 	 * @description: 模型输出

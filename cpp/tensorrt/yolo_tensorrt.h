@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 
- * @LastEditTime: 2024-06-17 23:21:07
+ * @LastEditTime: 2024-08-06 21:15:58
  * @FilePath: \cpp\tensorrt\yolo_tensorrt.h
  * @Description: yolo算法的tensorrt推理框架头文件
  */
@@ -35,6 +35,15 @@ public:
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
 
 protected:
+	/**
+	 * @description: 推理运行时
+	 */
+	nvinfer1::IRuntime* m_runtime;
+
+	/**
+	 * @description: 推理引擎
+	 */
+	nvinfer1::ICudaEngine* m_engine;
 	/**
 	 * @description: 推理上下文
 	 */
