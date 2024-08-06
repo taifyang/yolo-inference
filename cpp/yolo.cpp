@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 
- * @LastEditTime: 2024-07-07 16:24:31
+ * @LastEditTime: 2024-08-06 21:03:13
  * @FilePath: \cpp\yolo.cpp
  * @Description: YOLO类实现
  */
@@ -35,7 +35,7 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 {
 	if(!std::filesystem::exists(file_path))
 	{
-		std::cout << "file not exists!" << std::endl;
+		std::cerr << "file not exists!" << std::endl;
 		std::exit(-1);
 	}
 
@@ -46,7 +46,7 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 		m_image = cv::imread(file_path);
 		if (m_image.empty())
 		{
-			std::cout << "read image empty!" << std::endl;
+			std::cerr << "read image empty!" << std::endl;
 			std::exit(-1);
 		}
 
@@ -80,7 +80,7 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 		cv::VideoCapture cap;
 		if (!cap.open(file_path))
 		{
-			std::cout << "read video empty!" << std::endl;
+			std::cerr << "read video empty!" << std::endl;
 			std::exit(-1);
 		}
 
@@ -133,7 +133,7 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 	}
 	else
 	{
-		std::cout << "supported input file types: .bmp .jpg .png .mp4" << std::endl;
+		std::cerr << "supported input file types: .bmp .jpg .png .mp4" << std::endl;
 		std::exit(-1);
 	}
 }
@@ -153,19 +153,19 @@ std::unique_ptr<YOLO> CreateFactory::create(const Backend_Type& backend_type, co
 {
 	if (backend_type >= m_create_registry.size())
 	{
-		std::cout << "unsupported backend type!" << std::endl;
+		std::cerr << "unsupported backend type!" << std::endl;
 		std::exit(-1);
 	}
 	if (task_type >= m_create_registry[task_type].size())
 	{
-		std::cout << "unsupported task type!" << std::endl;
+		std::cerr << "unsupported task type!" << std::endl;
 		std::exit(-1);
 	}
 
 	std::unique_ptr<YOLO> yolo = m_create_registry[backend_type][task_type]();
 	if(yolo == nullptr)
 	{
-		std::cout << "algo create failed!" <<std::endl;
+		std::cerr << "algo create failed!" <<std::endl;
 		std::exit(-1);
 	}
 	else 
