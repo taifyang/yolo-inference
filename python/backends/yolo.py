@@ -1,11 +1,12 @@
 '''
 Author: taifyang 
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang
-LastEditTime: 2024-08-06 21:27:24
+LastEditors: taifyang 
+LastEditTime: 2024-08-20 23:35:12
 FilePath: \python\backends\yolo.py
 Description: YOLO接口类
 '''
+
 
 import os
 import cv2
@@ -36,28 +37,48 @@ class YOLO:
     return {*}      算法类实例
     '''    
     def task_map(self):
-        return {
-            'ONNXRuntime':{
+        map = {}
+        try:
+            import onnxruntime
+            map['ONNXRuntime'] = {
                 'Classify':backends.ONNXRuntime.YOLO_ONNXRuntime_Classify,
                 'Detect':backends.ONNXRuntime.YOLO_ONNXRuntime_Detect,
                 'Segment':backends.ONNXRuntime.YOLO_ONNXRuntime_Segment,
-            },
-            'OpenCV':{
+            }
+        except:
+               pass
+        
+        try:
+            import cv2   
+            map['OpenCV'] =  {
                 'Classify':backends.OpenCV.YOLO_OpenCV_Classify,
                 'Detect':backends.OpenCV.YOLO_OpenCV_Detect,
                 'Segment':backends.OpenCV.YOLO_OpenCV_Segment,
-            },
-            'OpenVINO':{
+            }
+        except:
+            pass
+            
+        try:
+            import openvino
+            map['OpenVINO'] = {
                 'Classify':backends.OpenVINO.YOLO_OpenVINO_Classify,
                 'Detect':backends.OpenVINO.YOLO_OpenVINO_Detect,
                 'Segment':backends.OpenVINO.YOLO_OpenVINO_Segment,
-            },
-            'TensorRT':{
+            }
+        except:
+            pass
+        
+        try:
+            import tensorrt
+            map['TensorRT'] = {
                 'Classify':backends.TensorRT.YOLO_TensorRT_Classify,
                 'Detect':backends.TensorRT.YOLO_TensorRT_Detect,
                 'Segment':backends.TensorRT.YOLO_TensorRT_Segment,
-            },
-        }
+            }
+        except:
+            pass
+
+        return map
     
     '''
     description:                推理接口

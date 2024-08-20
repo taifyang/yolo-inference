@@ -7,6 +7,7 @@ FilePath: \python\backends\TensorRT\yolo_tensorrt.py
 Description: yolo算法tensorrt推理框架实现类
 '''
 
+
 import tensorrt as trt
 import pycuda.autoinit 
 import pycuda.driver as cuda  
@@ -208,7 +209,7 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
                 indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
                 boxes = boxes[indices]
             if self.draw_result:
-                self.result = draw(self.image, boxes, self.input_shape)
+                self.result = draw(self.image, boxes, input_shape=self.input_shape)
         
 
 '''

@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 
- * @LastEditTime: 2024-08-06 21:15:58
+ * @LastEditTime: 2024-08-20 23:01:02
  * @FilePath: \cpp\tensorrt\yolo_tensorrt.h
  * @Description: yolo算法的tensorrt推理框架头文件
  */
@@ -33,6 +33,12 @@ public:
 	 * @return {*}
 	 */
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
+
+	/**
+	 * @description: 资源释放接口
+	 * @return {*}
+	 */
+	void release();
 
 protected:
 	/**

@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 
- * @LastEditTime: 2024-08-06 21:11:17
+ * @LastEditTime: 2024-08-20 23:04:14
  * @FilePath: \cpp\tensorrt\yolo_tensorrt.cpp
  * @Description: yolo算法的tensorrt推理框架实现
  */
@@ -555,17 +555,26 @@ void YOLO_TensorRT_Segment::post_process()
 		draw_result(m_output_seg);
 }
 
-void YOLO_TensorRT_Classify::release()
+void YOLO_TensorRT::release()
 {
 	cudaStreamDestroy(m_stream);
 	cudaFree(m_input_device);
+	m_execution_context->destroy();
+	m_engine->destroy();
+	m_runtime->destroy();
+}
+
+void YOLO_TensorRT_Classify::release()
+{
+	YOLO_TensorRT::release();
+	
 	cudaFree(m_output_device);
 }
 
 void YOLO_TensorRT_Detect::release()
 {
-	cudaStreamDestroy(m_stream);
-	cudaFree(m_input_device);
+	YOLO_TensorRT::release();
+
 	cudaFree(m_output_device);
 
 #ifdef _CUDA_PREPROCESS
@@ -581,13 +590,10 @@ void YOLO_TensorRT_Detect::release()
 
 void YOLO_TensorRT_Segment::release()
 {
-	cudaStreamDestroy(m_stream);
-	cudaFree(m_input_device);
+	YOLO_TensorRT::release();
+
 	cudaFree(m_output0_device);
 	cudaFree(m_output1_device);
-	m_execution_context->destroy();
-	m_engine->destroy();
-	m_runtime->destroy();
 
 #ifdef _CUDA_PREPROCESS
 	cudaFree(m_affine_matrix_device);
