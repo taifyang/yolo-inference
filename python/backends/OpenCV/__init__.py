@@ -5,6 +5,8 @@ LastEditors: taifyang
 LastEditTime: 2024-08-03 21:00:27
 FilePath: \yolo-inference\python\backends\OpenCV\__init__.py
 '''
+
+
 from backends.OpenCV.yolo_opencv import YOLO_OpenCV_Classify, YOLO_OpenCV_Detect, YOLO_OpenCV_Segment
 
 

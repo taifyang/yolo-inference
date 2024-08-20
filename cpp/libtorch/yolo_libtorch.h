@@ -1,7 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditors: taifyang 
  * @LastEditTime: 2024-08-06 21:20:25
  * @FilePath: \cpp\libtorch\yolo_libtorch.h
  * @Description: yolo算法的libtorch推理框架头文件

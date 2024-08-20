@@ -179,7 +179,7 @@ class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
                 indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
                 boxes = boxes[indices]
             if self.draw_result:
-                self.result = draw(self.image, boxes, self.input_shape)
+                self.result = draw(self.image, boxes, input_shape=self.input_shape)
             
 
 '''

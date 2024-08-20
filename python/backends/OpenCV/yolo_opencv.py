@@ -1,11 +1,12 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang  
-LastEditTime: 2024-07-11 23:46:59
+LastEditors: taifyang 
+LastEditTime: 2024-08-20 23:32:13
 FilePath: \python\backends\OpenCV\yolo_opencv.py
 Description: yolo算法opencv推理框架实现
 '''
+
 
 import cv2
 from backends.yolo import *
@@ -92,7 +93,7 @@ class YOLO_OpenCV_Classify(YOLO_OpenCV):
     return {*}
     '''    
     def post_process(self) -> None:
-        output = np.squeeze(self.output).astype(dtype=np.float32)
+        output = np.squeeze(self.output[0]).astype(dtype=np.float32)
         if self.algo_type == 'YOLOv5' and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.exp(np.max(output))/np.sum(np.exp(output)))
         if self.algo_type == 'YOLOv8' and self.draw_result:
@@ -123,6 +124,7 @@ class YOLO_OpenCV_Detect(YOLO_OpenCV):
         boxes = []
         scores = []
         class_ids = []
+        self.output = self.output[0]
         for i in range(self.output.shape[1]):
             if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7']:
                 data = self.output[0][i]
@@ -149,7 +151,7 @@ class YOLO_OpenCV_Detect(YOLO_OpenCV):
                 output.append(np.array([boxes[i][0], boxes[i][1], boxes[i][2], boxes[i][3], scores[i], class_ids[i]]))
             boxes = np.array(output)
             if self.draw_result:
-                self.result = draw(self.image, boxes, self.input_shape)
+                self.result = draw(self.image, boxes, input_shape=self.input_shape)
 
 
 '''
