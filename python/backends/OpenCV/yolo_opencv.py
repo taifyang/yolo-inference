@@ -1,12 +1,11 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang 
-LastEditTime: 2024-08-20 23:32:13
+LastEditors: taifyang
+LastEditTime: 2024-08-24 11:37:50
 FilePath: \python\backends\OpenCV\yolo_opencv.py
 Description: yolo算法opencv推理框架实现
 '''
-
 
 import cv2
 from backends.yolo import *
@@ -93,7 +92,7 @@ class YOLO_OpenCV_Classify(YOLO_OpenCV):
     return {*}
     '''    
     def post_process(self) -> None:
-        output = np.squeeze(self.output[0]).astype(dtype=np.float32)
+        output = np.squeeze(self.output).astype(dtype=np.float32)
         if self.algo_type == 'YOLOv5' and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.exp(np.max(output))/np.sum(np.exp(output)))
         if self.algo_type == 'YOLOv8' and self.draw_result:
@@ -121,35 +120,38 @@ class YOLO_OpenCV_Detect(YOLO_OpenCV):
     return {*}
     '''     
     def post_process(self) -> None:
+        output = np.squeeze(self.output[0]).astype(dtype=np.float32)
         boxes = []
         scores = []
         class_ids = []
-        self.output = self.output[0]
-        for i in range(self.output.shape[1]):
-            if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7']:
-                data = self.output[0][i]
-                objness = data[4]
-                if objness < self.confidence_threshold:
-                    continue
-                score = data[5:] * objness
-            if self.algo_type in ['YOLOv8', 'YOLOv9']: 
-                data = self.output[0][i, ...]
-                score = data[4:]
-                objness = 1   
-            _, _, _, max_score_index = cv2.minMaxLoc(score)
-            max_id = max_score_index[1]
-            if score[max_id] > self.score_threshold:
-                x, y, w, h = data[0].item(), data[1].item(), data[2].item(), data[3].item()
-                boxes.append(np.array([x-w/2, y-h/2, x+w/2, y+h/2]))
-                scores.append(score[max_id]*objness)
-                class_ids.append(max_id)
-                
+
+        if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7']:
+            output = output[output[..., 4] > self.confidence_threshold]
+            classes_scores = output[..., 5:(5+self.m_class_num)]     
+            for i in range(output.shape[0]):
+                class_id = np.argmax(classes_scores[i])
+                score = classes_scores[i][class_id] * output[i][4]
+                if score > self.score_threshold:
+                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
+                    scores.append(score)
+                    class_ids.append(class_id) 
+        if self.algo_type in ['YOLOv8', 'YOLOv9']: 
+            classes_scores = output[..., 4:(4+self.m_class_num)]          
+            for i in range(output.shape[0]):              
+                class_id = np.argmax(classes_scores[i])
+                score = classes_scores[i][class_id]
+                if score > self.score_threshold:
+                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
+                    scores.append(score)
+                    class_ids.append(class_id)    
+             
         if len(boxes):   
-            indices = cv2.dnn.NMSBoxes(boxes, scores, self.score_threshold, self.nms_threshold)
-            output = []
-            for i in indices:
-                output.append(np.array([boxes[i][0], boxes[i][1], boxes[i][2], boxes[i][3], scores[i], class_ids[i]]))
-            boxes = np.array(output)
+            boxes = np.array(boxes)
+            scores = np.array(scores)
+            if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9']:
+                boxes = xywh2xyxy(boxes)
+                indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
+                boxes = boxes[indices]
             if self.draw_result:
                 self.result = draw(self.image, boxes, input_shape=self.input_shape)
 
@@ -180,32 +182,27 @@ class YOLO_OpenCV_Segment(YOLO_OpenCV):
         scores = []
         class_ids = []
         preds = []
-        if self.algo_type == 'YOLOv5':
+        if self.algo_type in ['YOLOv5']:
             output = output[output[..., 4] > self.confidence_threshold]
-            classes_scores = output[..., 5:(5+self.class_num)]     
+            classes_scores = output[..., 5:(5+self.m_class_num)]     
             for i in range(output.shape[0]):
                 class_id = np.argmax(classes_scores[i])
-                obj_score = output[i][4]
-                cls_score = classes_scores[i][class_id]
-                output[i][4] = obj_score * cls_score
-                output[i][5] = class_id
-                if output[i][4] > self.score_threshold:
-                    boxes.append(output[i][:6])
-                    scores.append(output[i][4])
-                    class_ids.append(output[i][5])   
-                    output[i][5:] *= obj_score
-                    preds.append(output[i])
-        if self.algo_type == 'YOLOv8': 
-            for i in range(output.shape[0]):
-                classes_scores = output[..., 4:(4+self.class_num)]     
+                score = classes_scores[i][class_id] * output[i][4]
+                if score > self.score_threshold:
+                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
+                    scores.append(score)
+                    class_ids.append(class_id) 
+                    preds.append(output[i])  
+        if self.algo_type in ['YOLOv8']: 
+            classes_scores = output[..., 4:(4+self.m_class_num)]          
+            for i in range(output.shape[0]):              
                 class_id = np.argmax(classes_scores[i])
-                output[i][4] = classes_scores[i][class_id]
-                output[i][5] = class_id
-                if output[i][4] > self.score_threshold:
-                    boxes.append(output[i, :6])
-                    scores.append(output[i][4])
-                    class_ids.append(output[i][5])    
-                    preds.append(output[i])     
+                score = classes_scores[i][class_id]
+                if score > self.score_threshold:
+                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
+                    scores.append(score)
+                    class_ids.append(class_id) 
+                    preds.append(output[i])    
                           
         if len(boxes):   
             boxes = np.array(boxes)

@@ -14,7 +14,7 @@
 class TRTLogger : public nvinfer1::ILogger
 {
 public:
-	virtual void log(Severity severity, nvinfer1::AsciiChar const* msg) noexcept override
+	void log(nvinfer1::ILogger::Severity severity, const char* msg) noexcept
 	{
 	}
 } logger;
@@ -43,16 +43,14 @@ void YOLO_TensorRT::init(const Algo_Type algo_type, const Device_Type device_typ
 		std::exit(-1);
 	}
 
-	file.seekg(0, file.end);
-	size_t engine_data_size = file.tellg();
-	file.seekg(0, file.beg);
-	char* engine_data = new char[engine_data_size];
-	file.read(engine_data, engine_data_size);
-	file.close();
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+
+    std::string stream_model(buffer.str());
 
 	TRTLogger logger;
 	m_runtime = nvinfer1::createInferRuntime(logger);
-	m_engine = m_runtime->deserializeCudaEngine(engine_data, engine_data_size);
+	m_engine = m_runtime->deserializeCudaEngine(stream_model.data(), stream_model.size());
 
 	cudaStreamCreate(&m_stream);
 	m_execution_context = m_engine->createExecutionContext();
