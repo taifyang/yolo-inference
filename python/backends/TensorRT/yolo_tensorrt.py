@@ -1,12 +1,11 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang  
-LastEditTime: 2024-07-11 23:48:24
+LastEditors: taifyang 
+LastEditTime: 2024-08-24 12:05:59
 FilePath: \python\backends\TensorRT\yolo_tensorrt.py
 Description: yolo算法tensorrt推理框架实现类
 '''
-
 
 import tensorrt as trt
 import pycuda.autoinit 
@@ -178,28 +177,23 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
         class_ids = []
         if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7']:
             output = output[output[..., 4] > self.confidence_threshold]
-            classes_scores = output[..., 5:(5+self.class_num)]     
+            classes_scores = output[..., 5:(5+self.m_class_num)]     
             for i in range(output.shape[0]):
                 class_id = np.argmax(classes_scores[i])
-                obj_score = output[i][4]
-                cls_score = classes_scores[i][class_id]
-                output[i][4] = obj_score * cls_score
-                output[i][5] = class_id
-                if output[i][4] > self.score_threshold:
-                    boxes.append(output[i][:6])
-                    scores.append(output[i][4])
-                    class_ids.append(output[i][5])   
-                    output[i][5:] *= obj_score
+                score = classes_scores[i][class_id] * output[i][4]
+                if score > self.score_threshold:
+                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
+                    scores.append(score)
+                    class_ids.append(class_id) 
         if self.algo_type in ['YOLOv8', 'YOLOv9']: 
-            for i in range(output.shape[0]):
-                classes_scores = output[..., 4:]     
+            classes_scores = output[..., 4:(4+self.m_class_num)]          
+            for i in range(output.shape[0]):              
                 class_id = np.argmax(classes_scores[i])
-                output[i][4] = classes_scores[i][class_id]
-                output[i][5] = class_id
-                if output[i][4] > self.score_threshold:
-                    boxes.append(output[i, :6])
-                    scores.append(output[i][4])
-                    class_ids.append(output[i][5])    
+                score = classes_scores[i][class_id]
+                if score > self.score_threshold:
+                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
+                    scores.append(score)
+                    class_ids.append(class_id)    
                                
         if len(boxes):   
             boxes = np.array(boxes)
@@ -276,30 +270,25 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
         preds = []
         if self.algo_type == 'YOLOv5':
             output1 = output1[output1[..., 4] > self.confidence_threshold]
-            classes_scores = output1[..., 5:(5+self.class_num)]     
+            classes_scores = output1[..., 5:(5+self.m_class_num)]     
             for i in range(output1.shape[0]):
                 class_id = np.argmax(classes_scores[i])
-                obj_score = output1[i][4]
-                cls_score = classes_scores[i][class_id]
-                output1[i][4] = obj_score * cls_score
-                output1[i][5] = class_id
-                if output1[i][4] > self.score_threshold:
-                    boxes.append(output1[i][:6])
-                    scores.append(output1[i][4])
-                    class_ids.append(output1[i][5])   
-                    output1[i][5:] *= obj_score
-                    preds.append(output1[i])
+                score = classes_scores[i][class_id] * output1[i][4]
+                if score > self.score_threshold:
+                    boxes.append(np.concatenate([output1[i, :4], np.array([score, class_id])]))
+                    scores.append(score)
+                    class_ids.append(class_id) 
+                    preds.append(output1[i])                            
         if self.algo_type == 'YOLOv8': 
-            for i in range(output1.shape[0]):
-                classes_scores = output1[..., 4:(4+self.class_num)]     
+            classes_scores = output1[..., 4:(4+self.m_class_num)]   
+            for i in range(output1.shape[0]):              
                 class_id = np.argmax(classes_scores[i])
-                output1[i][4] = classes_scores[i][class_id]
-                output1[i][5] = class_id
-                if output1[i][4] > self.score_threshold:
-                    boxes.append(output1[i, :6])
-                    scores.append(output1[i][4])
-                    class_ids.append(output1[i][5])   
-                    preds.append(output1[i])    
+                score = classes_scores[i][class_id]
+                if score > self.score_threshold:
+                    boxes.append(np.concatenate([output1[i, :4], np.array([score, class_id])]))
+                    scores.append(score)
+                    class_ids.append(class_id) 
+                    preds.append(output1[i])   
                       
         if len(boxes):        
             boxes = np.array(boxes)

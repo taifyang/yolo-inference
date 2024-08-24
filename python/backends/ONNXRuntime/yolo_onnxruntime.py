@@ -1,8 +1,8 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang  
-LastEditTime: 2024-07-11 23:47:25
+LastEditors: taifyang 
+LastEditTime: 2024-08-24 12:03:54
 FilePath: \python\backends\ONNXRuntime\yolo_onnxruntime.py
 Description: yolo算法onnxruntime推理框架实现类
 '''
@@ -51,7 +51,7 @@ class YOLO_ONNXRuntime(YOLO):
     '''    
     def process(self) -> None:
         self.output = self.onnx_session.run(None, self.input)
-
+        pass
 
 '''
 description: yolo分类算法onnxruntime推理框架实现类
@@ -142,28 +142,23 @@ class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
         
         if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7']:
             output = output[output[..., 4] > self.confidence_threshold]
-            classes_scores = output[..., 5:(5+self.class_num)]     
+            classes_scores = output[..., 5:(5+self.m_class_num)]     
             for i in range(output.shape[0]):
                 class_id = np.argmax(classes_scores[i])
-                obj_score = output[i][4]
-                cls_score = classes_scores[i][class_id]
-                output[i][4] = obj_score * cls_score
-                output[i][5] = class_id
-                if output[i][4] > self.score_threshold:
-                    boxes.append(output[i][:6])
-                    scores.append(output[i][4])
-                    class_ids.append(output[i][5])   
-                    output[i][5:] *= obj_score
+                score = classes_scores[i][class_id] * output[i][4]
+                if score > self.score_threshold:
+                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
+                    scores.append(score)
+                    class_ids.append(class_id) 
         if self.algo_type in ['YOLOv8', 'YOLOv9']: 
-            for i in range(output.shape[0]):
-                classes_scores = output[..., 4:]     
+            classes_scores = output[..., 4:(4+self.m_class_num)]          
+            for i in range(output.shape[0]):              
                 class_id = np.argmax(classes_scores[i])
-                output[i][4] = classes_scores[i][class_id]
-                output[i][5] = class_id
-                if output[i][4] > self.score_threshold:
-                    boxes.append(output[i, :6])
-                    scores.append(output[i][4])
-                    class_ids.append(output[i][5])       
+                score = classes_scores[i][class_id]
+                if score > self.score_threshold:
+                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
+                    scores.append(score)
+                    class_ids.append(class_id)    
         if self.algo_type == 'YOLOv10': 
             output = output[output[..., 4] > self.confidence_threshold] 
             for i in range(output.shape[0]):
@@ -214,38 +209,33 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
         scores = []
         class_ids = []
         preds = []
-        if self.algo_type == 'YOLOv5':
+        if self.algo_type in ['YOLOv5']:
             output = output[output[..., 4] > self.confidence_threshold]
-            classes_scores = output[..., 5:(5+self.class_num)]     
+            classes_scores = output[..., 5:(5+self.m_class_num)]     
             for i in range(output.shape[0]):
                 class_id = np.argmax(classes_scores[i])
-                obj_score = output[i][4]
-                cls_score = classes_scores[i][class_id]
-                output[i][4] = obj_score * cls_score
-                output[i][5] = class_id
-                if output[i][4] > self.score_threshold:
-                    boxes.append(output[i][:6])
-                    scores.append(output[i][4])
-                    class_ids.append(output[i][5])   
-                    output[i][5:] *= obj_score
-                    preds.append(output[i])
-        if self.algo_type == 'YOLOv8': 
-            for i in range(output.shape[0]):
-                classes_scores = output[..., 4:(4+self.class_num)]     
+                score = classes_scores[i][class_id] * output[i][4]
+                if score > self.score_threshold:
+                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
+                    scores.append(score)
+                    class_ids.append(class_id) 
+                    preds.append(output[i])  
+        if self.algo_type in ['YOLOv8']: 
+            classes_scores = output[..., 4:(4+self.m_class_num)]          
+            for i in range(output.shape[0]):              
                 class_id = np.argmax(classes_scores[i])
-                output[i][4] = classes_scores[i][class_id]
-                output[i][5] = class_id
-                if output[i][4] > self.score_threshold:
-                    boxes.append(output[i, :6])
-                    scores.append(output[i][4])
-                    class_ids.append(output[i][5])    
-                    preds.append(output[i])     
+                score = classes_scores[i][class_id]
+                if score > self.score_threshold:
+                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
+                    scores.append(score)
+                    class_ids.append(class_id) 
+                    preds.append(output[i])  
                           
         if len(boxes):   
             boxes = np.array(boxes)
             boxes = xywh2xyxy(boxes)
             scores = np.array(scores)
-            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
+            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) [:3]
             boxes = boxes[indices]
             
             masks_in = np.array(preds)[indices][..., -32:]
