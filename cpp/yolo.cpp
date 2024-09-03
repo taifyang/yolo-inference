@@ -40,8 +40,8 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 	}
 
 	m_draw_result = save_result || show_result;
-	std::string suffix = file_path.substr(file_path.size() - 4);
-	if (suffix == ".bmp" || suffix == ".jpg" || suffix == ".png")
+	std::string extension = std::filesystem::path(file_path).extension().string();
+	if (extension == ".bmp" || extension == ".jpg" || extension == ".png")
 	{
 		m_image = cv::imread(file_path);
 		if (m_image.empty())
@@ -75,7 +75,7 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 			cv::destroyAllWindows();
 		}
 	}
-	else if (suffix == ".mp4")
+	else if (extension == ".mp4")
 	{
 		cv::VideoCapture cap;
 		if (!cap.open(file_path))
