@@ -29,7 +29,7 @@ try:
     import tensorrt
     from backends import TensorRT
 except:
-    print('tensorrt not installed')
+    print('tensorrt is not installed')
 
 
 __all__ = 'ONNXRuntime', 'OpenCV', 'OpenVINO', 'TensorRT'
