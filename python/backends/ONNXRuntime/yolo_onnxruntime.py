@@ -142,7 +142,7 @@ class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
         
         if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7']:
             output = output[output[..., 4] > self.confidence_threshold]
-            classes_scores = output[..., 5:(5+self.m_class_num)]     
+            classes_scores = output[..., 5:(5+self.class_num)]     
             for i in range(output.shape[0]):
                 class_id = np.argmax(classes_scores[i])
                 score = classes_scores[i][class_id] * output[i][4]
@@ -151,7 +151,7 @@ class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
                     scores.append(score)
                     class_ids.append(class_id) 
         if self.algo_type in ['YOLOv8', 'YOLOv9']: 
-            classes_scores = output[..., 4:(4+self.m_class_num)]          
+            classes_scores = output[..., 4:(4+self.class_num)]          
             for i in range(output.shape[0]):              
                 class_id = np.argmax(classes_scores[i])
                 score = classes_scores[i][class_id]
@@ -211,7 +211,7 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
         preds = []
         if self.algo_type in ['YOLOv5']:
             output = output[output[..., 4] > self.confidence_threshold]
-            classes_scores = output[..., 5:(5+self.m_class_num)]     
+            classes_scores = output[..., 5:(5+self.class_num)]     
             for i in range(output.shape[0]):
                 class_id = np.argmax(classes_scores[i])
                 score = classes_scores[i][class_id] * output[i][4]
@@ -221,7 +221,7 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
                     class_ids.append(class_id) 
                     preds.append(output[i])  
         if self.algo_type in ['YOLOv8']: 
-            classes_scores = output[..., 4:(4+self.m_class_num)]          
+            classes_scores = output[..., 4:(4+self.class_num)]          
             for i in range(output.shape[0]):              
                 class_id = np.argmax(classes_scores[i])
                 score = classes_scores[i][class_id]
