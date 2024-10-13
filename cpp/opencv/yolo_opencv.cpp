@@ -64,7 +64,7 @@ void YOLO_OpenCV_Classify::init(const Algo_Type algo_type, const Device_Type dev
 
 void YOLO_OpenCV_Detect::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	if (algo_type != YOLOv5 && algo_type != YOLOv6 && algo_type != YOLOv7 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv10 && algo_type != YOLOv11)
+	if (algo_type != YOLOv5 && algo_type != YOLOv6 && algo_type != YOLOv7 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv11)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
@@ -85,11 +85,6 @@ void YOLO_OpenCV_Detect::init(const Algo_Type algo_type, const Device_Type devic
 	{
 		m_output_numprob = 4 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
-	}
-	if(m_algo == YOLOv10)
-	{
-		m_output_numprob = 6;
-		m_output_numbox = 300;
 	}
 	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
 }
@@ -197,7 +192,7 @@ void YOLO_OpenCV_Classify::post_process()
 	m_output_cls.id = id;
 	if (m_algo == YOLOv5)
 		m_output_cls.score = exp(scores[id]) / sum;
-	if (m_algo == YOLOv8)
+	if (m_algo == YOLOv8 || m_algo == YOLOv11)
 		m_output_cls.score = scores[id];
 
 	if(m_draw_result)
@@ -232,11 +227,6 @@ void YOLO_OpenCV_Detect::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id];
 		}
-		if (m_algo == YOLOv10)
-		{
-			score = ptr[4];
-			class_id = int(ptr[5]);
-		}
 		if (score < m_score_threshold)
 			continue;
 
@@ -252,10 +242,6 @@ void YOLO_OpenCV_Detect::post_process()
 			int width = int(w);
 			int height = int(h);
 			box = cv::Rect(left, top, width, height);
-		}
-		if (m_algo == YOLOv10)
-		{
-			box = cv::Rect(ptr[0], ptr[1], ptr[2] - ptr[0], ptr[3] - ptr[1]);
 		}
 
 		scale_box(box, m_image.size());
@@ -277,19 +263,6 @@ void YOLO_OpenCV_Detect::post_process()
 			output.id = class_ids[idx];
 			output.score = scores[idx];
 			output.box = boxes[idx];
-			m_output_det[i] = output;
-		}
-	}
-	if (m_algo == YOLOv10)
-	{
-		m_output_det.clear();
-		m_output_det.resize(boxes.size());
-		for (int i = 0; i < boxes.size(); i++)
-		{
-			OutputDet output;
-			output.id = class_ids[i];
-			output.score = scores[i];
-			output.box = boxes[i];
 			m_output_det[i] = output;
 		}
 	}
