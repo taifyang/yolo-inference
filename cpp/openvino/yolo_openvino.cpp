@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 
- * @LastEditTime: 2024-06-17 22:59:46
+ * @LastEditTime: 2024-10-13 20:29:49
  * @FilePath: \cpp\openvino\yolo_openvino.cpp
  * @Description: yolo算法的openvino推理框架实现
  */
@@ -27,14 +27,14 @@ void YOLO_OpenVINO::init(const Algo_Type algo_type, const Device_Type device_typ
 
 void YOLO_OpenVINO_Classify::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	if (algo_type != YOLOv5 && algo_type != YOLOv8)
+	if (algo_type != YOLOv5 && algo_type != YOLOv8 && algo_type != YOLOv11)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
 	}
 	YOLO_OpenVINO::init(algo_type, device_type, model_type, model_path);
 
-	if (m_algo == YOLOv8)
+	if (m_algo == YOLOv8 || m_algo == YOLOv11)
 	{
 		m_input_width = 224;
 		m_input_height = 224;
@@ -44,7 +44,7 @@ void YOLO_OpenVINO_Classify::init(const Algo_Type algo_type, const Device_Type d
 
 void YOLO_OpenVINO_Detect::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	if (algo_type != YOLOv5 && algo_type != YOLOv6 && algo_type != YOLOv7 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv10)
+	if (algo_type != YOLOv5 && algo_type != YOLOv6 && algo_type != YOLOv7 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv10 && algo_type != YOLOv11)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
@@ -61,7 +61,7 @@ void YOLO_OpenVINO_Detect::init(const Algo_Type algo_type, const Device_Type dev
 		m_output_numprob = 5 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
 	}
-	if (m_algo == YOLOv8 || m_algo == YOLOv9)
+	if (m_algo == YOLOv8 || m_algo == YOLOv9 || m_algo == YOLOv11)
 	{
 		m_output_numprob = 4 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
@@ -76,7 +76,7 @@ void YOLO_OpenVINO_Detect::init(const Algo_Type algo_type, const Device_Type dev
 
 void YOLO_OpenVINO_Segment::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	if (algo_type != YOLOv5 && algo_type != YOLOv8)
+	if (algo_type != YOLOv5 && algo_type != YOLOv8 && algo_type != YOLOv11)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
@@ -90,7 +90,7 @@ void YOLO_OpenVINO_Segment::init(const Algo_Type algo_type, const Device_Type de
 		m_output_numdet = 1 * m_output_numprob * m_output_numbox;
 		m_output_numseg = m_mask_params.segChannels * m_mask_params.segWidth * m_mask_params.segHeight;
 	}
-	if (m_algo == YOLOv8)
+	if (m_algo == YOLOv8 || m_algo == YOLOv11)
 	{
 		m_output_numprob = 36 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
@@ -115,7 +115,7 @@ void YOLO_OpenVINO_Classify::pre_process()
 		cv::subtract(crop_image, cv::Scalar(0.406, 0.456, 0.485), crop_image);
 		cv::divide(crop_image, cv::Scalar(0.225, 0.224, 0.229), crop_image);
 	}
-	if (m_algo == YOLOv8)
+	if (m_algo == YOLOv8 || m_algo == YOLOv11)
 	{
 		cv::cvtColor(m_image, crop_image, cv::COLOR_BGR2RGB);
 
@@ -190,7 +190,7 @@ void YOLO_OpenVINO_Classify::post_process()
 	m_output_cls.id = id;
 	if (m_algo == YOLOv5)
 		m_output_cls.score = exp(scores[id]) / sum;
-	if (m_algo == YOLOv8)
+	if (m_algo == YOLOv8 || m_algo == YOLOv11)
 		m_output_cls.score = scores[id];
 
 	if(m_draw_result)
@@ -217,7 +217,7 @@ void YOLO_OpenVINO_Detect::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id] * objness;
 		}
-		if (m_algo == YOLOv8 || m_algo == YOLOv9)
+		if (m_algo == YOLOv8 || m_algo == YOLOv9 || m_algo == YOLOv11)
 		{
 			float* classes_scores = ptr + 4;
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
@@ -232,7 +232,7 @@ void YOLO_OpenVINO_Detect::post_process()
 			continue;
 
 		cv::Rect box;
-		if(m_algo == YOLOv5 || m_algo == YOLOv6 || m_algo == YOLOv7 || m_algo == YOLOv8 || m_algo == YOLOv9)
+		if(m_algo == YOLOv5 || m_algo == YOLOv6 || m_algo == YOLOv7 || m_algo == YOLOv8 || m_algo == YOLOv9 || m_algo == YOLOv11)
 		{
 			float x = ptr[0];
 			float y = ptr[1];
@@ -255,7 +255,7 @@ void YOLO_OpenVINO_Detect::post_process()
 		class_ids.push_back(class_id);
 	}
 
-	if(m_algo == YOLOv5 || m_algo == YOLOv6 || m_algo == YOLOv7 || m_algo == YOLOv8 || m_algo == YOLOv9)
+	if(m_algo == YOLOv5 || m_algo == YOLOv6 || m_algo == YOLOv7 || m_algo == YOLOv8 || m_algo == YOLOv9 || m_algo == YOLOv11)
 	{
 		std::vector<int> indices;
 		nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
@@ -310,7 +310,7 @@ void YOLO_OpenVINO_Segment::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id] * objness;
 		}
-		if (m_algo == YOLOv8)
+		if (m_algo == YOLOv8 || m_algo == YOLOv11)
 		{
 			float* classes_scores = ptr + 4;
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
@@ -340,7 +340,7 @@ void YOLO_OpenVINO_Segment::post_process()
 			std::vector<float> temp_proto(ptr + m_class_num + 5, ptr + m_class_num + 37);
 			picked_proposals.push_back(temp_proto);
 		}
-		if (m_algo == YOLOv8)
+		if (m_algo == YOLOv8 || m_algo == YOLOv11)
 		{
 			std::vector<float> temp_proto(ptr + m_class_num + 4, ptr + m_class_num + 36);
 			picked_proposals.push_back(temp_proto);

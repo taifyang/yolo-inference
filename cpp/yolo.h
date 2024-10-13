@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 
- * @LastEditTime: 2024-07-21 23:31:47
+ * @LastEditTime: 2024-10-13 17:16:26
  * @FilePath: \cpp\yolo.h
  * @Description: yolo接口类头文件
  */
@@ -47,6 +47,7 @@ enum Algo_Type
 	YOLOv8,
 	YOLOv9,
 	YOLOv10,
+	YOLOv11,
 };
 
 /**

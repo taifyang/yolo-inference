@@ -2,7 +2,7 @@
 Author: taifyang  
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang 
-LastEditTime: 2024-08-24 11:58:48
+LastEditTime: 2024-10-13 20:43:18
 FilePath: \python\backends\OpenVINO\yolo_openvino.py
 Description: yolo算法openvino推理框架实现类
 '''
@@ -52,8 +52,8 @@ class YOLO_OpenVINO_Classify(YOLO_OpenVINO):
     return {*}
     '''    
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv5', 'YOLOv8'], 'algo type not supported!'
-        if self.algo_type == 'YOLOv5':
+        assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv11'], 'algo type not supported!'
+        if self.algo_type in ['YOLOv5']:
             crop_size = min(self.image.shape[0], self.image.shape[1])
             left = (self.image.shape[1] - crop_size) // 2
             top = (self.image.shape[0] - crop_size) // 2
@@ -62,7 +62,7 @@ class YOLO_OpenVINO_Classify(YOLO_OpenVINO):
             input = input / 255.0
             input = input - np.array([0.406, 0.456, 0.485])
             input = input / np.array([0.225, 0.224, 0.229])
-        if self.algo_type == 'YOLOv8':
+        if self.algo_type in ['YOLOv8', 'YOLOv11']:
             self.input_shape = (224, 224)
             if self.image.shape[1] > self.image.shape[0]:
                 self.image = cv2.resize(self.image, (self.input_shape[0]*self.image.shape[1]//self.image.shape[0], self.input_shape[0]))
@@ -85,9 +85,9 @@ class YOLO_OpenVINO_Classify(YOLO_OpenVINO):
     def post_process(self) -> None:
         output = self.output[self.compiled_model.output(0)]
         output = np.squeeze(output).astype(dtype=np.float32)
-        if self.algo_type == 'YOLOv5' and self.draw_result:
+        if self.algo_type in ['YOLOv5'] and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.exp(np.max(output))/np.sum(np.exp(output)))
-        if self.algo_type == 'YOLOv8' and self.draw_result:
+        if self.algo_type in ['YOLOv8', 'YOLOv11'] and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.max(output))
        
  
@@ -101,7 +101,7 @@ class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
     return {*}
     '''    
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11'], 'algo type not supported!'
         input = letterbox(self.image, self.input_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB和HWC2CHW
         input = input / 255.0
@@ -128,7 +128,7 @@ class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
                     boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
                     scores.append(score)
                     class_ids.append(class_id) 
-        if self.algo_type in ['YOLOv8', 'YOLOv9']: 
+        if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11']: 
             classes_scores = output[..., 4:(4+self.class_num)]          
             for i in range(output.shape[0]):              
                 class_id = np.argmax(classes_scores[i])
@@ -137,7 +137,7 @@ class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
                     boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
                     scores.append(score)
                     class_ids.append(class_id)              
-        if self.algo_type == 'YOLOv10': 
+        if self.algo_type in ['YOLOv10']: 
             output = output[output[..., 4] > self.confidence_threshold] 
             for i in range(output.shape[0]):
                 boxes.append(output[i, :6])
@@ -165,7 +165,7 @@ class YOLO_OpenVINO_Segment(YOLO_OpenVINO):
     return {*}
     '''    
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv5', 'YOLOv8'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv11'], 'algo type not supported!'
         input = letterbox(self.image, self.input_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB和HWC2CHW
         input = input / 255.0
@@ -183,7 +183,7 @@ class YOLO_OpenVINO_Segment(YOLO_OpenVINO):
         scores = []
         class_ids = []
         preds = []
-        if self.algo_type == 'YOLOv5':
+        if self.algo_type in ['YOLOv5']:
             output0 = output0[output0[..., 4] > self.confidence_threshold]
             classes_scores = output0[..., 5:(5+self.class_num)]     
             for i in range(output0.shape[0]):
@@ -194,7 +194,7 @@ class YOLO_OpenVINO_Segment(YOLO_OpenVINO):
                     scores.append(score)
                     class_ids.append(class_id) 
                     preds.append(output0[i])                            
-        if self.algo_type == 'YOLOv8': 
+        if self.algo_type in ['YOLOv8', 'YOLOv11']: 
             classes_scores = output0[..., 4:(4+self.class_num)]          
             for i in range(output0.shape[0]):              
                 class_id = np.argmax(classes_scores[i])

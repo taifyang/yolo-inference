@@ -1,5 +1,5 @@
 # yolo-inference
-C++ and Python implementations of YOLOv5, YOLOv6, YOLOv7, YOLOv8, YOLOv9 and YOLOv10 inference.
+C++ and Python implementations of YOLOv5, YOLOv6, YOLOv7, YOLOv8, YOLOv9, YOLOv10, YOLOv11 inference.
 
 Supported inference backends include Libtorch, ONNXRuntime, OpenCV, OpenVINO and TensorRT. 
 
