@@ -234,7 +234,7 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
             boxes = np.array(boxes)
             boxes = xywh2xyxy(boxes)
             scores = np.array(scores)
-            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) [:3]
+            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold)
             boxes = boxes[indices]
             
             masks_in = np.array(preds)[indices][..., -32:]
