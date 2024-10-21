@@ -2,20 +2,20 @@
 Author: taifyang  
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang
-LastEditTime: 2024-10-21 23:16:44
-FilePath: \python\backends\OpenCV\yolo_opencv.py
-Description: yolo算法opencv推理框架实现
+LastEditTime: 2024-10-21 23:44:25
+FilePath: \python\backends\PyTorch_\yolo_pytorch.py
+Description: yolo算法pytorch推理框架实现
 '''
 
-import cv2
+import torch
 from backends.yolo import *
 from backends.utils import *
 
 
 '''
-description: yolo算法opencv推理框架实现类
+description: yolo算法pytorch推理框架实现类
 '''
-class YOLO_OpenCV(YOLO):
+class YOLO_PyTorch(YOLO):
     '''
     description:            构造方法
     param {*} self          类的实例
@@ -29,17 +29,11 @@ class YOLO_OpenCV(YOLO):
         super().__init__()
         assert os.path.exists(model_path), 'model not exists!'
         assert model_type == 'FP32' or model_type == 'FP16', 'unsupported model type!'
-        self.net = cv2.dnn.readNet(model_path)
+        self.net = torch.load(model_path)
         self.algo_type = algo_type
-        if device_type == 'CPU':
-            self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
-            self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
-        if device_type == 'GPU':
-            self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-            if model_type == 'FP32':
-                self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
-            if model_type == 'FP16':
-                self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA_FP16)
+        self.device_type = device_type
+        if self.device_type == 'GPU':
+            self.net = self.net.cuda()
     
     '''
     description:    模型推理
@@ -47,13 +41,13 @@ class YOLO_OpenCV(YOLO):
     return {*}
     '''       
     def process(self) -> None:
-        self.output = self.net.forward(self.net.getUnconnectedOutLayersNames())
+        self.output = self.net(self.input)
 
 
 '''
-description: yolo分类算法opencv推理框架实现类
+description: yolo分类算法pytorch推理框架实现类
 '''     
-class YOLO_OpenCV_Classify(YOLO_OpenCV):
+class YOLO_PyTorch_Classify(YOLO_PyTorch):
     '''
     description:    模型前处理
     param {*} self  类的实例
@@ -84,7 +78,9 @@ class YOLO_OpenCV_Classify(YOLO_OpenCV):
             input = input / 255.0
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB和HWC2CHW
         self.input = np.expand_dims(input, axis=0).astype(dtype=np.float32)
-        self.net.setInput(self.input)
+        self.input = torch.from_numpy(self.input)
+        if self.device_type == 'GPU':
+            self.input = self.input.cuda()
     
     '''
     description:    模型后处理
@@ -92,7 +88,7 @@ class YOLO_OpenCV_Classify(YOLO_OpenCV):
     return {*}
     '''    
     def post_process(self) -> None:
-        output = np.squeeze(self.output).astype(dtype=np.float32)
+        output = np.squeeze(self.output.cpu().numpy()).astype(dtype=np.float32)
         if self.algo_type in ['YOLOv5'] and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.exp(np.max(output))/np.sum(np.exp(output)))
         if self.algo_type in ['YOLOv8', 'YOLOv11'] and self.draw_result:
@@ -100,9 +96,9 @@ class YOLO_OpenCV_Classify(YOLO_OpenCV):
     
 
 '''
-description: yolo检测算法opencv推理框架实现类
+description: yolo检测算法pytorch推理框架实现类
 '''      
-class YOLO_OpenCV_Detect(YOLO_OpenCV):
+class YOLO_PyTorch_Detect(YOLO_PyTorch):
     '''
     description:    模型前处理
     param {*} self  类的实例
@@ -112,15 +108,17 @@ class YOLO_OpenCV_Detect(YOLO_OpenCV):
         assert self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv11'], 'algo type not supported!'
         input = letterbox(self.image, self.input_shape)
         self.input = cv2.dnn.blobFromImage(input, 1/255., size=self.input_shape, swapRB=True, crop=False)
-        self.net.setInput(self.input)
-    
+        self.input = torch.from_numpy(self.input)   
+        if self.device_type == 'GPU':
+            self.input = self.input.cuda()
+        
     '''
     description:    模型后处理
     param {*} self  类的实例
     return {*}
     '''     
     def post_process(self) -> None:
-        output = np.squeeze(self.output[0]).astype(dtype=np.float32)
+        output = np.squeeze(self.output[0].cpu().numpy()).astype(dtype=np.float32)
         boxes = []
         scores = []
         class_ids = []
@@ -157,9 +155,9 @@ class YOLO_OpenCV_Detect(YOLO_OpenCV):
 
 
 '''
-description: yolo分割算法opencv推理框架实现类
+description: yolo分割算法pytorch推理框架实现类
 '''    
-class YOLO_OpenCV_Segment(YOLO_OpenCV):
+class YOLO_PyTorch_Segment(YOLO_PyTorch):
     '''
     description:    模型前处理
     param {*} self  类的实例
@@ -169,15 +167,17 @@ class YOLO_OpenCV_Segment(YOLO_OpenCV):
         assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv11'], 'algo type not supported!'
         input = letterbox(self.image, self.input_shape)
         self.input = cv2.dnn.blobFromImage(input, 1/255., size=self.input_shape, swapRB=True, crop=False)
-        self.net.setInput(self.input)
-        
+        self.input = torch.from_numpy(self.input)
+        if self.device_type == 'GPU':
+            self.input = self.input.cuda()
+                
     '''
     description:    模型后处理
     param {*} self  类的实例
     return {*}
     '''           
     def post_process(self) -> None:
-        output = np.squeeze(self.output[0]).astype(dtype=np.float32)
+        output = np.squeeze(self.output[0].cpu().numpy()).astype(dtype=np.float32)
         boxes = []
         scores = []
         class_ids = []
@@ -212,7 +212,7 @@ class YOLO_OpenCV_Segment(YOLO_OpenCV):
             boxes = boxes[indices]
             
             masks_in = np.array(preds)[indices][..., -32:]
-            proto= np.squeeze(self.output[1]).astype(dtype=np.float32)
+            proto = np.squeeze(self.output[1].cpu().numpy()).astype(dtype=np.float32)
             c, mh, mw = proto.shape 
             masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)
             
