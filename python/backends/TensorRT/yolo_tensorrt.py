@@ -1,7 +1,7 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+LastEditors: taifyang
 LastEditTime: 2024-10-13 20:44:24
 FilePath: \python\backends\TensorRT\yolo_tensorrt.py
 Description: yolo算法tensorrt推理框架实现类

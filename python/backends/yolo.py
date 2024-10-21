@@ -1,8 +1,8 @@
 '''
 Author: taifyang 
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang 
-LastEditTime: 2024-08-20 23:35:12
+LastEditors: taifyang
+LastEditTime: 2024-10-21 23:04:32
 FilePath: \python\backends\yolo.py
 Description: YOLO接口类
 '''
@@ -57,13 +57,23 @@ class YOLO:
             }
         except:
             pass
-            
+                             
         try:
             import openvino
             map['OpenVINO'] = {
                 'Classify':backends.OpenVINO.YOLO_OpenVINO_Classify,
                 'Detect':backends.OpenVINO.YOLO_OpenVINO_Detect,
                 'Segment':backends.OpenVINO.YOLO_OpenVINO_Segment,
+            }
+        except:
+            pass
+        
+        try:
+            import torch
+            map['PyTorch'] =  {
+                'Classify':backends.PyTorch.YOLO_PyTorch_Classify,
+                'Detect':backends.PyTorch.YOLO_PyTorch_Detect,
+                'Segment':backends.PyTorch.YOLO_PyTorch_Segment,
             }
         except:
             pass
