@@ -235,6 +235,7 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
             boxes = np.array(boxes)
             boxes = xywh2xyxy(boxes)
             scores = np.array(scores)
+            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold)
             boxes = boxes[indices]
             
             masks_in = np.array(preds)[indices][..., -32:]
@@ -250,7 +251,8 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
         
             masks = crop_mask(masks, downsampled_bboxes)
             if self.draw_result:
-                self.result = draw_result(self.image, boxes, masks, self.input_shape)<<<<<<< HEAD
+<<<<<<< HEAD
+                self.result = draw_result(self.image, boxes, masks, self.input_shape)
 =======
                 self.result = draw(self.image, boxes, masks, self.input_shape)
 >>>>>>> 28112a9ac92a2095242161e479b65fa9f1e833bb
