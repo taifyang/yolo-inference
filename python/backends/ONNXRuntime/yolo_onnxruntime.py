@@ -251,8 +251,4 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
         
             masks = crop_mask(masks, downsampled_bboxes)
             if self.draw_result:
-<<<<<<< HEAD
                 self.result = draw_result(self.image, boxes, masks, self.input_shape)
-=======
-                self.result = draw(self.image, boxes, masks, self.input_shape)
->>>>>>> 28112a9ac92a2095242161e479b65fa9f1e833bb
