@@ -1,10 +1,10 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 
- * @LastEditTime: 2024-10-13 20:22:57
+ * @LastEditors: taifyang
+ * @LastEditTime: 2024-10-30 21:21:20
  * @FilePath: \cpp\libtorch\yolo_libtorch.cpp
- * @Description: yolo算法的libtorch推理框架实现
+ * @Description: libtorch inference source file for YOLO algorithm
  */
 
 #include "yolo_libtorch.h"
@@ -102,16 +102,14 @@ void YOLO_Libtorch_Segment::init(const Algo_Type algo_type, const Device_Type de
 	{
 		m_output_numprob = 37 + m_class_num;
 		m_output_numbox = 3 * (m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32);
-		m_output_numdet = 1 * m_output_numprob * m_output_numbox;
-		m_output_numseg = m_mask_params.segChannels * m_mask_params.segWidth * m_mask_params.segHeight;
 	}
 	if (m_algo == YOLOv8 || m_algo == YOLOv11)
 	{
 		m_output_numprob = 36 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
-		m_output_numdet = 1 * m_output_numprob * m_output_numbox;
-		m_output_numseg = m_mask_params.segChannels * m_mask_params.segWidth * m_mask_params.segHeight;
 	}
+	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
+	m_output_numseg = m_mask_params.segChannels * m_mask_params.segWidth * m_mask_params.segHeight;
 
 	m_output0_host = new float[m_output_numdet];
 	m_output1_host = new float[m_output_numseg];
@@ -267,20 +265,11 @@ void YOLO_Libtorch_Detect::process()
 }
 
 void YOLO_Libtorch_Segment::process()
-{
+{	
 	m_output = m_module.forward(m_input);
 	torch::Tensor pred0, pred1;
-	if (m_algo == YOLOv5)
-	{
-		pred0 = m_output.toTuple()->elements()[0].toTensor().to(torch::kFloat).to(at::kCPU);
-		pred1 = m_output.toTuple()->elements()[1].toTensor().to(torch::kFloat).to(at::kCPU);
-	}
-	if (m_algo == YOLOv8 || m_algo == YOLOv11)
-	{
-		pred0 = m_output.toTuple()->elements()[0].toTensor().to(torch::kFloat).to(at::kCPU);
-		pred1 = m_output.toTuple()->elements()[1].toTensor().to(torch::kFloat).to(at::kCPU);
-	}
-
+	pred0 = m_output.toTuple()->elements()[0].toTensor().to(torch::kFloat).to(at::kCPU);
+	pred1 = m_output.toTuple()->elements()[1].toTensor().to(torch::kFloat).to(at::kCPU);
 	std::copy(pred0.data_ptr<float>(), pred0.data_ptr<float>() + m_output_numdet, m_output0_host);
 	std::copy(pred1.data_ptr<float>(), pred1.data_ptr<float>() + m_output_numseg, m_output1_host);
 }

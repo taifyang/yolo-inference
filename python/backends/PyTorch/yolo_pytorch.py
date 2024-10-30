@@ -2,9 +2,9 @@
 Author: taifyang  
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang
-LastEditTime: 2024-10-21 23:44:25
+LastEditTime: 2024-10-30 22:01:22
 FilePath: \python\backends\PyTorch_\yolo_pytorch.py
-Description: yolo算法pytorch推理框架实现
+Description: pytorch inference class for YOLO algorithm
 '''
 
 import torch
@@ -13,22 +13,23 @@ from backends.utils import *
 
 
 '''
-description: yolo算法pytorch推理框架实现类
+description: pytorch inference class for YOLO algorithm
 '''
 class YOLO_PyTorch(YOLO):
     '''
-    description:            构造方法
-    param {*} self          类的实例
-    param {str} algo_type   算法类型
-    param {str} device_type 设备类型
-    param {str} model_type  模型精度
-    param {str} model_path  模型路径
+    description:            construction method
+    param {*} self          instance of class
+    param {str} algo_type   algorithm type
+    param {str} device_type device type
+    param {str} model_type  model type
+    param {str} model_path  model path
     return {*}
-    '''    
+    '''      
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__()
         assert os.path.exists(model_path), 'model not exists!'
-        assert model_type == 'FP32' or model_type == 'FP16', 'unsupported model type!'
+        assert device_type in ['CPU', 'GPU'], 'unsupported device type!'
+        assert model_type in ['FP32', 'FP16'], 'unsupported model type!'
         self.net = torch.load(model_path)
         self.algo_type = algo_type
         self.device_type = device_type
@@ -36,21 +37,20 @@ class YOLO_PyTorch(YOLO):
             self.net = self.net.cuda()
     
     '''
-    description:    模型推理
-    param {*} self  类的实例
+    description:    model inference
+    param {*} self  instance of class
     return {*}
     '''       
     def process(self) -> None:
         self.output = self.net(self.input)
 
-
 '''
-description: yolo分类算法pytorch推理框架实现类
+description: pytorch inference class for the YOLO classfiy algorithm
 '''     
 class YOLO_PyTorch_Classify(YOLO_PyTorch):
     '''
-    description:    模型前处理
-    param {*} self  类的实例
+    description:    model pre-process
+    param {*} self  instance of class
     return {*}
     '''    
     def pre_process(self) -> None:
@@ -76,15 +76,15 @@ class YOLO_PyTorch_Classify(YOLO_PyTorch):
             crop_image = self.image[top:(top+crop_size), left:(left+crop_size), ...]
             input = cv2.resize(crop_image, self.input_shape)
             input = input / 255.0
-        input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB和HWC2CHW
+        input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW
         self.input = np.expand_dims(input, axis=0).astype(dtype=np.float32)
         self.input = torch.from_numpy(self.input)
         if self.device_type == 'GPU':
             self.input = self.input.cuda()
     
     '''
-    description:    模型后处理
-    param {*} self  类的实例
+    description:    model post-process
+    param {*} self  instance of class
     return {*}
     '''    
     def post_process(self) -> None:
@@ -96,25 +96,26 @@ class YOLO_PyTorch_Classify(YOLO_PyTorch):
     
 
 '''
-description: yolo检测算法pytorch推理框架实现类
+description: pytorch inference class for the YOLO detection algorithm
 '''      
 class YOLO_PyTorch_Detect(YOLO_PyTorch):
     '''
-    description:    模型前处理
-    param {*} self  类的实例
+    description:    model pre-process
+    param {*} self  instance of class
     return {*}
     '''    
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv11'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11'], 'algo type not supported!'
         input = letterbox(self.image, self.input_shape)
-        self.input = cv2.dnn.blobFromImage(input, 1/255., size=self.input_shape, swapRB=True, crop=False)
-        self.input = torch.from_numpy(self.input)   
+        input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
+        input = input / 255.0
+        self.input = np.expand_dims(input, axis=0) 
         if self.device_type == 'GPU':
             self.input = self.input.cuda()
         
     '''
-    description:    模型后处理
-    param {*} self  类的实例
+    description:    model post-process
+    param {*} self  instance of class
     return {*}
     '''     
     def post_process(self) -> None:
@@ -141,7 +142,13 @@ class YOLO_PyTorch_Detect(YOLO_PyTorch):
                 if score > self.score_threshold:
                     boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
                     scores.append(score)
-                    class_ids.append(class_id)    
+                    class_ids.append(class_id)  
+        if self.algo_type in ['YOLOv10']: 
+            output = output[output[..., 4] > self.confidence_threshold] 
+            for i in range(output.shape[0]):
+                boxes.append(output[i, :6])
+                scores.append(output[i][4])
+                class_ids.append(output[i][5])    
              
         if len(boxes):   
             boxes = np.array(boxes)
@@ -151,29 +158,30 @@ class YOLO_PyTorch_Detect(YOLO_PyTorch):
                 indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
                 boxes = boxes[indices]
             if self.draw_result:
-                self.result = draw(self.image, boxes, input_shape=self.input_shape)
+                self.result = draw_result(self.image, boxes, input_shape=self.input_shape)
 
 
 '''
-description: yolo分割算法pytorch推理框架实现类
+description: pytorch inference class for the YOLO segmentation algorithm
 '''    
 class YOLO_PyTorch_Segment(YOLO_PyTorch):
     '''
-    description:    模型前处理
-    param {*} self  类的实例
+    description:    model pre-process
+    param {*} self  instance of class
     return {*}
     ''' 
     def pre_process(self) -> None:
         assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv11'], 'algo type not supported!'
         input = letterbox(self.image, self.input_shape)
-        self.input = cv2.dnn.blobFromImage(input, 1/255., size=self.input_shape, swapRB=True, crop=False)
-        self.input = torch.from_numpy(self.input)
+        input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
+        input = input / 255.0
+        self.input = np.expand_dims(input, axis=0)
         if self.device_type == 'GPU':
             self.input = self.input.cuda()
                 
     '''
-    description:    模型后处理
-    param {*} self  类的实例
+    description:    model post-process
+    param {*} self  instance of class
     return {*}
     '''           
     def post_process(self) -> None:
@@ -224,4 +232,4 @@ class YOLO_PyTorch_Segment(YOLO_PyTorch):
         
             masks = crop_mask(masks, downsampled_bboxes)
             if self.draw_result:
-                self.result = draw(self.image, boxes, masks, self.input_shape)
+                self.result = draw_result(self.image, boxes, masks, self.input_shape)

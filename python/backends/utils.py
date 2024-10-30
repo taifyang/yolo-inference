@@ -2,8 +2,8 @@
 Author: taifyang 
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang
-LastEditTime: 2024-07-10 21:01:42
-Description: 工具函数
+LastEditTime: 2024-10-30 21:55:18
+Description: utilities functions
 '''
 
 
@@ -13,12 +13,12 @@ from backends.yolo import *
 
 
 '''
-description:                NMS非最大值抑制
-param {*} boxes             目标包围盒
-param {*} scores            目标得分
-param {*} score_threshold   得分阈值
-param {*} nms_threshold     IOU阈值
-return {*}                  目标索引
+description:                Non-Maximum Suppression
+param {*} boxes             detect bounding boxes
+param {*} scores            detect scores
+param {*} score_threshold   detect score threshold
+param {*} nms_threshold     IOU threshold
+return {*}                  detect indices
 '''
 def nms(boxes, scores, score_threshold, nms_threshold):
     x1 = boxes[:, 0]
@@ -46,9 +46,9 @@ def nms(boxes, scores, score_threshold, nms_threshold):
 
 
 '''
-description:    xywh格式包围盒转x1y1x2y2格式包围盒
-param {*} x     xywh格式包围盒
-return {*}      x1y1x2y2格式包围盒
+description:    convert xywh bounding boxes to x1y1x2y2 bounding boxes
+param {*} x     xywh bounding boxes
+return {*}      x1y1x2y2 bounding boxes
 '''
 def xywh2xyxy(x):
     y = np.copy(x)
@@ -60,11 +60,11 @@ def xywh2xyxy(x):
 
 
 '''
-description:        letterbox图像处理
-param {*} im        输入图像
-param {*} new_shape 变换尺寸
-param {*} color     填充颜色
-return {*}          输出图像
+description:        letterbox image process
+param {*} im        input image
+param {*} new_shape output shape
+param {*} color     filled color
+return {*}          output image
 '''
 def letterbox(im, new_shape=(416, 416), color=(114, 114, 114)):
     # Resize and pad image while meeting stride-multiple constraints
@@ -86,11 +86,11 @@ def letterbox(im, new_shape=(416, 416), color=(114, 114, 114)):
 
 
 '''
-description:            缩放包围盒
-param {*} boxes         包围盒
-param {*} input_shape   原图像尺寸
-param {*} output_shape  新图像尺寸
-return {*}              缩放后的包围盒
+description:            scale boxes
+param {*} boxes         bounding boxes
+param {*} input_shape   input image shape
+param {*} output_shape  output image shape
+return {*}              scaled boxes
 '''
 def scale_boxes(boxes, input_shape, output_shape):
     # Rescale boxes (xyxy) from self.input_shape to shape
@@ -105,10 +105,10 @@ def scale_boxes(boxes, input_shape, output_shape):
 
 
 '''
-description:    裁剪掩码
-param {*} masks 输入掩码
-param {*} boxes 包围盒
-return {*}      裁剪后的掩码
+description:    crop mask
+param {*} masks input masks
+param {*} boxes bounding boxes
+return {*}      cropped masks
 '''
 def crop_mask(masks, boxes):
     n, h, w = masks.shape
@@ -121,11 +121,11 @@ def crop_mask(masks, boxes):
 
 
 '''
-description:            缩放掩码
-param {*} mask          输入掩码
-param {*} input_shape   原图像尺寸
-param {*} output_shape  新图像尺寸
-return {*}              缩放后的掩码
+description:            scale mask
+param {*} mask          input masks
+param {*} input_shape   input image shape
+param {*} output_shape  output image shape
+return {*}              scaled masks
 '''
 def scale_mask(mask, input_shape, output_shape):
     gain = min(input_shape[0] / output_shape[0], input_shape[1] / output_shape[1])  # gain  = old / new
@@ -136,14 +136,14 @@ def scale_mask(mask, input_shape, output_shape):
 
 
 '''
-description:            画出结果
-param {*} image         输入图像
-param {*} preds         预测
-param {*} masks         掩码
-param {*} input_shape   输入图像尺寸
-return {*}              可视化结果
+description:            draw result
+param {*} image         input image
+param {*} preds         prediction result
+param {*} masks         masks
+param {*} input_shape   input image shape
+return {*}              output image
 '''
-def draw(image, preds, masks=[], input_shape=(640,640)):
+def draw_result(image, preds, masks=[], input_shape=(640,640)):
     image_copy = image.copy()   
     preds = scale_boxes(preds, input_shape, image.shape)
     boxes = preds[...,:4].astype(np.int32) 

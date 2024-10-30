@@ -1,10 +1,10 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang 
-LastEditTime: 2024-08-24 12:03:54
+LastEditors: taifyang
+LastEditTime: 2024-10-30 22:01:55
 FilePath: \python\backends\ONNXRuntime\yolo_onnxruntime.py
-Description: yolo算法onnxruntime推理框架实现类
+Description: onnxruntime inference class for YOLO algorithm
 '''
 
 
@@ -14,21 +14,22 @@ from backends.utils import *
 
 
 '''
-description: yolo算法onnxruntime推理框架实现类
+description: onnxruntime inference class for YOLO algorithm
 '''
 class YOLO_ONNXRuntime(YOLO):
     '''
-    description:            构造方法
-    param {*} self          类的实例
-    param {str} algo_type   算法类型
-    param {str} device_type 设备类型
-    param {str} model_type  模型精度
-    param {str} model_path  模型路径
+    description:            construction method
+    param {*} self          instance of class
+    param {str} algo_type   algorithm type
+    param {str} device_type device type
+    param {str} model_type  model type
+    param {str} model_path  model path
     return {*}
     '''    
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__()
-        assert os.path.exists(model_path), "model not exists!"
+        assert os.path.exists(model_path), 'model not exists!'
+        assert device_type in ['CPU', 'GPU'], 'unsupported device type!'
         if device_type == 'CPU':
             self.onnx_session = onnxruntime.InferenceSession(model_path, providers=['CPUExecutionProvider'])
         elif device_type == 'GPU':
@@ -45,20 +46,20 @@ class YOLO_ONNXRuntime(YOLO):
         self.input = {}
     
     '''
-    description:    模型推理
-    param {*} self  类的实例
+    description:    model infenence
+    param {*} self  instance of class
     return {*}
     '''    
     def process(self) -> None:
         self.output = self.onnx_session.run(None, self.input)
 
 '''
-description: yolo分类算法onnxruntime推理框架实现类
+description: onnxruntime inference class for the YOLO classfiy algorithm
 '''
 class YOLO_ONNXRuntime_Classify(YOLO_ONNXRuntime):   
     '''
-    description:    模型前处理
-    param {*} self  类的实例
+    description:    model pre-process
+    param {*} self  instance of class
     return {*}
     '''            
     def pre_process(self) -> None:
@@ -85,7 +86,7 @@ class YOLO_ONNXRuntime_Classify(YOLO_ONNXRuntime):
             input = cv2.resize(crop_image, self.input_shape)
             input = input / 255.0
             
-        input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB和HWC2CHW
+        input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW
         if self.model_type == 'FP32' or self.model_type == 'INT8':
             input = np.expand_dims(input, axis=0).astype(dtype=np.float32)
         elif self.model_type == 'FP16':
@@ -95,8 +96,8 @@ class YOLO_ONNXRuntime_Classify(YOLO_ONNXRuntime):
             self.input[name] = input
     
     '''
-    description:    模型后处理
-    param {*} self  类的实例
+    description:    model post-process
+    param {*} self  instance of class
     return {*}
     '''           
     def post_process(self) -> None:
@@ -108,18 +109,18 @@ class YOLO_ONNXRuntime_Classify(YOLO_ONNXRuntime):
 
 
 '''
-description: yolo检测算法onnxruntime推理框架实现类
+description: onnxruntime inference class for the YOLO detection algorithm
 '''
 class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
     '''
-    description:    模型前处理
-    param {*} self  类的实例
+    description:    model pre-process
+    param {*} self  instance of class
     return {*}
     '''    
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11'], 'algo type not supported!'
         input = letterbox(self.image, self.input_shape)
-        input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB和HWC2CHW
+        input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW
         input = input / 255.0
         if self.model_type == 'FP32' or self.model_type == 'INT8':
             input = np.expand_dims(input, axis=0).astype(dtype=np.float32)
@@ -129,8 +130,8 @@ class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
             self.input[name] = input
     
     '''
-    description:    模型后处理
-    param {*} self  类的实例
+    description:    model post-process
+    param {*} self  instance of class
     return {*}
     '''         
     def post_process(self) -> None:
@@ -173,22 +174,22 @@ class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
                 indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
                 boxes = boxes[indices]
             if self.draw_result:
-                self.result = draw(self.image, boxes, input_shape=self.input_shape)
+                self.result = draw_result(self.image, boxes, input_shape=self.input_shape)
             
 
 '''
-description: yolo分割算法onnxruntime推理框架实现类
+description: onnxruntime inference class for the YOLO segmentation algorithm
 '''      
 class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
     '''
-    description:    模型前处理
-    param {*} self  类的实例
+    description:    model pre-process
+    param {*} self  instance of class
     return {*}
     '''    
     def pre_process(self) -> None:
         assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv11'], 'algo type not supported!'
         input = letterbox(self.image, self.input_shape)
-        input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB和HWC2CHW
+        input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW
         input = input / 255.0
         if self.model_type == 'FP32' or self.model_type == 'INT8':
             input = np.expand_dims(input, axis=0).astype(dtype=np.float32)
@@ -198,8 +199,8 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
             self.input[name] = input
     
     '''
-    description:    模型后处理
-    param {*} self  类的实例
+    description:    model post-process
+    param {*} self  instance of class
     return {*}
     '''           
     def post_process(self) -> None:
@@ -250,4 +251,4 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
         
             masks = crop_mask(masks, downsampled_bboxes)
             if self.draw_result:
-                self.result = draw(self.image, boxes, masks, self.input_shape)
+                self.result = draw_result(self.image, boxes, masks, self.input_shape)

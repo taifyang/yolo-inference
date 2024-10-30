@@ -1,10 +1,10 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 
- * @LastEditTime: 2024-06-29 16:33:27
+ * @LastEditors: taifyang
+ * @LastEditTime: 2024-10-30 22:30:23
  * @FilePath: \cpp\yolo_classify.h
- * @Description: 分类算法类
+ * @Description: classification algorithm class
  */
 
 #pragma once
@@ -13,23 +13,23 @@
 #include "utils.h"
 
 /**
- * @description: 分类网络输出相关参数
+ * @description: classification network output related parameters
  */
 struct OutputCls
 {
-	int id;             //结果类别id
-	float score;   		//结果得分
+	int id;             //class id
+	float score;   		//score
 };
 
 /**
- * @description: 分类算法抽象类
+ * @description: classification class for YOLO algorithm
  */
 class YOLO_Classify : virtual public YOLO
 {
 protected:
 	/**
-	 * @description: 			画出结果
-	 * @param {string} label	类别标签
+	 * @description: 								draw result
+	 * @param {OutputCls} output_cls				classification model output
 	 */
 	void draw_result(OutputCls output_cls)
 	{
@@ -41,17 +41,17 @@ protected:
 	}
 
 	/**
-	 * @description: 分类类别数
+	 * @description: class num 
 	 */	
 	int m_class_num = 1000;
 
 	/**
-	 * @description: 模型输出
+	 * @description: model output on host
 	 */
 	float* m_output_host;
 
 	/**
-	 * @description: 分类模型输出
+	 * @description: classification network output
 	 */
 	OutputCls m_output_cls;
 };

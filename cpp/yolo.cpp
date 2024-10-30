@@ -1,10 +1,10 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 
- * @LastEditTime: 2024-08-06 21:03:13
+ * @LastEditors: taifyang
+ * @LastEditTime: 2024-10-28 23:04:00
  * @FilePath: \cpp\yolo.cpp
- * @Description: YOLO类实现
+ * @Description: source file for YOLO algorithm
  */
 
 #include <chrono>
@@ -50,18 +50,20 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 			std::exit(-1);
 		}
 
+		pre_process();
+		process();
+		post_process();
+
+		auto start = std::chrono::steady_clock::now();
 		for(int i=0; i<10; ++i)
 		{
-			auto start = std::chrono::steady_clock::now();
-		
 			pre_process();
 			process();
 			post_process();
-
-			auto end = std::chrono::steady_clock::now();	
-			std::chrono::duration<double> duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);		
-			std::cout << duration.count() * 1000 << "ms" << std::endl;
-		}
+		}		
+		auto end = std::chrono::steady_clock::now();	
+		std::chrono::duration<double> duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);		
+		std::cout << "avg cost:" << duration.count() * 100 << "ms" << std::endl;
 
 		if (save_result)
 		{

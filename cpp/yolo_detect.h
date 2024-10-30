@@ -1,10 +1,10 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 
- * @LastEditTime: 2024-08-06 21:18:21
+ * @LastEditors: taifyang
+ * @LastEditTime: 2024-10-30 22:18:11
  * @FilePath: \cpp\yolo_detect.h
- * @Description: 检测算法类
+ * @Description: detection algorithm class
  */
 
 #pragma once
@@ -13,28 +13,28 @@
 #include "utils.h"
 
 /**
- * @description: 检测网络输出相关参数
+ * @description: detection network output related parameters
  */
 struct OutputDet
 {
-	int id;             //结果类别id
-	float score;   		//结果得分
-	cv::Rect box;       //矩形框
+	int id;             //class id
+	float score;   		//score
+	cv::Rect box;       //bounding box
 };
 
 /**
- * @description: 检测算法抽象类
+ * @description: detection class for YOLO algorithm
  */
 class YOLO_Detect : virtual public YOLO
 {
 protected:
 	/**
-	 * @description: 				LetterBox图像处理
-	 * @param {Mat&} input_image	输入图像
-	 * @param {Mat&} output_image	输出图像
-	 * @param {Vec4d&} params		变换参数
-	 * @param {Size} shape			变换尺寸
-	 * @param {Scalar} color		填充颜色
+	 * @description: 				LetterBox image process
+	 * @param {Mat&} input_image	input image
+	 * @param {Mat&} output_image	output image
+	 * @param {Vec4d&} params		transform parameters
+	 * @param {Size} shape			output image shape
+	 * @param {Scalar} color		filled color
 	 * @return {*}
 	 */
 	void LetterBox(cv::Mat& input_image, cv::Mat& output_image, cv::Vec4d& params, cv::Size shape = cv::Size(640, 640), cv::Scalar color = cv::Scalar(114, 114, 114))
@@ -65,12 +65,12 @@ protected:
 	}
 
 	/**
-	 * @description: 						NMS非极大值抑
-	 * @param {vector<cv::Rect>} & boxes	目标包围盒
-	 * @param {vector<float>} &	scores		目标得分		
-	 * @param {float} score_threshold		得分阈值
-	 * @param {float} nms_threshold			IOU阈值
-	 * @param {vector<int>} & indices		目标索引
+	 * @description: 						Non-Maximum Suppression
+	 * @param {vector<cv::Rect>} & boxes	detect bounding boxes
+	 * @param {vector<float>} &	scores		detect scores		
+	 * @param {float} score_threshold		detect score threshold
+	 * @param {float} nms_threshold			IOU threshold
+	 * @param {vector<int>} & indices		detect indices
 	 * @return {*}
 	 */
 	void nms(std::vector<cv::Rect> & boxes, std::vector<float> & scores, float score_threshold, float nms_threshold, std::vector<int> & indices)
@@ -129,9 +129,9 @@ protected:
 	}
 
 	/**
-	 * @description: 		包围盒缩放
-	 * @param {Rect&} box	目标包围盒
-	 * @param {Size} size	图像尺寸
+	 * @description: 		scale box
+	 * @param {Rect&} box	detect box
+	 * @param {Size} size	output image shape
 	 * @return {*}
 	 */
 	void scale_box(cv::Rect& box, cv::Size size)
@@ -148,9 +148,8 @@ protected:
 	}
 
 	/**
-	 * @description: 			画出结果
-	 * @param {string} label	类别标签
-	 * @param {Rect} box		包围盒
+	 * @description: 								draw result
+	 * @param {std::vector<OutputDet>} output_det	detection model output
 	 * @return {*}
 	 */
 	void draw_result(std::vector<OutputDet> output_det)
@@ -169,52 +168,52 @@ protected:
 	}
 
 	/**
-	 * @description: 检测类别数
+	 * @description: class num
 	 */	
 	int m_class_num = 80;
 
 	/**
-	 * @description: 得分阈值
+	 * @description: score threshold
 	 */
 	float m_score_threshold = 0.2;
 
 	/**
-	 * @description: IOU阈值
+	 * @description: IOU threshold
 	 */
 	float m_nms_threshold = 0.5;
 
 	/**
-	 * @description: 置信度阈值
+	 * @description: confidence threshold
 	 */
 	float m_confidence_threshold = 0.2;
 
 	/**
-	 * @description: LetterBox参数
+	 * @description: LetterBox related parameters
 	 */
 	cv::Vec4d m_params;
 
 	/**
-	 * @description: 输出特征维度
+	 * @description:output detection size
 	 */
 	int m_output_numprob;
 
 	/**
-	 * @description: 输出特征图包围盒数
+	 * @description: output bounding box num
 	 */
 	int m_output_numbox;
 
 	/**
-	 * @description: 输出特征图尺寸
+	 * @description: output feature map size
 	 */
 	int m_output_numdet;
 
 	/**
-	 * @description: 模型输出
+	 * @description: model output on host
 	 */
 	float* m_output_host;
 
 	/**
-	 * @description: 检测模型输出
+	 * @description: detection model output
 	 */
 	std::vector<OutputDet> m_output_det;
 };

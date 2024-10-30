@@ -10,7 +10,7 @@ Supported model types include FP32, FP16 and INT8.
 You can test C++ code with:
 ```powershell
 # Windows
-mkdir build && cd build
+mkdir build ; cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 cmake --build . --config Release
 ./run.bat

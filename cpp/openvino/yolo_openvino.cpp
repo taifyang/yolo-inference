@@ -4,7 +4,7 @@
  * @LastEditors: taifyang 
  * @LastEditTime: 2024-10-13 20:29:49
  * @FilePath: \cpp\openvino\yolo_openvino.cpp
- * @Description: yolo算法的openvino推理框架实现
+ * @Description: openvino inference source file for YOLO algorithm
  */
 
 #include "yolo_openvino.h"
@@ -87,16 +87,14 @@ void YOLO_OpenVINO_Segment::init(const Algo_Type algo_type, const Device_Type de
 	{
 		m_output_numprob = 37 + m_class_num;
 		m_output_numbox = 3 * (m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32);
-		m_output_numdet = 1 * m_output_numprob * m_output_numbox;
-		m_output_numseg = m_mask_params.segChannels * m_mask_params.segWidth * m_mask_params.segHeight;
 	}
 	if (m_algo == YOLOv8 || m_algo == YOLOv11)
 	{
 		m_output_numprob = 36 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
-		m_output_numdet = 1 * m_output_numprob * m_output_numbox;
-		m_output_numseg = m_mask_params.segChannels * m_mask_params.segWidth * m_mask_params.segHeight;
 	}
+	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
+	m_output_numseg = m_mask_params.segChannels * m_mask_params.segWidth * m_mask_params.segHeight;
 }
 
 void YOLO_OpenVINO_Classify::pre_process()
