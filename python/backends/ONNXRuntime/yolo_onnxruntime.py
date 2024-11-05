@@ -1,8 +1,8 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang
-LastEditTime: 2024-10-30 22:01:55
+LastEditors: taifyang 
+LastEditTime: 2024-10-30 23:53:20
 FilePath: \python\backends\ONNXRuntime\yolo_onnxruntime.py
 Description: onnxruntime inference class for YOLO algorithm
 '''

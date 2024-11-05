@@ -1,8 +1,8 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang
-LastEditTime: 2024-10-30 22:54:14
+LastEditors: taifyang 
+LastEditTime: 2024-10-31 23:19:56
 FilePath: \python\backends\TensorRT\yolo_tensorrt.py
 Description: tensorrt inference class for YOLO algorithm
 '''

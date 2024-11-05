@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.23)
 
 project(yolo LANGUAGES C CXX CUDA)
 
@@ -79,8 +79,8 @@ if(CMAKE_SYSTEM_NAME MATCHES "Windows")
     endif()
 
     if(WITH_ONNXRUNTIME)
-        set(ONNXRUNTIME_INCLUDE_DIRS D:/software/onnxruntime-win-x64-gpu-1.12.1/include)
-        set(ONNXRUNTIME_LIBRARY_DIRS D:/software/onnxruntime-win-x64-gpu-1.12.1/lib)
+        set(ONNXRUNTIME_INCLUDE_DIRS D:/software/onnxruntime-win-x64-gpu-1.18.1/include)
+        set(ONNXRUNTIME_LIBRARY_DIRS D:/software/onnxruntime-win-x64-gpu-1.18.1/lib)
         include_directories(${ONNXRUNTIME_INCLUDE_DIRS})
         link_directories(${ONNXRUNTIME_LIBRARY_DIRS})
         target_link_libraries(yolo ${ONNXRUNTIME_LIBRARY_DIRS}/*.lib)
@@ -114,7 +114,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
     target_link_libraries(yolo ${OpenCV_LIBRARIES})  
 
     if(WITH_LIBTORCH)
-        set(Torch_DIR /docker_share/libtorch2.2.2_cuda11.8/share/cmake/Torch)
+        set(Torch_DIR /docker_share/libtorch2.0.0_cuda11.8/share/cmake/Torch)
         find_package(Torch REQUIRED)
         include_directories(${TORCH_INCLUDE_DIRS})
         target_link_libraries(yolo ${TORCH_LIBRARIES})

@@ -24,85 +24,63 @@ make
 ./run.sh
 ```
 
-C++ test on Windows10(CPU i7-12700, GPU RTX3070): 
-|       Model       |       Task       |       Device       |       Precision       | Libtorch | ONNXRuntime | OpenCV | OpenVINO | TensorRT |
-| :-----------------: | :----------------: | :------------------: | :---------------------: | :------: | :---------: | :----: | :------: | :------: |
-| YOLOv5n | Classify | CPU | FP32 | 34ms | 21ms | 29ms | 9ms | ×
-| YOLOv5n | Classify | GPU | FP32 | 6ms | 9ms | 7ms | 30ms | 5ms
-| YOLOv5n | Classify | CPU | FP16 | × | 22ms | 30ms | 9ms | ×
-| YOLOv5n | Classify | GPU | FP16 | 6ms | 10ms | 6ms | 30ms | 4ms
-| YOLOv5n | Classify | CPU | INT8 | × | 27ms | × | ? | ×
-| YOLOv5n | Classify | GPU | INT8 | × | 33ms | × | ? | 4ms
-| YOLOv5n | Detect | CPU | FP32 | 68ms | 26ms | 77ms | 12ms | ×
-| YOLOv5n | Detect | GPU | FP32 | 9ms | 10ms | 10ms | 66ms | 5ms
-| YOLOv5n | Detect | CPU | FP16 | × | 39ms | 75ms | 11ms | ×
-| YOLOv5n | Detect | GPU | FP16 | 8ms | 16ms | 9ms | 66ms | 5ms
-| YOLOv5n | Detect | CPU | INT8 | × | 40ms | × | 9ms | ×
-| YOLOv5n | Detect | GPU | INT8 | × | 47ms | × | 56ms | 4ms
-| YOLOv5n | Segment | CPU | FP32 | × | 33ms | 105ms | 37ms | ×
-| YOLOv5n | Segment | GPU | FP32 | 14ms | 16ms | 13ms | 93ms | 8ms
-| YOLOv5n | Segment | CPU | FP16 | × | 57ms | 104ms | 19ms | ×
-| YOLOv5n | Segment | GPU | FP16 | 13ms | 20ms | 12ms | 93ms | 7ms
-| YOLOv5n | Segment | CPU | INT8 | × | 51ms | × | ? | ×
-| YOLOv5n | Segment | GPU | INT8 | × | 66ms | × | ? | 6ms
-| YOLOv8n | Classify | CPU | FP32 | 13ms | 3ms | 4ms | 3ms | ×
-| YOLOv8n | Classify | GPU | FP32 | 2ms | 2ms | × | 7ms | 1ms
-| YOLOv8n | Classify | CPU | FP16 | × | 5ms | 4ms | 2ms | ×
-| YOLOv8n | Classify | GPU | FP16 | ? | 2ms | × | 16ms | 0.6ms
-| YOLOv8n | Classify | CPU | INT8 | × | 5ms | × | ? | ×
-| YOLOv8n | Classify | GPU | INT8 | × | 9ms | × | ? | 0.6ms
-| YOLOv8n | Detect | CPU | FP32 | 116ms | 36ms | 71ms | 18ms | ×
-| YOLOv8n | Detect | GPU | FP32 | 9ms | 11ms | × | 75ms | 7ms
-| YOLOv8n | Detect | CPU | FP16 | × | 49ms | 74ms | 18ms | ×
-| YOLOv8n | Detect | GPU | FP16 | ? | 13ms | × | 75ms | 5ms
-| YOLOv8n | Detect | CPU | INT8 | × | 50ms | × | 12ms | ×
-| YOLOv8n | Detect | GPU | INT8 | × | 62ms | × | 58ms | 6ms
-| YOLOv8n | Segment | CPU | FP32 | × | 52ms | 99ms | 25ms | ×
-| YOLOv8n | Segment | GPU | FP32 | 14ms | 16ms | × | 99ms | 11ms
-| YOLOv8n | Segment | CPU | FP16 | × | 68ms | 100ms | 25ms | ×
-| YOLOv8n | Segment | GPU | FP16 | × | 18ms | × | 98ms | 8ms
-| YOLOv8n | Segment | CPU | INT8 | × | 76ms | × | ? | ×
-| YOLOv8n | Segment | GPU | INT8 | × | 81ms | × | ? | 7ms
-
 C++ test on Ubuntu22.04 in Docker(CPU i7-12700, GPU RTX3070): 
-|       Model       |       Task       |       Device       |       Precision       | Libtorch | ONNXRuntime | OpenCV | OpenVINO | TensorRT |
-| :-----------------: | :----------------: | :------------------: | :---------------------: | :------: | :---------: | :----: | :------: | :------: |
-| YOLOv5n | Classify | CPU | FP32 | 19ms | 16ms | 21ms | 14ms | ×
-| YOLOv5n | Classify | GPU | FP32 | 4ms | 6ms | 5ms | ? | 17ms
-| YOLOv5n | Classify | CPU | FP16 | × | 24ms | 21ms | 15ms | ×
-| YOLOv5n | Classify | GPU | FP16 | 4ms | 8ms | 5ms | ? | 3ms
-| YOLOv5n | Classify | CPU | INT8 | × | 20ms | × | ? | ×
-| YOLOv5n | Classify | GPU | INT8 | × | 29ms | × | ? | 3ms
-| YOLOv5n | Detect | CPU | FP32 | 27ms | 22ms | 58ms | 21ms | ×
-| YOLOv5n | Detect | GPU | FP32 | 6ms | 8ms | 9ms | ? | 5ms
-| YOLOv5n | Detect | CPU | FP16 | × | 39ms | 58ms | 21ms | ×
-| YOLOv5n | Detect | GPU | FP16 | 5ms | 17ms | 8ms | ? | 4ms
-| YOLOv5n | Detect | CPU | INT8 | × | 27ms | × | 20ms | ×
-| YOLOv5n | Detect | GPU | INT8 | × | 42ms | × | ? | 4ms
-| YOLOv5n | Segment | CPU | FP32 | × | 32ms | 77ms | 28ms | ×
-| YOLOv5n | Segment | GPU | FP32 | 10ms | 12ms | 11ms | ? | 7ms
-| YOLOv5n | Segment | CPU | FP16 | × | 57ms | 77ms | 28ms | ×
-| YOLOv5n | Segment | GPU | FP16 | 8ms | 22ms | 10ms | ? | 5ms
-| YOLOv5n | Segment | CPU | INT8 | × | 40ms | × | ? | ×
-| YOLOv5n | Segment | GPU | INT8 | × | 54ms | × | ? | 4ms
-| YOLOv8n | Classify | CPU | FP32 | 4ms | 4ms | 5ms | 3ms | ×
-| YOLOv8n | Classify | GPU | FP32 | 1ms | 2ms | × | ? | 1ms
-| YOLOv8n | Classify | CPU | FP16 | × | 7ms | 5ms | 3ms | ×
-| YOLOv8n | Classify | GPU | FP16 | ? | 2ms | × | ? | 0.7ms
-| YOLOv8n | Classify | CPU | INT8 | × | 4ms | × | ? | ×
-| YOLOv8n | Classify | GPU | INT8 | × | 9ms | × | ? | 0.6ms
-| YOLOv8n | Detect | CPU | FP32 | 39ms | 35ms | 41ms | 30ms | ×
-| YOLOv8n | Detect | GPU | FP32 | 6ms | 7ms | × | ? | 6ms
-| YOLOv8n | Detect | CPU | FP16 | × | 45ms | 44ms | 30ms | ×
-| YOLOv8n | Detect | GPU | FP16 | ? | 13ms | × | ? | 4ms
-| YOLOv8n | Detect | CPU | INT8 | × | 46ms | × | 26ms | ×
-| YOLOv8n | Detect | GPU | INT8 | × | 55ms | × | ? | 5ms
-| YOLOv8n | Segment | CPU | FP32 | × | 45ms | 61ms | 39ms | ×
-| YOLOv8n | Segment | GPU | FP32 | 10ms | 12ms | × | ? | 9ms
-| YOLOv8n | Segment | CPU | FP16 | × | 68ms | 72ms | 39ms | ×
-| YOLOv8n | Segment | GPU | FP16 | ? | 18ms | × | ? | 6ms
-| YOLOv8n | Segment | CPU | INT8 | × | 57ms | × | ? | ×
-| YOLOv8n | Segment | GPU | INT8 | × | 68ms | × | ? | 6ms
+|       Model       |       Task       |       Device       |       Precision       | LibTorch | ONNXRuntime | OpenCV | OpenVINO | TensorRT |
+| :---------------: | :--------------: | :----------------: | :-------------------: | :------: | :---------: | :----: | :------: | :------: |
+| YOLOv5n | Classify | CPU | FP32 | 15.3ms | 15.5ms | 20.6ms | 14.1ms | ×
+| YOLOv5n | Classify | GPU | FP32 | 4.9ms | 5.1ms | 5.1ms | ? | 4.1ms
+| YOLOv5n | Classify | CPU | FP16 | × | 22.7ms | 20.1ms | 14.0ms | ×
+| YOLOv5n | Classify | GPU | FP16 | 4.6ms | 7.7ms | 4.9ms | ? | 3.2ms
+| YOLOv5n | Classify | CPU | INT8 | × | 18.9ms | × | ? | ×
+| YOLOv5n | Classify | GPU | INT8 | × | 38.9ms | × | ? | 3.0ms
+| YOLOv5n | Detect | CPU | FP32 | 23.3ms | 22.0ms | 57.3ms | 20.0ms | ×
+| YOLOv5n | Detect | GPU | FP32 | 7.2ms | 6.6ms | 8.2ms | ? | 4.4ms
+| YOLOv5n | Detect | CPU | FP16 | × | 42.6ms | 57.3ms | 19.8ms | ×
+| YOLOv5n | Detect | GPU | FP16 | 6.8ms | 18.4ms | 7.9ms | ? | 3.9ms
+| YOLOv5n | Detect | CPU | INT8 | × | 27.0ms | × | 18.1ms | ×
+| YOLOv5n | Detect | GPU | INT8 | × | 51.2ms | × | ? | 3.5ms
+| YOLOv5n | Segment | CPU | FP32 | × | 30.7ms | 75.8ms | 27.2ms | ×
+| YOLOv5n | Segment | GPU | FP32 | 10.1ms | 10.6ms | 10.8ms | ? | 6.3ms
+| YOLOv5n | Segment | CPU | FP16 | × | 55.0ms | 75.9ms | 27.2ms | ×
+| YOLOv5n | Segment | GPU | FP16 | 9.8ms | 28.4ms | 10.0ms | ? | 5.0ms
+| YOLOv5n | Segment | CPU | INT8 | × | 35.6ms | × | ? | ×
+| YOLOv5n | Segment | GPU | INT8 | × | 63.8ms | × | ? | 4.2ms
+| YOLOv8n | Classify | CPU | FP32 | 3.5ms | 2.4ms | 4.0ms | 2.4ms | ×
+| YOLOv8n | Classify | GPU | FP32 | 2.3ms | 1.5ms | 1.9ms | ? | 1.2ms
+| YOLOv8n | Classify | CPU | FP16 | × | 6.4ms | 4.0ms | 2.4ms | ×
+| YOLOv8n | Classify | GPU | FP16 | ? | 1.8ms | 1.7ms | ? | 1.0ms
+| YOLOv8n | Classify | CPU | INT8 | × | 3.5ms | × | ? | ×
+| YOLOv8n | Classify | GPU | INT8 | × | 8.0ms | × | ? | 1.0ms
+| YOLOv8n | Detect | CPU | FP32 | 33.3ms | 33.1ms | 42.2ms | 28.6ms | ×
+| YOLOv8n | Detect | GPU | FP32 | 6.4ms | 7.0ms | 6.8ms | ? | 6.0ms
+| YOLOv8n | Detect | CPU | FP16 | × | 58.5ms | 41.9ms | 28.6ms | ×
+| YOLOv8n | Detect | GPU | FP16 | ? | 19.4ms | 5.7ms | ? | 3.7ms
+| YOLOv8n | Detect | CPU | INT8 | × | 38.5ms | × | 24.5ms | ×
+| YOLOv8n | Detect | GPU | INT8 | × | 82.5ms | × | ? | 4.7ms
+| YOLOv8n | Segment | CPU | FP32 | × | 43.6ms | 54.7ms | 37.5ms | ×
+| YOLOv8n | Segment | GPU | FP32 | 9.5ms | 10.6ms | × | ? | 8.1ms
+| YOLOv8n | Segment | CPU | FP16 | × | 74.4ms | 54.9ms | 37.4ms | ×
+| YOLOv8n | Segment | GPU | FP16 | ? | 27.7ms | × | ? | 5.9ms
+| YOLOv8n | Segment | CPU | INT8 | × | 51.4ms | × | ? | ×
+| YOLOv8n | Segment | GPU | INT8 | × | 99.9ms | × | ? | 5.6ms
+| YOLOv11n | Classify | CPU | FP32 | 4.1ms | 2.6ms | 4.4ms | 2.6ms | ×
+| YOLOv11n | Classify | GPU | FP32 | 2.7ms | 1.7ms | × | ? | 1.4ms
+| YOLOv11n | Classify | CPU | FP16 | × | 6.6ms | 4.5ms | 2.6ms | ×
+| YOLOv11n | Classify | GPU | FP16 | ? | 2.1ms | × | ? | 1.1ms
+| YOLOv11n | Classify | CPU | INT8 | × | ? | × | ? | ×
+| YOLOv11n | Classify | GPU | INT8 | × | ? | × | ? | 1.3ms
+| YOLOv11n | Detect | CPU | FP32 | 35.0ms | 32.1ms | 44.4ms | 25.0ms | ×
+| YOLOv11n | Detect | GPU | FP32 | 7.2ms | 7.2ms | × | ? | 6.0ms
+| YOLOv11n | Detect | CPU | FP16 | × | 63.8ms | 44.8ms | 25.0ms | ×
+| YOLOv11n | Detect | GPU | FP16 | ? | 19.9ms | × | ? | 3.9ms
+| YOLOv11n | Detect | CPU | INT8 | × | ? | × | 22.8ms | ×
+| YOLOv11n | Detect | GPU | INT8 | × | ? | × | ? | 4.7ms
+| YOLOv11n | Segment | CPU | FP32 | × | 43.0ms | 56.9ms | 34.0ms | ×
+| YOLOv11n | Segment | GPU | FP32 | x | 10.8ms | × | ? | 7.5ms
+| YOLOv11n | Segment | CPU | FP16 | × | 80.4ms | 58.1ms | 33.8ms | ×
+| YOLOv11n | Segment | GPU | FP16 | x | 28.1ms | × | ? | 6.2ms
+| YOLOv11n | Segment | CPU | INT8 | × | ? | × | ? | ×
+| YOLOv11n | Segment | GPU | INT8 | × | ? | × | ? | 4.9ms
 
 You can test Python code with:
 ```powershell
@@ -117,85 +95,63 @@ pip install -r requirements.txt
 ./run.sh
 ```
 
-Python test on Windows10(CPU i7-12700, GPU RTX3070): 
-|       Model       |       Task       |       Device       |       Precision       | ONNXRuntime | OpenCV | OpenVINO | TensorRT |
-| :-----------------: | :----------------: | :------------------: | :---------------------: | :---------: | :----: | :------: | :------: |
-| YOLOv5n | Classify | CPU | FP32 | 21ms | 38ms | 27ms | ×
-| YOLOv5n | Classify | GPU | FP32 | 14ms | 19ms | 36ms | 19ms
-| YOLOv5n | Classify | CPU | FP16 | 29ms | 38ms | 27ms | ×
-| YOLOv5n | Classify | GPU | FP16 | 15ms | 16ms | 39ms | 18ms
-| YOLOv5n | Classify | CPU | INT8 | 34ms | × | ? | ×
-| YOLOv5n | Classify | GPU | INT8 | 38ms | × | ? | 18ms
-| YOLOv5n | Detect | CPU | FP32 | 29ms | 103ms | 31ms | ×
-| YOLOv5n | Detect | GPU | FP32 | 18ms | 42ms | 66ms | 17ms
-| YOLOv5n | Detect | CPU | FP16 | 42ms | 103ms | 31ms | ×
-| YOLOv5n | Detect | GPU | FP16 | 19ms | 41ms | 63ms | 16ms
-| YOLOv5n | Detect | CPU | INT8 | 61ms | × | 38ms | ×
-| YOLOv5n | Detect | GPU | INT8 | 53ms | × | 75ms | 16ms
-| YOLOv5n | Segment | CPU | FP32 | 39ms | 110ms | 46ms | ×
-| YOLOv5n | Segment | GPU | FP32 | 23ms | 22ms | 94ms | 20ms
-| YOLOv5n | Segment | CPU | FP16 | 57ms | 107ms | 76ms | ×
-| YOLOv5n | Segment | GPU | FP16 | 23ms | 20ms | 92ms | 19ms
-| YOLOv5n | Segment | CPU | INT8 | 63ms | × | ? | ×
-| YOLOv5n | Segment | GPU | INT8 | 63ms | × | ? | 17ms
-| YOLOv8n | Classify | CPU | FP32 | 3ms | 5ms | 5ms | ×
-| YOLOv8n | Classify | GPU | FP32 | 2ms | 3ms | 17ms | 6ms
-| YOLOv8n | Classify | CPU | FP16 | 6ms | 5ms | 4ms | ×
-| YOLOv8n | Classify | GPU | FP16 | 2ms | 2ms | 15ms | 5ms
-| YOLOv8n | Classify | CPU | INT8 | 6ms | × | ? | ×
-| YOLOv8n | Classify | GPU | INT8 | 7ms | × | ? | 6ms
-| YOLOv8n | Detect | CPU | FP32 | 54ms | 88ms | 100ms | ×
-| YOLOv8n | Detect | GPU | FP32 | 35ms | 31ms | 90ms | 37ms
-| YOLOv8n | Detect | CPU | FP16 | 75ms | 88ms | 98ms | ×
-| YOLOv8n | Detect | GPU | FP16 | 39ms | 27ms | 91ms | 34ms
-| YOLOv8n | Detect | CPU | INT8 | 72ms | × | 50ms | ×
-| YOLOv8n | Detect | GPU | INT8 | 87ms | × | 73ms | 36ms
-| YOLOv8n | Segment | CPU | FP32 | 74ms | 123ms | 133ms | ×
-| YOLOv8n | Segment | GPU | FP32 | 40ms | 39ms | 117ms | 41ms
-| YOLOv8n | Segment | CPU | FP16 | 94ms | 124ms | 84ms | ×
-| YOLOv8n | Segment | GPU | FP16 | 44ms | 34ms | 114ms | 38ms
-| YOLOv8n | Segment | CPU | INT8 | 92ms | × | ? | ×
-| YOLOv8n | Segment | GPU | INT8 | 129ms | × | ? | 37ms
-
 Python test Ubuntu22.04 in Docker(CPU i7-12700, GPU RTX3070): 
-|       Model       |       Task       |       Device       |       Precision       | ONNXRuntime | OpenCV | OpenVINO | TensorRT |
-| :-----------------: | :----------------: | :------------------: | :---------------------: | :---------: | :----: | :------: | :------: |
-| YOLOv5n | Classify | CPU | FP32 | 22ms | 32ms | 22ms | ×
-| YOLOv5n | Classify | GPU | FP32 | 13ms | 13ms | ? | 15ms
-| YOLOv5n | Classify | CPU | FP16 | 30ms | 32ms | 22ms | ×
-| YOLOv5n | Classify | GPU | FP16 | 14ms | 14ms | ? | 15ms
-| YOLOv5n | Classify | CPU | INT8 | 31ms | × | ? | ×
-| YOLOv5n | Classify | GPU | INT8 | 32ms | × | ? | 15ms
-| YOLOv5n | Detect | CPU | FP32 | 27ms | 79ms | 26ms | ×
-| YOLOv5n | Detect | GPU | FP32 | 13ms | 30ms | ? | 13ms
-| YOLOv5n | Detect | CPU | FP16 | 38ms | 79ms | 26ms | ×
-| YOLOv5n | Detect | GPU | FP16 | 15ms | 30ms | ? | 12ms
-| YOLOv5n | Detect | CPU | INT8 | 35ms | × | 25ms | ×
-| YOLOv5n | Detect | GPU | INT8 | 45ms | × | ? | 13ms
-| YOLOv5n | Segment | CPU | FP32 | 120ms | 117ms | 41ms | ×
-| YOLOv5n | Segment | GPU | FP32 | 21ms | 17ms | ? | 41ms
-| YOLOv5n | Segment | CPU | FP16 | 110ms | 103ms | 39ms | ×
-| YOLOv5n | Segment | GPU | FP16 | 30ms | 29ms | ? | 44ms
-| YOLOv5n | Segment | CPU | INT8 | 122ms | × | ? | ×
-| YOLOv5n | Segment | GPU | INT8 | 165ms | × | ? | 13ms
-| YOLOv8n | Classify | CPU | FP32 | 4ms | 5ms | 4ms | ×
-| YOLOv8n | Classify | GPU | FP32 | 2ms | 2ms | ? | 4ms
-| YOLOv8n | Classify | CPU | FP16 | 7ms | 6ms | 3ms | ×
-| YOLOv8n | Classify | GPU | FP16 | 2ms | 2ms | ? | 3ms
-| YOLOv8n | Classify | CPU | INT8 | 5ms | × | ? | ×
-| YOLOv8n | Classify | GPU | INT8 | 6ms | × | ? | 3ms
-| YOLOv8n | Detect | CPU | FP32 | 68ms | 55ms | 54ms | ×
-| YOLOv8n | Detect | GPU | FP32 | 32ms | 21ms | ? | 35ms
-| YOLOv8n | Detect | CPU | FP16 | 90ms | 56ms | 54ms | ×
-| YOLOv8n | Detect | GPU | FP16 | 37ms | 20ms | ? | 32ms
-| YOLOv8n | Detect | CPU | INT8 | 71ms | × | 50ms | ×
-| YOLOv8n | Detect | GPU | INT8 | 82ms | × | ? | 33ms
-| YOLOv8n | Segment | CPU | FP32 | 194ms | 114ms | 87ms | ×
-| YOLOv8n | Segment | GPU | FP32 | 67ms | 48ms | ? | 82ms
-| YOLOv8n | Segment | CPU | FP16 | 187ms | 116ms | 87ms | ×
-| YOLOv8n | Segment | GPU | FP16 | 73ms | 66ms | ? | 75ms
-| YOLOv8n | Segment | CPU | INT8 | 165ms | × | ? | ×
-| YOLOv8n | Segment | GPU | INT8 | 167ms | × | ? | 34ms
+|       Model       |       Task       |       Device       |       Precision       | PyTorch | ONNXRuntime | OpenCV | OpenVINO | TensorRT |
+| :---------------: | :--------------: | :----------------: | :-------------------: | :-----: | :---------: | :----: | :------: | :------: |
+| YOLOv5n | Classify | CPU | FP32 | 26.3ms | 21.4ms | 33.2ms | 21.8ms | ×
+| YOLOv5n | Classify | GPU | FP32 | 15.6ms | 16.1ms | 16.6ms | ? | 17.0ms
+| YOLOv5n | Classify | CPU | FP16 | x | 30.3ms | 31.5ms | 21.7ms | ×
+| YOLOv5n | Classify | GPU | FP16 | 14.5ms | 18.6ms | 17.4ms | ? | 19.8ms
+| YOLOv5n | Classify | CPU | INT8 | x | 28.9ms | × | ? | ×
+| YOLOv5n | Classify | GPU | INT8 | x | 54.8ms | × | ? | 18.9ms
+| YOLOv5n | Detect | CPU | FP32 | 30.6ms | 27.0ms | 60.0ms | 24.8ms | ×
+| YOLOv5n | Detect | GPU | FP32 | 10.4ms | 14.9ms | 10.7ms | ? | 14.3ms
+| YOLOv5n | Detect | CPU | FP16 | x | 40.7ms | 59.8ms | 24.8ms | ×
+| YOLOv5n | Detect | GPU | FP16 | 12.3ms | 19.6ms | 10.3ms | 30ms | ? | 12.8ms
+| YOLOv5n | Detect | CPU | INT8 | x | 33.7ms | × | 23.1ms | ×
+| YOLOv5n | Detect | GPU | INT8 | x | 72.9ms | × | ? | 13.8ms
+| YOLOv5n | Segment | CPU | FP32 | 159.2ms | 116.1ms | 147.2ms | 47.8ms | ×
+| YOLOv5n | Segment | GPU | FP32 | 34.6ms | 49.1ms | 38.0ms | ? | 70.7ms
+| YOLOv5n | Segment | CPU | FP16 | x | 138.8ms | 142.2ms | 48.2ms | ×
+| YOLOv5n | Segment | GPU | FP16 | 50.9ms | 78.9ms | 52.4ms | ? | 72.6ms
+| YOLOv5n | Segment | CPU | INT8 | x | 127.6ms | × | ? | ×
+| YOLOv5n | Segment | GPU | INT8 | x | 191.8ms | × | ? | 13.3ms
+| YOLOv8n | Classify | CPU | FP32 | 3.5ms | 2.2ms | 4.1ms | 2.3ms | ×
+| YOLOv8n | Classify | GPU | FP32 | 2.5ms | 1.6ms | 1.8ms | ? | 3.5ms
+| YOLOv8n | Classify | CPU | FP16 | x | 6.3ms | 4.1s | 2.3ms | ×
+| YOLOv8n | Classify | GPU | FP16 | ? | 1.7ms | 1.7ms | ? | 2.8ms
+| YOLOv8n | Classify | CPU | INT8 | x | 3.7ms | × | ? | ×
+| YOLOv8n | Classify | GPU | INT8 | x | 8.2ms | × | ? | 3.0ms
+| YOLOv8n | Detect | CPU | FP32 | 59.2ms | 57.8ms | 60.3s | 49.4ms | ×
+| YOLOv8n | Detect | GPU | FP32 | 35.5ms | 40.5ms | 29.4ms | ? | 39.1ms
+| YOLOv8n | Detect | CPU | FP16 | x | 77.1ms | 61.3ms | 49.6ms | ×
+| YOLOv8n | Detect | GPU | FP16 | ? | 60.4ms | 30.8ms | 30ms | ? | 38.1ms
+| YOLOv8n | Detect | CPU | INT8 | x | 64.1ms | × | 44.1ms | ×
+| YOLOv8n | Detect | GPU | INT8 | x | 138.7ms | × | ? | 40.9ms
+| YOLOv8n | Segment | CPU | FP32 | 184.7ms | 157.8ms | 142.3ms | 100.0ms | ×
+| YOLOv8n | Segment | GPU | FP32 | 94.3ms | 104.2ms | 88.5ms | ? | 116.6ms
+| YOLOv8n | Segment | CPU | FP16 | x | 180.4ms | 144.8s | 99.3ms | ×
+| YOLOv8n | Segment | GPU | FP16 | ? | 122.2ms | 108.7ms | ? | 118.7ms
+| YOLOv8n | Segment | CPU | INT8 | x | 166.4ms | × | ? | ×
+| YOLOv8n | Segment | GPU | INT8 | x | 275.3ms | × | ? | 40.9ms
+| YOLOv11n | Classify | CPU | FP32 | 4.1ms | 2.3ms | 4.6ms | 2.5ms | ×
+| YOLOv11n | Classify | GPU | FP32 | 2.8ms | 1.7ms | x | ? | 3.7ms
+| YOLOv11n | Classify | CPU | FP16 | x | 6.1ms | 4.5ms | 2.5ms | ×
+| YOLOv11n | Classify | GPU | FP16 | ? | 1.9ms | x | ? | 3.3ms
+| YOLOv11n | Classify | CPU | INT8 | x | ? | × | ? | ×
+| YOLOv11n | Classify | GPU | INT8 | x | ? | × | ? | 3.6ms
+| YOLOv11n | Detect | CPU | FP32 | 62.2ms | 52.9ms | 66.2ms | 45.2ms | ×
+| YOLOv11n | Detect | GPU | FP32 | 38.7ms | 41.2ms | x | ? | 36.6ms
+| YOLOv11n | Detect | CPU | FP16 | x | 82.5ms | 63.0ms | 45.1ms | ×
+| YOLOv11n | Detect | GPU | FP16 | ? | 58.2ms | x | ? | 38.2ms
+| YOLOv11n | Detect | CPU | INT8 | x | ? | × | 50.0ms | ×
+| YOLOv11n | Detect | GPU | INT8 | x | ? | × | ? | 39.1ms
+| YOLOv11n | Segment | CPU | FP32 | 183.5ms | 152.7ms | 144.1ms | 91.9ms | ×
+| YOLOv11n | Segment | GPU | FP32 | 98.2ms | 116.2ms | x | ? | 114.9ms
+| YOLOv11n | Segment | CPU | FP16 | x | 185.4ms | 155.2ms | 92.3ms | ×
+| YOLOv11n | Segment | GPU | FP16 | ?ms | 130.4ms | x | ? | 120.2ms
+| YOLOv11n | Segment | CPU | INT8 | x | ? | × | ? | ×
+| YOLOv11n | Segment | GPU | INT8 | x | ? | × | ? | 39.0ms
 
 You Can download some model weights in:  <https://pan.baidu.com/s/19Ua857QSXEQG7k8FV7YKSQ?pwd=syjb>
 

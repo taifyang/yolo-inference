@@ -1,8 +1,8 @@
 '''
 Author: taifyang 
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang
-LastEditTime: 2024-10-24 22:15:54
+LastEditors: taifyang 
+LastEditTime: 2024-11-05 20:24:34
 FilePath: \python\backends\yolo.py
 Description: YOLO algorithm interface class
 '''
@@ -25,11 +25,11 @@ class YOLO:
     '''    
     def __init__(self) -> None:
         super().__init__()
-        self.class_num = 80		            #类别数量
-        self.score_threshold = 0.2      	#得分阈值
-        self.nms_threshold = 0.5        	#NMS阈值
-        self.confidence_threshold = 0.2 	#置信度阈值    
-        self.input_shape = (640, 640)   	#输入图像尺寸
+        self.class_num = 80		            
+        self.score_threshold = 0.2      	
+        self.nms_threshold = 0.5        	
+        self.confidence_threshold = 0.2 	
+        self.input_shape = (640, 640)   	
 
     '''
     description:    task map
@@ -39,7 +39,6 @@ class YOLO:
     def task_map(self):
         map = {}
         try:
-            import onnxruntime
             map['ONNXRuntime'] = {
                 'Classify':backends.ONNXRuntime.YOLO_ONNXRuntime_Classify,
                 'Detect':backends.ONNXRuntime.YOLO_ONNXRuntime_Detect,
@@ -49,7 +48,6 @@ class YOLO:
                pass
         
         try:
-            import cv2   
             map['OpenCV'] =  {
                 'Classify':backends.OpenCV.YOLO_OpenCV_Classify,
                 'Detect':backends.OpenCV.YOLO_OpenCV_Detect,
@@ -59,7 +57,6 @@ class YOLO:
             pass
                              
         try:
-            import openvino
             map['OpenVINO'] = {
                 'Classify':backends.OpenVINO.YOLO_OpenVINO_Classify,
                 'Detect':backends.OpenVINO.YOLO_OpenVINO_Detect,
@@ -69,7 +66,6 @@ class YOLO:
             pass
         
         try:
-            import torch
             map['PyTorch'] =  {
                 'Classify':backends.PyTorch.YOLO_PyTorch_Classify,
                 'Detect':backends.PyTorch.YOLO_PyTorch_Detect,
@@ -79,7 +75,6 @@ class YOLO:
             pass
         
         try:
-            import tensorrt
             map['TensorRT'] = {
                 'Classify':backends.TensorRT.YOLO_TensorRT_Classify,
                 'Detect':backends.TensorRT.YOLO_TensorRT_Detect,
@@ -106,17 +101,18 @@ class YOLO:
             self.image = cv2.imread(input_path)
             self.result = self.image.copy()
         
+            #warm up
             self.pre_process()
             self.process()
             self.post_process()
             
             start = time.perf_counter()
-            for i in range(10):
+            for i in range(1000):
                 self.pre_process()
                 self.process()
                 self.post_process()
             end = time.perf_counter()
-            print('avg cost:', (end-start)*100, 'ms')  
+            print('avg cost:', end-start, 'ms')  
             
             if save_result and output_path!='':
                 cv2.imwrite(output_path, self.result)
@@ -128,7 +124,10 @@ class YOLO:
             start = time.perf_counter()
             if save_result and output_path!='':
                 fourcc = cv2.VideoWriter_fourcc(*'XVID')
-                wri = cv2.VideoWriter(output_path, fourcc, 30.0, (1280,720))
+                fps = cap.get(cv2.CAP_PROP_FPS)
+                width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                wri = cv2.VideoWriter(output_path, fourcc, fps, (width,height))
             while True:
                 ret, self.image  = cap.read()
                 if not ret:
@@ -145,4 +144,3 @@ class YOLO:
             end = time.perf_counter()
             print((end-start)*1000, 'ms')                         
             
-    

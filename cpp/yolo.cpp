@@ -1,8 +1,8 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang
- * @LastEditTime: 2024-10-28 23:04:00
+ * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditTime: 2024-11-05 20:26:33
  * @FilePath: \cpp\yolo.cpp
  * @Description: source file for YOLO algorithm
  */
@@ -50,12 +50,13 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 			std::exit(-1);
 		}
 
+		//warm up
 		pre_process();
 		process();
 		post_process();
 
 		auto start = std::chrono::steady_clock::now();
-		for(int i=0; i<10; ++i)
+		for(int i=0; i<1000; ++i)
 		{
 			pre_process();
 			process();
@@ -63,7 +64,7 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 		}		
 		auto end = std::chrono::steady_clock::now();	
 		std::chrono::duration<double> duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);		
-		std::cout << "avg cost:" << duration.count() * 100 << "ms" << std::endl;
+		std::cout << "avg cost:" << duration.count() << "ms" << std::endl;
 
 		if (save_result)
 		{
@@ -90,7 +91,9 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 		if (save_result)
 		{
 			std::string result_name = "./result/" + std::string(argv[1]) + std::string(argv[2]) + std::string(argv[3]) + std::string(argv[4]) + std::string(argv[5]) + ".avi";
-			wri.open(result_name, cv::VideoWriter::fourcc('M', 'P', '4', '2'), 30, cv::Size(1280, 720));
+			int width = int(cap.get(cv::CAP_PROP_FRAME_WIDTH));
+    		int height = int(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+			wri.open(result_name, cv::VideoWriter::fourcc('M', 'P', '4', '2'), 30, cv::Size(width, height));
 		}
 
 		auto start = std::chrono::steady_clock::now();

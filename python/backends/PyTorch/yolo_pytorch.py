@@ -1,8 +1,8 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang
-LastEditTime: 2024-10-30 22:01:22
+LastEditors: taifyang 
+LastEditTime: 2024-11-01 00:23:03
 FilePath: \python\backends\PyTorch_\yolo_pytorch.py
 Description: pytorch inference class for YOLO algorithm
 '''
@@ -33,6 +33,7 @@ class YOLO_PyTorch(YOLO):
         self.net = torch.load(model_path)
         self.algo_type = algo_type
         self.device_type = device_type
+        self.model_type = model_type
         if self.device_type == 'GPU':
             self.net = self.net.cuda()
     
@@ -81,6 +82,8 @@ class YOLO_PyTorch_Classify(YOLO_PyTorch):
         self.input = torch.from_numpy(self.input)
         if self.device_type == 'GPU':
             self.input = self.input.cuda()
+            if self.model_type == 'FP16':
+                self.input = self.input.half()
     
     '''
     description:    model post-process
@@ -88,7 +91,7 @@ class YOLO_PyTorch_Classify(YOLO_PyTorch):
     return {*}
     '''    
     def post_process(self) -> None:
-        output = np.squeeze(self.output.cpu().numpy()).astype(dtype=np.float32)
+        output = np.squeeze(self.output.cpu().detach().numpy()).astype(dtype=np.float32)
         if self.algo_type in ['YOLOv5'] and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.exp(np.max(output))/np.sum(np.exp(output)))
         if self.algo_type in ['YOLOv8', 'YOLOv11'] and self.draw_result:
@@ -110,8 +113,11 @@ class YOLO_PyTorch_Detect(YOLO_PyTorch):
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
         self.input = np.expand_dims(input, axis=0) 
+        self.input = torch.from_numpy(self.input)
         if self.device_type == 'GPU':
             self.input = self.input.cuda()
+            if self.model_type == 'FP16':
+                self.input = self.input.half()
         
     '''
     description:    model post-process
@@ -119,7 +125,7 @@ class YOLO_PyTorch_Detect(YOLO_PyTorch):
     return {*}
     '''     
     def post_process(self) -> None:
-        output = np.squeeze(self.output[0].cpu().numpy()).astype(dtype=np.float32)
+        output = np.squeeze(self.output[0].cpu().detach().numpy()).astype(dtype=np.float32)
         boxes = []
         scores = []
         class_ids = []
@@ -176,8 +182,11 @@ class YOLO_PyTorch_Segment(YOLO_PyTorch):
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
         self.input = np.expand_dims(input, axis=0)
+        self.input = torch.from_numpy(self.input)
         if self.device_type == 'GPU':
             self.input = self.input.cuda()
+            if self.model_type == 'FP16':
+                self.input = self.input.half()
                 
     '''
     description:    model post-process
@@ -185,7 +194,7 @@ class YOLO_PyTorch_Segment(YOLO_PyTorch):
     return {*}
     '''           
     def post_process(self) -> None:
-        output = np.squeeze(self.output[0].cpu().numpy()).astype(dtype=np.float32)
+        output = np.squeeze(self.output[0].cpu().detach().numpy()).astype(dtype=np.float32)
         boxes = []
         scores = []
         class_ids = []
