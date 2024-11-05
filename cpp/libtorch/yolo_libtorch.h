@@ -1,10 +1,10 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 
- * @LastEditTime: 2024-08-06 21:20:25
+ * @LastEditors: taifyang
+ * @LastEditTime: 2024-10-30 21:17:38
  * @FilePath: \cpp\libtorch\yolo_libtorch.h
- * @Description: yolo算法的libtorch推理框架头文件
+ * @Description: libtorch inference header file for YOLO algorithm
  */
 
 #pragma once
@@ -17,146 +17,146 @@
 #include <torch/torch.h>
 
 /**
- * @description: yolo算法的libtorch推理框架抽象类
+ * @description: libtorch inference class for YOLO algorithm
  */
 class YOLO_Libtorch : virtual public YOLO
 {	
 public:
 	/**
-	 * @description: 					初始化接口
-	 * @param {Algo_Type} algo_type		算法类型
-	 * @param {Device_Type} device_type	推理设备
-	 * @param {Model_Type} model_type	模型精度
-	 * @param {string} model_path		模型路径
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
 	 * @return {*}
 	 */
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
 
 protected:
 	/**
-	 * @description: 设备类型
+	 * @description: device type
 	 */
 	torch::DeviceType m_device;
 
 	/**
-	 * @description: 推理模块
+	 * @description: inference module
 	 */
 	torch::jit::script::Module m_module;
 
 	/**
-	 * @description: 模型输入
+	 * @description: model input
 	 */
 	std::vector<torch::jit::IValue> m_input;
 
 	/**
-	 * @description: 模型输出
+	 * @description: model output
 	 */
 	torch::jit::IValue m_output;
 };
 
 /**
- * @description: yolo分类算法的libtorch推理框架类
+ * @description: libtorch inference class for the yolo classification algorithm
  */
 class YOLO_Libtorch_Classify : public YOLO_Libtorch, public YOLO_Classify
 {
 public:
 	/**
-	 * @description: 					初始化接口
-	 * @param {Algo_Type} algo_type		算法类型
-	 * @param {Device_Type} device_type	推理设备
-	 * @param {Model_Type} model_type	模型精度
-	 * @param {string} model_path		模型路径
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
 	 * @return {*}
 	 */
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
 
 private:
 	/**
-	 * @description: 前处理
+	 * @description: model pre-process
 	 * @return {*}
 	 */
 	void pre_process();
 
 	/**
-	 * @description: 模型推理
+	 * @description: model inference
 	 * @return {*}
 	 */
 	void process();
 
 	/**
-	 * @description: 模型后处理
+	 * @description: model post-process
 	 * @return {*}
 	 */
 	void post_process();
 };
 
 /**
- * @description: yolo检测算法的libtorch推理框架类
+ * @description: libtorch inference class for the yolo detection algorithm
  */
 class YOLO_Libtorch_Detect : public YOLO_Libtorch, public YOLO_Detect
 {
 public:
 	/**
-	 * @description: 					初始化接口
-	 * @param {Algo_Type} algo_type		算法类型
-	 * @param {Device_Type} device_type	推理设备
-	 * @param {Model_Type} model_type	模型精度
-	 * @param {string} model_path		模型路径
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
 	 * @return {*}
 	 */
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
 
 private:
 	/**
-	 * @description: 模型前处理
+	 * @description: model pre-process
 	 * @return {*}
 	 */
 	void pre_process();
 
 	/**
-	 * @description: 模型推理
+	 * @description: model inference
 	 * @return {*}
 	 */
 	void process();
 
 	/**
-	 * @description: 模型后处理
+	 * @description: model post-process
 	 * @return {*}
 	 */
 	void post_process();
 };
 
 /**
- * @description: yolo分割算法的libtorch推理框架类
+ * @description: libtorch inference class for the yolo segmentation algorithm
  */
 class YOLO_Libtorch_Segment : public YOLO_Libtorch, public YOLO_Segment
 {
 public:
 	/**
-	 * @description: 					初始化接口
-	 * @param {Algo_Type} algo_type		算法类型
-	 * @param {Device_Type} device_type	推理设备
-	 * @param {Model_Type} model_type	模型精度
-	 * @param {string} model_path		模型路径
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
 	 * @return {*}
 	 */
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
 
 private:
 	/**
-	 * @description: 模型前处理
+	 * @description: model pre-process
 	 * @return {*}
 	 */
 	void pre_process();
 
 	/**
-	 * @description: 模型推理
+	 * @description: model inference
 	 * @return {*}
 	 */
 	void process();
 
 	/**
-	 * @description: 模型后处理
+	 * @description: model post-process
 	 * @return {*}
 	 */
 	void post_process();

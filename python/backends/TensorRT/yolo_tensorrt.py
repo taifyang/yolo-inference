@@ -1,10 +1,10 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang
-LastEditTime: 2024-10-13 20:44:24
+LastEditors: taifyang 
+LastEditTime: 2024-10-31 23:19:56
 FilePath: \python\backends\TensorRT\yolo_tensorrt.py
-Description: yolo算法tensorrt推理框架实现类
+Description: tensorrt inference class for YOLO algorithm
 '''
 
 import tensorrt as trt
@@ -15,22 +15,22 @@ from backends.utils import *
 
 
 '''
-description: yolo算法tensorrt推理框架实现类
+description: tensorrt inference class for YOLO algorithm
 '''
 class YOLO_TensorRT(YOLO):
     '''
-    description:            构造方法
-    param {*} self          类的实例
-    param {str} algo_type   算法类型
-    param {str} device_type 设备类型
-    param {str} model_type  模型精度
-    param {str} model_path  模型路径 
+    description:            construction method
+    param {*} self          instance of class
+    param {str} algo_type   algorithm type
+    param {str} device_type device type
+    param {str} model_type  model type
+    param {str} model_path  model path
     return {*}
-    '''    
+    '''     
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__()
         assert os.path.exists(model_path), 'model not exists!'
-        assert device_type == 'GPU', 'only support GPU!'
+        assert device_type in ['GPU'], 'unsupported device type!'
         self.algo_type = algo_type
         self.model_type = model_type
         logger = trt.Logger(trt.Logger.ERROR)
@@ -40,16 +40,16 @@ class YOLO_TensorRT(YOLO):
    
 
 '''
-description: yolo分类算法tensorrt推理框架实现类
+description: tensorrt inference class for the YOLO classfiy algorithm
 '''        
 class YOLO_TensorRT_Classify(YOLO_TensorRT):
     '''
-    description:            构造方法
-    param {*} self          类的实例
-    param {str} algo_type   算法类型
-    param {str} device_type 设备类型
-    param {str} model_type  模型精度
-    param {str} model_path  模型路径
+    description:            construction method
+    param {*} self          instance of class
+    param {str} algo_type   algorithm type
+    param {str} device_type device type
+    param {str} model_type  model type
+    param {str} model_path  model path
     return {*}
     '''    
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
@@ -62,8 +62,8 @@ class YOLO_TensorRT_Classify(YOLO_TensorRT):
         self.output_device = cuda.mem_alloc(self.output_host.nbytes)
     
     '''
-    description:    模型前处理
-    param {*} self  类的实例
+    description:    model pre-process
+    param {*} self  instance of class
     return {*}
     '''       
     def pre_process(self) -> None:
@@ -88,13 +88,13 @@ class YOLO_TensorRT_Classify(YOLO_TensorRT):
             crop_image = self.image[top:(top+crop_size), left:(left+crop_size), ...]
             input = cv2.resize(crop_image, self.input_shape)
             input = input / 255.0
-        input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB和HWC2CHW
+        input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW
         input = np.expand_dims(input, axis=0) 
         np.copyto(self.input_host, input.ravel())
     
     '''
-    description:    模型推理
-    param {*} self  类的实例
+    description:    model inference
+    param {*} self  instance of class
     return {*}
     '''       
     def process(self) -> None:
@@ -106,8 +106,8 @@ class YOLO_TensorRT_Classify(YOLO_TensorRT):
             self.output = self.output_host.reshape(context.get_binding_shape(1)) 
     
     '''
-    description:    模型后处理
-    param {*} self  类的实例
+    description:    model post-process
+    param {*} self  instance of class
     return {*}
     '''          
     def post_process(self) -> None:
@@ -119,18 +119,18 @@ class YOLO_TensorRT_Classify(YOLO_TensorRT):
     
  
 '''
-description: yolo检测算法tensorrt推理框架实现类
+description: tensorrt inference class for the YOLO detection algorithm
 '''   
 class YOLO_TensorRT_Detect(YOLO_TensorRT):
     '''
-    description:            构造方法
-    param {*} self          类的实例
-    param {str} algo_type   算法类型
-    param {str} device_type 设备类型
-    param {str} model_type  模型精度
-    param {str} model_path  模型路径
+    description:            construction method
+    param {*} self          instance of class
+    param {str} algo_type   algorithm type
+    param {str} device_type device type
+    param {str} model_type  model type
+    param {str} model_path  model path
     return {*}
-    '''    
+    '''      
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__(algo_type, device_type, model_type, model_path)
         assert self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11'], 'algo type not supported!'
@@ -141,20 +141,20 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
         self.output_device = cuda.mem_alloc(self.output_host.nbytes)
     
     '''
-    description:    模型前处理
-    param {*} self  类的实例
+    description:    model pre-process
+    param {*} self  instance of class
     return {*}
     '''       
     def pre_process(self) -> None:
         input = letterbox(self.image, self.input_shape)
-        input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  
+        input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
         input = np.expand_dims(input, axis=0) 
         np.copyto(self.input_host, input.ravel())
     
     '''
-    description:    模型推理
-    param {*} self  类的实例
+    description:    model inference
+    param {*} self  instance of class
     return {*}
     '''        
     def process(self) -> None:
@@ -166,8 +166,8 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
             self.output = self.output_host.reshape(context.get_binding_shape(1)) 
     
     '''
-    description:    模型后处理
-    param {*} self  类的实例
+    description:    model post-process
+    param {*} self  instance of class
     return {*}
     '''       
     def post_process(self) -> None:
@@ -203,22 +203,22 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
                 indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
                 boxes = boxes[indices]
             if self.draw_result:
-                self.result = draw(self.image, boxes, input_shape=self.input_shape)
+                self.result = draw_result(self.image, boxes, input_shape=self.input_shape)
         
 
 '''
-description: yolo分割算法tensorrt推理框架实现类
+description: tensorrt inference class for the YOLO segmentation algorithm
 '''             
 class YOLO_TensorRT_Segment(YOLO_TensorRT):
     '''
-    description:            构造方法
-    param {*} self          类的实例
-    param {str} algo_type   算法类型
-    param {str} device_type 设备类型
-    param {str} model_type  模型精度
-    param {str} model_path  模型路径
+    description:            construction method
+    param {*} self          instance of class
+    param {str} algo_type   algorithm type
+    param {str} device_type device type
+    param {str} model_type  model type
+    param {str} model_path  model path
     return {*}
-    '''    
+    '''     
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__(algo_type, device_type, model_type, model_path)
         assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv11'], 'algo type not supported!'
@@ -231,20 +231,20 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
         self.output1_device = cuda.mem_alloc(self.output1_host.nbytes)
     
     '''
-    description:    模型前处理
-    param {*} self  类的实例
+    description:    model pre-process
+    param {*} self  instance of class
     return {*}
     '''        
     def pre_process(self) -> None:
         input = letterbox(self.image, self.input_shape)
-        input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  
+        input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
         input = np.expand_dims(input, axis=0) 
         np.copyto(self.input_host, input.ravel())
     
     '''
-    description:    模型推理
-    param {*} self  类的实例
+    description:    model inference
+    param {*} self  instance of class
     return {*}
     '''        
     def process(self) -> None:
@@ -258,8 +258,8 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
             self.output1 = self.output1_host.reshape(context.get_binding_shape(2)) 
     
     '''
-    description:    模型后处理
-    param {*} self  类的实例
+    description:    model post-process
+    param {*} self  instance of class
     return {*}
     '''            
     def post_process(self) -> None:
@@ -310,4 +310,4 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
         
             masks = crop_mask(masks, downsampled_bboxes)
             if self.draw_result:
-                self.result = draw(self.image, boxes, masks, self.input_shape)
+                self.result = draw_result(self.image, boxes, masks, self.input_shape)

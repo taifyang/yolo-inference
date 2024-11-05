@@ -4,7 +4,7 @@
  * @LastEditors: taifyang 
  * @LastEditTime: 2024-06-17 23:29:18
  * @FilePath: \cpp\tensorrt\decode.cu
- * @Description: yolo检测器cuda后处理解码实现
+ * @Description: cuda post-processing decoding source file for YOLO algorithm
  */
 
 #include "decode.cuh"

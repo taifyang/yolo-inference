@@ -1,10 +1,10 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 
- * @LastEditTime: 2024-08-20 23:01:02
+ * @LastEditors: taifyang
+ * @LastEditTime: 2024-10-30 21:37:25
  * @FilePath: \cpp\tensorrt\yolo_tensorrt.h
- * @Description: yolo算法的tensorrt推理框架头文件
+ * @Description: tensorrt inference header file for YOLO algorithm
  */
 
 #pragma once
@@ -18,297 +18,297 @@
 #include <NvInferRuntime.h>
 
 /**
- * @description: 
+ * @description: tensorrt inference class for YOLO algorithm
  * @return {*}
  */
 class YOLO_TensorRT : virtual public YOLO
 {
 public:
 	/**
-	 * @description: 					初始化接口
-	 * @param {Algo_Type} algo_type		算法类型
-	 * @param {Device_Type} device_type	推理设备
-	 * @param {Model_Type} model_type	模型精度
-	 * @param {string} model_path		模型路径
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
 	 * @return {*}
 	 */
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
 
 	/**
-	 * @description: 资源释放接口
+	 * @description: release interface
 	 * @return {*}
 	 */
 	void release();
 
 protected:
 	/**
-	 * @description: 推理运行时
+	 * @description: nvinfer runtime
 	 */
 	nvinfer1::IRuntime* m_runtime;
 
 	/**
-	 * @description: 推理引擎
+	 * @description: nvinfer engine
 	 */
 	nvinfer1::ICudaEngine* m_engine;
 	/**
-	 * @description: 推理上下文
+	 * @description: nvinfer execution context
 	 */
 	nvinfer1::IExecutionContext* m_execution_context;
 
 	/**
-	 * @description: cuda流
+	 * @description: cuda stream
 	 */
 	cudaStream_t m_stream;
 
 	/**
-	 * @description: 输入数据指针device
+	 * @description: pointer to input device
 	 */
 	float* m_input_device;
 
 	/**
-	 * @description: 最大输入大小
+	 * @description: max input size
 	 */
 	const int m_max_input_size = sizeof(float) * m_input_numel;
 
 	/**
-	 * @description: 最大包围盒数
+	 * @description: max bounding box num
 	 */
-	const int m_max_image_bbox = 1024;
+	const int m_max_box = 1024;
 };
 
 /**
- * @description: yolo分类算法的tensorrt推理框架类
+ * @description: tensorrt inference class for the yolo classification algorithm
  */
 class YOLO_TensorRT_Classify : public YOLO_TensorRT, public YOLO_Classify
 {
 public:
 	/**
-	 * @description: 					初始化接口
-	 * @param {Algo_Type} algo_type		算法类型
-	 * @param {Device_Type} device_type	推理设备
-	 * @param {Model_Type} model_type	模型精度
-	 * @param {string} model_path		模型路径
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
 	 * @return {*}
 	 */
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
 
 private:
 	/**
-	 * @description: 模型前处理
+	 * @description: model pre-process
 	 * @return {*}
 	 */
 	void pre_process();
 
 	/**
-	 * @description: 模型推理
+	 * @description: model inference
 	 * @return {*}
 	 */
 	void process();
 
 	/**
-	 * @description: 模型后处理
+	 * @description: model post-process
 	 * @return {*}
 	 */
 	void post_process();
 
 	/**
-	 * @description: 资源释放
+	 * @description: resource release
 	 * @return {*}
 	 */
 	void release();
 
 	/**
-	 * @description: 输入输出tensor绑定
+	 * @description: input and output tensor bindings
 	 */
 	float* m_bindings[2];
 
 	/**
-	 * @description: 输入数据指针host
+	 * @description: pointer to input on host
 	 */
 	float* m_input_host;
 
 	/**
-	 * @description: 输出数据指针device
+	 * @description: pointer to output on device
 	 */
 	float* m_output_device;
 };
 
 /**
- * @description: yolo检测算法的tensorrt推理框架类
+ * @description: tensorrt inference class for the yolo detection algorithm
  */
 class YOLO_TensorRT_Detect : public YOLO_TensorRT, public YOLO_Detect
 {
 public:
 	/**
-	 * @description: 					初始化接口
-	 * @param {Algo_Type} algo_type		算法类型
-	 * @param {Device_Type} device_type	推理设备
-	 * @param {Model_Type} model_type	模型精度
-	 * @param {string} model_path		模型路径
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
 	 * @return {*}
 	 */
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
 
 private:
 	/**
-	 * @description: 模型前处理
+	 * @description: model pre-process
 	 * @return {*}
 	 */
 	void pre_process();
 
 	/**
-	 * @description: 模型推理
+	 * @description: model inference
 	 * @return {*}
 	 */
 	void process();
 
 	/**
-	 * @description: 模型后处理
+	 * @description: model post-process
 	 * @return {*}
 	 */
 	void post_process();
 
 	/**
-	 * @description: 资源释放
+	 * @description: resource release
 	 * @return {*}
 	 */
 	void release();
 
 	/**
-	 * @description: 输入输出tensor绑定
+	 * @description: input and output tensor bindings
 	 */
 	float* m_bindings[2];
 
 #ifndef _CUDA_PREPROCESS
 	/**
-	 * @description: 输入数据指针host
+	 * @description: pointer to input on host
 	 */
 	float* m_input_host;
 #else
 	/**
-	 * @description: 输入int8数据指针host
+	 * @description: pointer to uint8_t input on host 
 	 */
 	uint8_t* m_input_host;
 #endif // !_CUDA_PREPROCESS
 
 	/**
-	 * @description: 输出数据指针device
+	 * @description: pointer to output on device
 	 */
 	float* m_output_device;
 
 #ifdef _CUDA_PREPROCESS
 	/**
-	 * @description: 仿射变换矩阵host
+	 * @description: affine matrix on host
 	 */
 	float* m_affine_matrix_host;
 
 	/**
-	 * @description: 仿射变换矩阵device
+	 * @description: affine matrix on device
 	 */
 	float* m_affine_matrix_device;
 #endif // _CUDA_PREPROCESS
 
 #ifdef _CUDA_POSTPROCESS
 	/**
-	 * @description: 输出包围盒host
+	 * @description: output bounding box on host
 	 */
 	float* m_output_box_host;
 
 	/**
-	 * @description: 输出包围盒device
+	 * @description: output bounding box on device
 	 */
 	float* m_output_box_device;
 #endif // _CUDA_POSTPROCESS
 };
 
 /**
- * @description: yolo分割算法的tensorrt推理框架类
+ * @description: tensorrt inference class for the yolo segmentation algorithm
  */
 class YOLO_TensorRT_Segment : public YOLO_TensorRT, public YOLO_Segment
 {
 public:
 	/**
-	 * @description: 					初始化接口
-	 * @param {Algo_Type} algo_type		算法类型
-	 * @param {Device_Type} device_type	推理设备
-	 * @param {Model_Type} model_type	模型精度
-	 * @param {string} model_path		模型路径
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
 	 * @return {*}
 	 */
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
 
 private:
 	/**
-	 * @description: 模型前处理
+	 * @description: model pre-process
 	 * @return {*}
 	 */
 	void pre_process();
 
 	/**
-	 * @description: 模型推理
+	 * @description: model inference
 	 * @return {*}
 	 */
 	void process();
 
 	/**
-	 * @description: 模型后处理
+	 * @description: model post-process
 	 * @return {*}
 	 */
 	void post_process();
 
 	/**
-	 * @description: 资源释放
+	 * @description: resource release
 	 * @return {*}
 	 */
 	void release();
 
 	/**
-	 * @description: 输入输出tensor绑定
+	 * @description: input and output tensor bindings
 	 */
 	float* m_bindings[3];
 
 #ifndef _CUDA_PREPROCESS
 	/**
-	 * @description: 输入数据host
+	 * @description: pointer to input on host
 	 */
 	float* m_input_host;
 #else
 	/**
-	 * @description: 输入int8数据host
+	 * @description:  pointer to uint8_t input on host
 	 */
 	uint8_t* m_input_host;
 #endif // !_CUDA_PREPROCESS
 
 	/**
-	 * @description: 输出数据device
+	 * @description: pointer to output0 on device
 	 */
 	float* m_output0_device;
 
 	/**
-	 * @description: 输出数据device
+	 * @description: pointer to output1 on device
 	 */
 	float* m_output1_device;
 
 #ifdef _CUDA_PREPROCESS
 	/**
-	 * @description: 仿射变换矩阵host
+	 * @description: affine matrix on host
 	 */
 	float* m_affine_matrix_host;
 
 	/**
-	 * @description: 仿射变换矩阵device
+	 * @description: affine matrix on device
 	 */
 	float* m_affine_matrix_device;
 #endif // _CUDA_PREPROCESS
 
 #ifdef _CUDA_POSTPROCESS
 	/**
-	 * @description: 输出包围盒host
+	 * @description: output bounding box on host
 	 */
 	float* m_output_box_host;
 
 	/**
-	 * @description: 输出包围盒device
+	 * @description: output bounding box on device
 	 */
 	float* m_output_box_device;
 #endif // _CUDA_POSTPROCESS

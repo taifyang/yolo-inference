@@ -2,7 +2,7 @@
 Author: taifyang 
 Date: 2024-07-11 23:48:57
 LastEditors: taifyang 
-LastEditTime: 2024-08-20 23:15:30
+LastEditTime: 2024-10-31 23:02:56
 FilePath: \yolo-inference\python\backends\__init__.py
 '''
 
@@ -11,31 +11,31 @@ try:
     import onnxruntime
     from backends import ONNXRuntime
 except:
-    print('onnxruntime is not installed')
+    print('ONNXRuntime module import fail!')
     
 try:
     import cv2
     from backends import OpenCV
 except:
-    print('cv2 is not installed')
+    print('OpenCV module import fail!')
    
 try:
     import openvino
     from backends import OpenVINO
 except:
-    print('openvino is not installed')
+    print('OpenVINO module import fail!')
 
 try:
     import torch
     from backends import PyTorch
 except:
-    print('pytorch is not installed')
+    print('PyTorch module import fail!')
             
 try:
     import tensorrt
     from backends import TensorRT
 except:
-    print('tensorrt is not installed')
+    print('TensorRT module import fail!')
 
 
 __all__ = 'ONNXRuntime', 'OpenCV', 'OpenVINO', 'PyTorch', 'TensorRT'

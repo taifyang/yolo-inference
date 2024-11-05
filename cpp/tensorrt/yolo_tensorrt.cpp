@@ -1,10 +1,10 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 
- * @LastEditTime: 2024-10-13 20:32:26
+ * @LastEditors: taifyang
+ * @LastEditTime: 2024-10-30 21:01:45
  * @FilePath: \cpp\tensorrt\yolo_tensorrt.cpp
- * @Description: yolo算法的tensorrt推理框架实现
+ * @Description: tensorrt inference source file for YOLO algorithm
  */
 
 #include "yolo_tensorrt.h"
@@ -128,8 +128,8 @@ void YOLO_TensorRT_Detect::init(const Algo_Type algo_type, const Device_Type dev
 #endif // _CUDA_PREPROCESS
 
 #ifdef _CUDA_POSTPROCESS
-	cudaMallocHost(&m_output_box_host, sizeof(float) * (NUM_BOX_ELEMENT * m_max_image_bbox + 1));
-	cudaMalloc(&m_output_box_device, sizeof(float) * (NUM_BOX_ELEMENT * m_max_image_bbox + 1));
+	cudaMallocHost(&m_output_box_host, sizeof(float) * (NUM_BOX_ELEMENT * m_max_box + 1));
+	cudaMalloc(&m_output_box_device, sizeof(float) * (NUM_BOX_ELEMENT * m_max_box + 1));
 #endif // _CUDA_POSTPROCESS
 }
 
@@ -146,16 +146,14 @@ void YOLO_TensorRT_Segment::init(const Algo_Type algo_type, const Device_Type de
 	{
 		m_output_numprob = 37 + m_class_num;
 		m_output_numbox = 3 * (m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32);
-		m_output_numdet = 1 * m_output_numprob * m_output_numbox;
-		m_output_numseg = m_mask_params.segChannels * m_mask_params.segWidth * m_mask_params.segHeight;
 	}
 	if (m_algo == YOLOv8 || m_algo == YOLOv11)
 	{
 		m_output_numprob = 36 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
-		m_output_numdet = 1 * m_output_numprob * m_output_numbox;
-		m_output_numseg = m_mask_params.segChannels * m_mask_params.segWidth * m_mask_params.segHeight;
 	}
+	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
+	m_output_numseg = m_mask_params.segChannels * m_mask_params.segWidth * m_mask_params.segHeight;
 
 	cudaMallocHost(&m_input_host, m_max_input_size);
 	cudaMallocHost(&m_output0_host, sizeof(float) * m_output_numdet);
@@ -331,13 +329,13 @@ void YOLO_TensorRT_Detect::post_process()
 	std::vector<int> class_ids;
 
 #ifdef _CUDA_POSTPROCESS
-	cudaMemset(m_output_box_device, 0, sizeof(float) * (NUM_BOX_ELEMENT * m_max_image_bbox + 1));	//不加此句会出问题
-	decode_kernel_invoker(m_output_device, m_output_numbox, m_class_num, confidence_threshold, m_affine_matrix_device, m_output_box_device, m_max_image_bbox, m_stream, m_algo);
-	nms_kernel_invoker(m_output_box_device, nms_threshold, m_max_image_bbox, m_stream);
-	cudaMemcpyAsync(m_output_box_host, m_output_box_device, sizeof(float) * (NUM_BOX_ELEMENT * m_max_image_bbox + 1), cudaMemcpyDeviceToHost, m_stream);
+	cudaMemset(m_output_box_device, 0, sizeof(float) * (NUM_BOX_ELEMENT * m_max_box + 1));	//不加此句会出问题
+	decode_kernel_invoker(m_output_device, m_output_numbox, m_class_num, confidence_threshold, m_affine_matrix_device, m_output_box_device, m_max_box, m_stream, m_algo);
+	nms_kernel_invoker(m_output_box_device, nms_threshold, m_max_box, m_stream);
+	cudaMemcpyAsync(m_output_box_host, m_output_box_device, sizeof(float) * (NUM_BOX_ELEMENT * m_max_box + 1), cudaMemcpyDeviceToHost, m_stream);
 	cudaStreamSynchronize(m_stream);
 
-	for (size_t i = 0; i < m_max_image_bbox; i++)
+	for (size_t i = 0; i < m_max_box; i++)
 	{
 		if (m_output_box_host[7 * i + 7])
 		{

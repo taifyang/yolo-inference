@@ -1,10 +1,11 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 
- * @LastEditTime: 2024-06-17 23:32:19
+ * @LastEditors: taifyang
+ * @LastEditTime: 2024-10-30 21:26:07
  * @FilePath: \cpp\tensorrt\preprocess.cuh
- * @Description: 前处理的cuda实现头文件，见https://github.com/wang-xinyu/tensorrtx/blob/master/yolov5/src/preprocess.h
+ * @Description: cuda pre-processing decoding head file for YOLO algorithm
+ * refer to https://github.com/wang-xinyu/tensorrtx/blob/master/yolov5/src/preprocess.h
  */
 
 #pragma once
@@ -15,7 +16,7 @@
 #include "yolo_tensorrt.h"
 
 /**
- * @description: 仿射变换矩阵
+ * @description: affine matrix
  */
 struct AffineMatrix
 {
@@ -23,7 +24,7 @@ struct AffineMatrix
 };
 
 /**
- * @description: 前处理的cuda实现
+ * @description: cuda pre-processing decoding kernel
  * @return {*}
  */
 void preprocess_kernel_img(uint8_t* src, int src_width, int src_height, float* dst, int dst_width, int dst_height, float* affine_matrix, cudaStream_t stream);

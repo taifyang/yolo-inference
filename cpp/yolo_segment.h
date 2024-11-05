@@ -1,10 +1,10 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 
- * @LastEditTime: 2024-06-29 16:28:24
+ * @LastEditors: taifyang
+ * @LastEditTime: 2024-10-30 20:59:21
  * @FilePath: \cpp\yolo_segment.h
- * @Description: 分割算法类
+ * @Description: segmentation algorithm class
  */
 
 #pragma once
@@ -12,18 +12,18 @@
 #include "yolo_detect.h"
 
 /**
- * @description: 分割网络输出相关参数
+ * @description: segmentation network output related parameters
  */
 struct OutputSeg
 {
-	int id;             //结果类别id
-	float score;   		//结果得分
-	cv::Rect box;       //矩形框
-	cv::Mat boxMask;    //矩形框内mask，节省内存空间和加快速度
+	int id;             //class id
+	float score;   		//score
+	cv::Rect box;       //bounding box
+	cv::Mat mask;    	//mask
 };
 
 /**
- * @description: 掩膜相关参数
+ * @description: mask parameters
  */
 struct MaskParams
 {
@@ -38,17 +38,17 @@ struct MaskParams
 };
 
 /**
- * @description: 分割算法抽象类
+ * @description: segmentation class for YOLO algorithm
  */
 class YOLO_Segment : public YOLO_Detect
 {
 protected:
 	/**
-	 * @description: 					获取掩码
-	 * @param {Mat&} maskProposals		掩码候选
-	 * @param {Mat&} mask_protos		输入掩码
-	 * @param {OutputSeg&} output		输出掩码
-	 * @param {MaskParams&} maskParams	掩码参数
+	 * @description: 					get mask
+	 * @param {Mat&} maskProposals		mask proposals
+	 * @param {Mat&} mask_protos		mask protos
+	 * @param {OutputSeg&} output		mask output
+	 * @param {MaskParams&} maskParams	mask parameters
 	 * @return {*}
 	 */
 	void GetMask(const cv::Mat& maskProposals, const cv::Mat& mask_protos, OutputSeg& output, const MaskParams& maskParams)
@@ -60,7 +60,6 @@ protected:
 		int seg_height = maskParams.segHeight;
 		float mask_threshold = maskParams.maskThreshold;
 		cv::Vec4f params = maskParams.params;
-		cv::Size src_img_shape = maskParams.srcImgShape;
 		cv::Rect temp_rect = output.box;
 
 		//crop from mask_protos
@@ -110,12 +109,12 @@ protected:
 
 		cv::resize(dest, mask, cv::Size(width, height), cv::INTER_LINEAR);
 		mask = mask(temp_rect - cv::Point(left, top)) > mask_threshold;
-		output.boxMask = mask;
+		output.mask = mask;
 	}
 
 	/**
-	 * @description: 						画出结果
-	 * @param {vector<OutputSeg>} result	分割结果
+	 * @description: 						draw result
+	 * @param {vector<OutputSeg>} result	segmentation model output
 	 */	
 	void draw_result(std::vector<OutputSeg> output_seg)
 	{
@@ -131,7 +130,7 @@ protected:
 		for (int i = 0; i < output_seg.size(); i++)
 		{
 			cv::rectangle(m_result, output_seg[i].box, cv::Scalar(255, 0, 0), 1);
-			mask(output_seg[i].box).setTo(color[output_seg[i].id], output_seg[i].boxMask);
+			mask(output_seg[i].box).setTo(color[output_seg[i].id], output_seg[i].mask);
 			std::string label = "class" + std::to_string(output_seg[i].id) + ":" + cv::format("%.2f", output_seg[i].score);
 			cv::putText(m_result, label, cv::Point(output_seg[i].box.x, output_seg[i].box.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 1);
 		}
@@ -140,29 +139,29 @@ protected:
 	}
 
 	/**
-	 * @description: 掩码参数
+	 * @description: mask parameters
 	 */
 	MaskParams m_mask_params;
 
 	/**
-	 * @description: 输出分割尺寸
+	 * @description: output segmentation size
 	 */	
 	int m_output_numseg;
 
 	 /**
-	 * @description: 模型输出
+	 * @description: model output0 on host
 	 * @return {*}
 	 */
 	float* m_output0_host;
 
 	/**
-	 * @description: 模型输出
+	 * @description: model output1 on host
 	 * @return {*}
 	 */
 	float* m_output1_host;
 
 	/**
-	 * @description: 分割模型输出
+	 * @description: segmentation model output
 	 */
 	std::vector<OutputSeg> m_output_seg;
 };

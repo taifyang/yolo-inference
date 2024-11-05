@@ -1,6 +1,7 @@
 numpy
-opencv-python # ==4.9.0from local
-onnxruntime-gpu==1.17.1
+opencv-python # ==4.9.0 with cuda from local
+onnxruntime-gpu==1.18.1
 openvino==2024.1.0
 pycuda==2024.1
-tensorrt # ==8.2.1.8from local
+tensorrt # ==8.2.1.8 from local
+torch==2.0.0+cu118

@@ -1,10 +1,10 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 
- * @LastEditTime: 2024-06-17 22:54:36
+ * @LastEditors: taifyang
+ * @LastEditTime: 2024-10-30 20:49:01
  * @FilePath: \cpp\opencv\yolo_opencv.h
- * @Description: yolo算法的opencv推理框架头文件
+ * @Description: opencv inference header file for YOLO algorithm
  */
 
 #pragma once
@@ -16,129 +16,129 @@
 #include <opencv2/opencv.hpp>
 
 /**
- * @description: yolo算法的opencv推理框架抽象类
+ * @description: opencv inference class for YOLO algorithm
  */
 class YOLO_OpenCV : virtual public YOLO
 {
 public:
 	/**
-	 * @description: 					初始化接口
-	 * @param {Algo_Type} algo_type		算法类型
-	 * @param {Device_Type} device_type	推理设备
-	 * @param {Model_Type} model_type	模型精度
-	 * @param {string} model_path		模型路径
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
 	 * @return {*}
 	 */
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
 
 protected:
 	/**
-	 * @description: 模型推理
+	 * @description: model inference
 	 * @return {*}
 	 */
 	void process();
 
 	/**
-	 * @description: 推理引擎
+	 * @description: inference engine
 	 */
 	cv::dnn::Net m_net;
 
 	/**
-	 * @description: 输入图像
+	 * @description: model input
 	 */
 	cv::Mat m_input;
 
 	/**
-	 * @description: 输出结果
+	 * @description: model output
 	 */
 	std::vector<cv::Mat> m_output;
 };
 
 /**
- * @description: yolo分类算法的opencv推理框架类
+ * @description: opencv inference class for the yolo classification algorithm
  */
 class YOLO_OpenCV_Classify : public YOLO_OpenCV, public YOLO_Classify
 {
 public:
 	/**
-	 * @description: 					初始化接口
-	 * @param {Algo_Type} algo_type		算法类型
-	 * @param {Device_Type} device_type	推理设备
-	 * @param {Model_Type} model_type	模型精度
-	 * @param {string} model_path		模型路径
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
 	 * @return {*}
 	 */
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
 
 private:
 	/**
-	 * @description: 模型前处理
+	 * @description: model pre-process
 	 * @return {*}
 	 */
 	void pre_process();
 
 	/**
-	 * @description: 模型后处理
+	 * @description: model post-process
 	 * @return {*}
 	 */
 	void post_process();
 };
 
 /**
- * @description: yolo检测算法的opencv推理框架类
+ * @description: opencv inference class for the yolo detection algorithm
  */
 class YOLO_OpenCV_Detect : public YOLO_OpenCV, public YOLO_Detect
 {
 public:
 	/**
-	 * @description: 					初始化接口
-	 * @param {Algo_Type} algo_type		算法类型
-	 * @param {Device_Type} device_type	推理设备
-	 * @param {Model_Type} model_type	模型精度
-	 * @param {string} model_path		模型路径
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
 	 * @return {*}
 	 */
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
 
 private:
 	/**
-	 * @description: 模型前处理
+	 * @description: model pre-process
 	 * @return {*}
 	 */
 	void pre_process();
 
 	/**
-	 * @description: 模型后处理
+	 * @description: model post-process
 	 * @return {*}
 	 */
 	void post_process();
 };
 
 /**
- * @description: yolo分割算法的opencv推理框架类
+ * @description: opencv inference class for the yolo segmentation algorithm
  */
 class YOLO_OpenCV_Segment : public YOLO_OpenCV, public YOLO_Segment
 {
 public:
 	/**
-	 * @description: 					初始化接口
-	 * @param {Algo_Type} algo_type		算法类型
-	 * @param {Device_Type} device_type	推理设备
-	 * @param {Model_Type} model_type	模型精度
-	 * @param {string} model_path		模型路径
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
 	 * @return {*}
 	 */
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
 
 private:
 	/**
-	 * @description: 模型前处理
+	 * @description: model pre-process
 	 * @return {*}
 	 */
 	void pre_process();
 
 	/**
-	 * @description: 模型后处理
+	 * @description: model post-process
 	 * @return {*}
 	 */
 	void post_process();

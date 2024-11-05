@@ -1,10 +1,10 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 
- * @LastEditTime: 2024-10-13 20:23:16
+ * @LastEditors: taifyang
+ * @LastEditTime: 2024-10-30 22:38:51
  * @FilePath: \cpp\onnxruntime\yolo_onnxruntime.cpp
- * @Description: yolo算法的onnxruntime推理框架实现
+ * @Description: onnxruntime inference source file for YOLO algorithm
  */
 
 #include "yolo_onnxruntime.h"

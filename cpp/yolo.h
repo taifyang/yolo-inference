@@ -1,10 +1,10 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 
- * @LastEditTime: 2024-10-13 17:16:26
+ * @LastEditors: taifyang
+ * @LastEditTime: 2024-10-30 22:49:50
  * @FilePath: \cpp\yolo.h
- * @Description: yolo接口类头文件
+ * @Description: header file for YOLO algorithm
  */
 
 #pragma once
@@ -15,7 +15,7 @@
 #include <opencv2/opencv.hpp>
 
 /**
- * @description: 推理后端
+ * @description: backend type
  */
 enum Backend_Type
 {
@@ -27,7 +27,7 @@ enum Backend_Type
 };
 
 /**
- * @description: 推理任务
+ * @description: task type
  */
 enum Task_Type
 {
@@ -37,7 +37,7 @@ enum Task_Type
 };
 
 /**
- * @description: 算法类型
+ * @description: algorithm type
  */
 enum Algo_Type
 {
@@ -51,7 +51,7 @@ enum Algo_Type
 };
 
 /**
- * @description: 推理设备
+ * @description: device type
  */
 enum Device_Type
 {
@@ -60,7 +60,7 @@ enum Device_Type
 };
 
 /**
- * @description: 模型精度
+ * @description: model type
  */
 enum Model_Type
 {
@@ -70,145 +70,145 @@ enum Model_Type
 };
 
 /**
- * @description: 接口类
+ * @description: interface class for YOLO algorithm
  */
 class YOLO
 {
 public:
 	/**
-	 * @description: 析构函数
+	 * @description: destructor
 	 * @return {*}
 	 */	
-	virtual ~YOLO() {};	//这句代码保证虚拟继承析构的时候不会内存泄漏
+	virtual ~YOLO() {};	
 
 	/**
-	 * @description: 					初始化接口
-	 * @param {Algo_Type} algo_type		算法类型
-	 * @param {Device_Type} device_type	推理设备
-	 * @param {Model_Type} model_type	模型精度
-	 * @param {string} model_path		模型路径
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
 	 * @return {*}
 	 */
 	virtual void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path) = 0;
 
 	/**
-	 * @description: 				推理接口
-	 * @param {string} file_path	文件路径		
-	 * @param {bool} save_result	保存结果
-	 * @param {bool} show_result	显示结果
-	 * @param {char*} argv			程序入参
+	 * @description: 				inference interface
+	 * @param {string} file_path	file path		
+	 * @param {bool} save_result	save result
+	 * @param {bool} show_result	show result
+	 * @param {char*} argv			argv
 	 * @return {*}
 	 */	
 	void infer(const std::string file_path, bool save_result = true, bool show_result = true, char* argv[] = {}); 
 
 	/**
-	 * @description: 资源释放接口
+	 * @description: release interface
 	 * @return {*}
 	 */
 	virtual void release() {};
 
 protected:
 	/**
-	 * @description: 模型前处理接口
+	 * @description: model pre-process interface
 	 * @return {*}
 	 */
 	virtual void pre_process() = 0;
 
 	/**
-	 * @description: 模型推理接口
+	 * @description: model inference interface
 	 * @return {*}
 	 */
 	virtual void process() = 0;
 
 	/**
-	 * @description: 模型后处理接口
+	 * @description: model post-process interface
 	 * @return {*}
 	 */
 	virtual void post_process() = 0;
 
 	/**
-	 * @description: 输入图像
+	 * @description: input image
 	 */
 	cv::Mat m_image;
 
 	/**
-	 * @description: 图像结果
+	 * @description: result
 	 */
 	cv::Mat m_result;
 
 	/**
-	 * @description: 推理图像宽度
+	 * @description: model input image width
 	 */
 	int m_input_width = 640;
 
 	/**
-	 * @description: 推理图像高度
+	 * @description: model input image height
 	 */
 	int m_input_height = 640;
 
 	/**
-	 * @description: 推理图像大小
+	 * @description: model input image size
 	 */
 	int m_input_numel = 1 * 3 * m_input_width * m_input_height;
 
 	/**
-	 * @description: 算法类型
+	 * @description: algorithm yype
 	 */
 	Algo_Type m_algo;
 
 	/**
-	 * @description: 模型精度
+	 * @description: model type
 	 */
 	Model_Type m_model;
 
 	/**
-	 * @description: 是否可视化结果
+	 * @description: draw result
 	 */
 	bool m_draw_result;
 };
 
 /**
- * @description: 抽象工厂类
+ * @description: abstract Factory Class
  */
-class  CreateFactory
+class CreateFactory
 {
 public:
 	/**
-	 * @description: 算法类创建函数指针别名
+	 * @description: algorithm class creates function pointer alias
 	 */
 	typedef std::unique_ptr<YOLO>(*CreateFunction)();
 
 	/**
-	 * @description: 算法类实例
+	 * @description: algorithm Class Instance
 	 */
 	static CreateFactory& instance();
 
 	/**
-	 * @description: 							算法类注册函数
-	 * @param {Backend_Type&} backend_type		推理后端
-	 * @param {Task_Type&} task_type			任务类型
-	 * @param {CreateFunction} create_function	算法类创建函数指针
+	 * @description: 							register class
+	 * @param {Backend_Type&} backend_type		backend type
+	 * @param {Task_Type&} task_type			task type
+	 * @param {CreateFunction} create_function	pointer to algorithm class
 	 * @return {*}
 	 */
 	void register_class(const Backend_Type& backend_type, const Task_Type& task_type, CreateFunction create_function);
 
 	/**
-	 * @description: 						算法类创建函数
-	 * @param {Backend_Type&} backend_type	推理后端
-	 * @param {Task_Type&} task_type		任务类型
-	 * @return {*}							具体算法类
+	 * @description: 						create algorithm class
+	 * @param {Backend_Type&} backend_type	backend type
+	 * @param {Task_Type&} task_type		task type
+	 * @return {*}							algorithm class
 	 */
 	std::unique_ptr<YOLO> create(const Backend_Type& backend_type, const Task_Type& task_type);
 
 private:
 	/**
-	 * @description: 构造函数
+	 * @description: constructor
 	 * @return {*}
 	 */
 	CreateFactory();
 
 	/**
-	 * @description: 算法类注册表
+	 * @description: registry for algorithm class 
 	 */
 	std::vector<std::vector<CreateFunction>> m_create_registry;
 };

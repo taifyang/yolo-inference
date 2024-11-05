@@ -1,10 +1,10 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 
- * @LastEditTime: 2024-06-17 23:31:48
+ * @LastEditors: taifyang
+ * @LastEditTime: 2024-10-30 20:55:26
  * @FilePath: \cpp\tensorrt\preprocess.cu
- * @Description: 前处理的cuda实现
+ * @Description: cuda pre-processing decoding source file for YOLO algorithm
  */
 
 #include "preprocess.cuh"
