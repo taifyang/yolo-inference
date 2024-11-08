@@ -2,11 +2,12 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang
- * @LastEditTime: 2024-10-30 22:38:51
+ * @LastEditTime: 2024-11-08 00:12:46
  * @FilePath: \cpp\onnxruntime\yolo_onnxruntime.cpp
  * @Description: onnxruntime inference source file for YOLO algorithm
  */
 
+#include <thread>
 #include "yolo_onnxruntime.h"
 
 void YOLO_ONNXRuntime::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
@@ -14,8 +15,8 @@ void YOLO_ONNXRuntime::init(const Algo_Type algo_type, const Device_Type device_
 	m_algo = algo_type;
 
 	Ort::SessionOptions session_options;
-	session_options.SetIntraOpNumThreads(12);
-	session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
+	session_options.SetIntraOpNumThreads(std::thread::hardware_concurrency()/2);
+	session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
 
 	if (device_type == GPU)
 	{
@@ -25,7 +26,6 @@ void YOLO_ONNXRuntime::init(const Algo_Type algo_type, const Device_Type device_
 		cuda_option.cudnn_conv_algo_search = OrtCudnnConvAlgoSearchExhaustive;
 		cuda_option.gpu_mem_limit = SIZE_MAX;
 		cuda_option.do_copy_in_default_stream = 1;
-		session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
 		session_options.AppendExecutionProvider_CUDA(cuda_option);
 	}
 	
