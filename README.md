@@ -7,60 +7,6 @@ Supported task types include Classify, Detect and Segment.
 
 Supported model types include FP32, FP16 and INT8.
 
-You should convert onnx model with following scirpt to tranpose output dims for YOLOv8, YOLOv9, YOLOv11 detection and segmentation:
- ```python
-import onnx
-import onnx.helper as helper
-import sys
-import os
-
-def main():
-
-    if len(sys.argv) < 2:
-        print("Usage:\n python transpose.py yolov8n.onnx")
-        return 1
-
-    file = sys.argv[1]
-    if not os.path.exists(file):
-        print(f"Not exist path: {file}")
-        return 1
-
-    prefix, suffix = os.path.splitext(file)
-    dst = prefix + ".trans" + suffix
-
-    model = onnx.load(file)
-    node  = model.graph.node[-1]
-
-    old_output = node.output[0]
-    node.output[0] = "pre_transpose"
-
-    for specout in model.graph.output:
-        if specout.name == old_output:
-            shape0 = specout.type.tensor_type.shape.dim[0]
-            shape1 = specout.type.tensor_type.shape.dim[1]
-            shape2 = specout.type.tensor_type.shape.dim[2]
-            new_out = helper.make_tensor_value_info(
-                specout.name,
-                specout.type.tensor_type.elem_type,
-                [0, 0, 0]
-            )
-            new_out.type.tensor_type.shape.dim[0].CopyFrom(shape0)
-            new_out.type.tensor_type.shape.dim[2].CopyFrom(shape1)
-            new_out.type.tensor_type.shape.dim[1].CopyFrom(shape2)
-            specout.CopyFrom(new_out)
-
-    model.graph.node.append(
-        helper.make_node("Transpose", ["pre_transpose"], [old_output], perm=[0, 2, 1])
-    )
-
-    print(f"Model save to {dst}")
-    onnx.save(model, dst)
-    return 0
-
-if __name__ == "__main__":
-    sys.exit(main())
-```
-
 You can test C++ code with:
 ```powershell
 # Windows
@@ -255,9 +201,64 @@ Python test Ubuntu22.04 in Docker(CPU i7-12700, GPU RTX3070):
 | YOLOv11n | Segment | CPU | INT8 | × | ? | × | ? | × |
 | YOLOv11n | Segment | GPU | INT8 | × | ? | × | ? | 39.0ms |
 
-You Can download some model weights in:  <https://pan.baidu.com/s/19Ua857QSXEQG7k8FV7YKSQ?pwd=syjb>
-
 You can get a docker image with:
 ```bash
 docker pull taify/yolo_inference:latest
+```
+
+You Can download some model weights in:  <https://pan.baidu.com/s/19Ua857QSXEQG7k8FV7YKSQ?pwd=syjb>
+
+
+For your own model, you should convert onnx model with following scirpt to tranpose output dims for YOLOv8, YOLOv9, YOLOv11 detection and segmentation:
+ ```python
+import onnx
+import onnx.helper as helper
+import sys
+import os
+
+def main():
+
+    if len(sys.argv) < 2:
+        print("Usage:\n python transpose.py yolov8n.onnx")
+        return 1
+
+    file = sys.argv[1]
+    if not os.path.exists(file):
+        print(f"Not exist path: {file}")
+        return 1
+
+    prefix, suffix = os.path.splitext(file)
+    dst = prefix + ".trans" + suffix
+
+    model = onnx.load(file)
+    node  = model.graph.node[-1]
+
+    old_output = node.output[0]
+    node.output[0] = "pre_transpose"
+
+    for specout in model.graph.output:
+        if specout.name == old_output:
+            shape0 = specout.type.tensor_type.shape.dim[0]
+            shape1 = specout.type.tensor_type.shape.dim[1]
+            shape2 = specout.type.tensor_type.shape.dim[2]
+            new_out = helper.make_tensor_value_info(
+                specout.name,
+                specout.type.tensor_type.elem_type,
+                [0, 0, 0]
+            )
+            new_out.type.tensor_type.shape.dim[0].CopyFrom(shape0)
+            new_out.type.tensor_type.shape.dim[2].CopyFrom(shape1)
+            new_out.type.tensor_type.shape.dim[1].CopyFrom(shape2)
+            specout.CopyFrom(new_out)
+
+    model.graph.node.append(
+        helper.make_node("Transpose", ["pre_transpose"], [old_output], perm=[0, 2, 1])
+    )
+
+    print(f"Model save to {dst}")
+    onnx.save(model, dst)
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
 ```
