@@ -7,7 +7,7 @@ Supported task types include Classify, Detect and Segment.
 
 Supported model types include FP32, FP16 and INT8.
 
-Dependencies(tested):
+Dependencies(tested on Ubuntu22.04):
 * [CUDA](https://developer.nvidia.com/cuda-downloads) version 11.8 
 * [OpenCV](https://github.com/opencv/opencv) version 4.9.0 (built with CUDA)
 * [ONNXRuntime](https://github.com/microsoft/onnxruntime) version 1.18.1
@@ -32,7 +32,7 @@ make
 ./run.sh
 ```
 
-C++ test on Ubuntu22.04 in Docker(CPU i7-12700, GPU RTX3070): 
+C++ test in Docker(CPU i7-12700, GPU RTX3070): 
 |       Model       |       Task       |       Device       |       Precision       | LibTorch | ONNXRuntime | OpenCV | OpenVINO | TensorRT |
 | :---------------: | :--------------: | :----------------: | :-------------------: | :------: | :---------: | :----: | :------: | :------: |
 | YOLOv5n | Classify | CPU | FP32 | 15.3ms | 12.2ms | 20.6ms | 14.1ms | × |
@@ -127,7 +127,7 @@ pip install -r requirements.txt
 ./run.sh
 ```
 
-Python test Ubuntu22.04 in Docker(CPU i7-12700, GPU RTX3070): 
+Python test in Docker(CPU i7-12700, GPU RTX3070): 
 |       Model       |       Task       |       Device       |       Precision       | PyTorch | ONNXRuntime | OpenCV | OpenVINO | TensorRT |
 | :---------------: | :--------------: | :----------------: | :-------------------: | :-----: | :---------: | :----: | :------: | :------: |
 | YOLOv5n | Classify | CPU | FP32 | 26.3ms | 21.4ms | 33.2ms | 21.8ms | × |
