@@ -7,6 +7,14 @@ Supported task types include Classify, Detect and Segment.
 
 Supported model types include FP32, FP16 and INT8.
 
+Dependencies(tested):
+* [CUDA](https://developer.nvidia.com/cuda-downloads) version 11.8 
+* [OpenCV](https://github.com/opencv/opencv) version 4.9.0 (built with CUDA)
+* [ONNXRuntime](https://github.com/microsoft/onnxruntime) version 1.18.1
+* [OpenVINO](https://github.com/openvinotoolkit/openvino) version 2024.1
+* [TensorRT](https://developer.nvidia.com/tensorrt/download) version 8.2.1.8
+* [Torch](https://pytorch.org) version 2.0.0+cu118
+
 You can test C++ code with:
 ```powershell
 # Windows
