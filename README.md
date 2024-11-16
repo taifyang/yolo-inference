@@ -206,10 +206,10 @@ You can get a docker image with:
 docker pull taify/yolo_inference:latest
 ```
 
-You Can download some model weights in:  <https://pan.baidu.com/s/19Ua857QSXEQG7k8FV7YKSQ?pwd=syjb>
+You Can download some model weights in:  <https://pan.baidu.com/s/1L8EyTa59qu_eEb3lKRnPQA?pwd=itda>
 
 
-For your own model, you should convert onnx model with following scirpt to tranpose output dims for YOLOv8, YOLOv9, YOLOv11 detection and segmentation:
+For your own model, you should convert onnx model with following scirpt to transpose output dims for YOLOv8, YOLOv9, YOLOv11 detection and segmentation:
  ```python
 import onnx
 import onnx.helper as helper
