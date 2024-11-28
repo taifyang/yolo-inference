@@ -1,8 +1,8 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang
- * @LastEditTime: 2024-10-30 22:49:50
+ * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditTime: 2024-11-22 22:58:34
  * @FilePath: \cpp\yolo.h
  * @Description: header file for YOLO algorithm
  */
@@ -152,14 +152,14 @@ protected:
 	int m_input_numel = 1 * 3 * m_input_width * m_input_height;
 
 	/**
-	 * @description: algorithm yype
+	 * @description: algorithm type
 	 */
-	Algo_Type m_algo;
+	Algo_Type m_algo_type;
 
 	/**
 	 * @description: model type
 	 */
-	Model_Type m_model;
+	Model_Type m_model_type;
 
 	/**
 	 * @description: draw result

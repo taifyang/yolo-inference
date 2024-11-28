@@ -1,8 +1,8 @@
 '''
 Author: taifyang 
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang 
-LastEditTime: 2024-11-05 20:24:34
+LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+LastEditTime: 2024-11-19 22:36:03
 FilePath: \python\backends\yolo.py
 Description: YOLO algorithm interface class
 '''
@@ -29,7 +29,7 @@ class YOLO:
         self.score_threshold = 0.2      	
         self.nms_threshold = 0.5        	
         self.confidence_threshold = 0.2 	
-        self.input_shape = (640, 640)   	
+        self.inputs_shape = (640, 640)   	
 
     '''
     description:    task map
@@ -102,9 +102,10 @@ class YOLO:
             self.result = self.image.copy()
         
             #warm up
-            self.pre_process()
-            self.process()
-            self.post_process()
+            for i in range(10):
+                self.pre_process()
+                self.process()
+                self.post_process()
             
             start = time.perf_counter()
             for i in range(1000):
@@ -112,7 +113,7 @@ class YOLO:
                 self.process()
                 self.post_process()
             end = time.perf_counter()
-            print('avg cost:', end-start, 'ms')  
+            print('avg cost run on 1000 times:', end-start, 'ms')  
             
             if save_result and output_path!='':
                 cv2.imwrite(output_path, self.result)

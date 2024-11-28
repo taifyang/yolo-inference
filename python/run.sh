@@ -202,12 +202,19 @@ python main.py --algo_type YOLOv10 --backend_type ONNXRuntime --task_type Detect
 python main.py --algo_type YOLOv10 --backend_type ONNXRuntime --task_type Detect --device_type GPU --model_type FP16 --model_path ../weights/../weights/yolov10n_fp16.onnx
 python main.py --algo_type YOLOv10 --backend_type ONNXRuntime --task_type Detect --device_type CPU --model_type INT8 --model_path ../weights/../weights/yolov10n_int8.onnx
 python main.py --algo_type YOLOv10 --backend_type ONNXRuntime --task_type Detect --device_type GPU --model_type INT8 --model_path ../weights/../weights/yolov10n_int8.onnx
+python main.py --algo_type YOLOv10 --backend_type OpenCV --task_type Detect --device_type CPU --model_type FP32 --model_path ../weights/../weights/yolov10n_fp32.onnx
+python main.py --algo_type YOLOv10 --backend_type OpenCV --task_type Detect --device_type GPU --model_type FP32 --model_path ../weights/../weights/yolov10n_fp32.onnx
+python main.py --algo_type YOLOv10 --backend_type OpenCV --task_type Detect --device_type CPU --model_type FP16 --model_path ../weights/../weights/yolov10n_fp16.onnx
+python main.py --algo_type YOLOv10 --backend_type OpenCV --task_type Detect --device_type GPU --model_type FP16 --model_path ../weights/../weights/yolov10n_fp16.onnx
 python main.py --algo_type YOLOv10 --backend_type OpenVINO --task_type Detect --device_type CPU --model_type FP32 --model_path ../weights/../weights/yolov10n_fp32.xml
 python main.py --algo_type YOLOv10 --backend_type OpenVINO --task_type Detect --device_type GPU --model_type FP32 --model_path ../weights/../weights/yolov10n_fp32.xml
 python main.py --algo_type YOLOv10 --backend_type OpenVINO --task_type Detect --device_type CPU --model_type FP16 --model_path ../weights/../weights/yolov10n_fp16.xml
 python main.py --algo_type YOLOv10 --backend_type OpenVINO --task_type Detect --device_type GPU --model_type FP16 --model_path ../weights/../weights/yolov10n_fp16.xml
 python main.py --algo_type YOLOv10 --backend_type OpenVINO --task_type Detect --device_type CPU --model_type INT8 --model_path ../weights/../weights/yolov10n_int8.xml
 python main.py --algo_type YOLOv10 --backend_type OpenVINO --task_type Detect --device_type GPU --model_type INT8 --model_path ../weights/../weights/yolov10n_int8.xml
+python main.py --algo_type YOLOv10 --backend_type TensorRT --task_type Detect --device_type GPU --model_type FP32 --model_path ../weights/../weights/yolov10n_fp32.engine
+python main.py --algo_type YOLOv10 --backend_type TensorRT --task_type Detect --device_type GPU --model_type FP16 --model_path ../weights/../weights/yolov10n_fp16.engine
+python main.py --algo_type YOLOv10 --backend_type TensorRT --task_type Detect --device_type GPU --model_type INT8 --model_path ../weights/../weights/yolov10n_int8.engine
 
 
 python main.py --algo_type YOLOv11 --backend_type PyTorch --task_type Classify --device_type CPU --model_type FP32 --model_path ../weights/yolov11n_cls_fp32_cpu.torchscript
@@ -242,6 +249,8 @@ python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type Detect --
 python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type Detect --device_type GPU --model_type FP32 --model_path ../weights/yolov11n_fp32.xml
 python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type Detect --device_type CPU --model_type FP16 --model_path ../weights/yolov11n_fp16.xml
 python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type Detect --device_type GPU --model_type FP16 --model_path ../weights/yolov11n_fp16.xml
+python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type Detect --device_type CPU --model_type INT8 --model_path ../weights/yolov11n_int8.xml
+python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type Detect --device_type GPU --model_type INT8 --model_path ../weights/yolov11n_int8.xml
 python main.py --algo_type YOLOv11 --backend_type TensorRT --task_type Detect --device_type GPU --model_type FP32 --model_path ../weights/yolov11n_fp32.engine
 python main.py --algo_type YOLOv11 --backend_type TensorRT --task_type Detect --device_type GPU --model_type FP16 --model_path ../weights/yolov11n_fp16.engine
 python main.py --algo_type YOLOv11 --backend_type TensorRT --task_type Detect --device_type GPU --model_type INT8 --model_path ../weights/yolov11n_int8.engine

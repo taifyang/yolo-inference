@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-11-05 20:26:33
+ * @LastEditTime: 2024-11-23 09:29:26
  * @FilePath: \cpp\yolo.cpp
  * @Description: source file for YOLO algorithm
  */
@@ -51,9 +51,12 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 		}
 
 		//warm up
-		pre_process();
-		process();
-		post_process();
+		for(int i=0; i<10; ++i)
+		{
+			pre_process();
+			process();
+			post_process();
+		}	
 
 		auto start = std::chrono::steady_clock::now();
 		for(int i=0; i<1000; ++i)
@@ -64,7 +67,7 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 		}		
 		auto end = std::chrono::steady_clock::now();	
 		std::chrono::duration<double> duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);		
-		std::cout << "avg cost:" << duration.count() << "ms" << std::endl;
+		std::cout << "avg cost run on 1000 times:" << duration.count() << "ms" << std::endl;
 
 		if (save_result)
 		{

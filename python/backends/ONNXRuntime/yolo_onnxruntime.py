@@ -1,8 +1,8 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang 
-LastEditTime: 2024-10-30 23:53:20
+LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+LastEditTime: 2024-11-05 20:41:02
 FilePath: \python\backends\ONNXRuntime\yolo_onnxruntime.py
 Description: onnxruntime inference class for YOLO algorithm
 '''
@@ -37,13 +37,13 @@ class YOLO_ONNXRuntime(YOLO):
         self.algo_type = algo_type
         self.model_type = model_type
          
-        self.input_name = []
+        self.inputs_name = []
         for node in self.onnx_session.get_inputs(): 
-            self.input_name.append(node.name)
-        self.output_name = []
+            self.inputs_name.append(node.name)
+        self.outputs_name = []
         for node in self.onnx_session.get_outputs():
-            self.output_name.append(node.name)
-        self.input = {}
+            self.outputs_name.append(node.name)
+        self.inputs = {}
     
     '''
     description:    model infenence
@@ -51,7 +51,7 @@ class YOLO_ONNXRuntime(YOLO):
     return {*}
     '''    
     def process(self) -> None:
-        self.output = self.onnx_session.run(None, self.input)
+        self.outputs = self.onnx_session.run(None, self.inputs)
 
 '''
 description: onnxruntime inference class for the YOLO classfiy algorithm
@@ -69,21 +69,21 @@ class YOLO_ONNXRuntime_Classify(YOLO_ONNXRuntime):
             left = (self.image.shape[1] - crop_size) // 2
             top = (self.image.shape[0] - crop_size) // 2
             crop_image = self.image[top:(top+crop_size), left:(left+crop_size), ...]
-            input = cv2.resize(crop_image, self.input_shape)
+            input = cv2.resize(crop_image, self.inputs_shape)
             input = input / 255.0
             input = input - np.array([0.406, 0.456, 0.485])
             input = input / np.array([0.225, 0.224, 0.229])
         if self.algo_type in ['YOLOv8', 'YOLOv11']:
-            self.input_shape = (224, 224)
+            self.inputs_shape = (224, 224)
             if self.image.shape[1] > self.image.shape[0]:
-                self.image = cv2.resize(self.image, (self.input_shape[0]*self.image.shape[1]//self.image.shape[0], self.input_shape[0]))
+                self.image = cv2.resize(self.image, (self.inputs_shape[0]*self.image.shape[1]//self.image.shape[0], self.inputs_shape[0]))
             else:
-                self.image = cv2.resize(self.image, (self.input_shape[1], self.input_shape[1]*self.image.shape[0]//self.image.shape[1]))
+                self.image = cv2.resize(self.image, (self.inputs_shape[1], self.inputs_shape[1]*self.image.shape[0]//self.image.shape[1]))
             crop_size = min(self.image.shape[0], self.image.shape[1])
             left = (self.image.shape[1] - crop_size) // 2
             top = (self.image.shape[0] - crop_size) // 2
             crop_image = self.image[top:(top+crop_size), left:(left+crop_size), ...]
-            input = cv2.resize(crop_image, self.input_shape)
+            input = cv2.resize(crop_image, self.inputs_shape)
             input = input / 255.0
             
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW
@@ -92,8 +92,8 @@ class YOLO_ONNXRuntime_Classify(YOLO_ONNXRuntime):
         elif self.model_type == 'FP16':
             input = np.expand_dims(input, axis=0).astype(dtype=np.float16)
             
-        for name in self.input_name:
-            self.input[name] = input
+        for name in self.inputs_name:
+            self.inputs[name] = input
     
     '''
     description:    model post-process
@@ -101,7 +101,7 @@ class YOLO_ONNXRuntime_Classify(YOLO_ONNXRuntime):
     return {*}
     '''           
     def post_process(self) -> None:
-        output = np.squeeze(self.output).astype(dtype=np.float32)
+        output = np.squeeze(self.outputs).astype(dtype=np.float32)
         if self.algo_type in ['YOLOv5'] and self.draw_result:
             print("class:", np.argmax(output), " scores:", np.exp(np.max(output))/np.sum(np.exp(output)))
         if self.algo_type in ['YOLOv8', 'YOLOv11'] and self.draw_result:
@@ -119,15 +119,15 @@ class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
     '''    
     def pre_process(self) -> None:
         assert self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11'], 'algo type not supported!'
-        input = letterbox(self.image, self.input_shape)
+        input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW
         input = input / 255.0
         if self.model_type == 'FP32' or self.model_type == 'INT8':
             input = np.expand_dims(input, axis=0).astype(dtype=np.float32)
         elif self.model_type == 'FP16':
             input = np.expand_dims(input, axis=0).astype(dtype=np.float16)
-        for name in self.input_name:
-            self.input[name] = input
+        for name in self.inputs_name:
+            self.inputs[name] = input
     
     '''
     description:    model post-process
@@ -135,7 +135,7 @@ class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
     return {*}
     '''         
     def post_process(self) -> None:
-        output = np.squeeze(self.output[0]).astype(dtype=np.float32)
+        output = np.squeeze(self.outputs[0]).astype(dtype=np.float32)
         boxes = []
         scores = []
         class_ids = []
@@ -173,8 +173,9 @@ class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
                 boxes = xywh2xyxy(boxes)
                 indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
                 boxes = boxes[indices]
+                boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
             if self.draw_result:
-                self.result = draw_result(self.image, boxes, input_shape=self.input_shape)
+                self.result = draw_result(self.image, boxes)
             
 
 '''
@@ -188,15 +189,15 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
     '''    
     def pre_process(self) -> None:
         assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv11'], 'algo type not supported!'
-        input = letterbox(self.image, self.input_shape)
+        input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW
         input = input / 255.0
         if self.model_type == 'FP32' or self.model_type == 'INT8':
             input = np.expand_dims(input, axis=0).astype(dtype=np.float32)
         elif self.model_type == 'FP16':
             input = np.expand_dims(input, axis=0).astype(dtype=np.float16)
-        for name in self.input_name:
-            self.input[name] = input
+        for name in self.inputs_name:
+            self.inputs[name] = input
     
     '''
     description:    model post-process
@@ -204,11 +205,12 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
     return {*}
     '''           
     def post_process(self) -> None:
-        output = np.squeeze(self.output[0]).astype(dtype=np.float32)
+        output = np.squeeze(self.outputs[0]).astype(dtype=np.float32)
         boxes = []
         scores = []
         class_ids = []
         preds = []
+        
         if self.algo_type in ['YOLOv5']:
             output = output[output[..., 4] > self.confidence_threshold]
             classes_scores = output[..., 5:(5+self.class_num)]     
@@ -236,19 +238,30 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
             boxes = xywh2xyxy(boxes)
             scores = np.array(scores)
             indices = nms(boxes, scores, self.score_threshold, self.nms_threshold)
-            boxes = boxes[indices]
-            
+            boxes = boxes[indices]          
             masks_in = np.array(preds)[indices][..., -32:]
-            proto= np.squeeze(self.output[1]).astype(dtype=np.float32)
+            proto = np.squeeze(self.outputs[1]).astype(dtype=np.float32)
             c, mh, mw = proto.shape 
-            masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)
-            
+            if self.algo_type in ['YOLOv5']:
+                masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)  
+            if self.algo_type in ['YOLOv8', 'YOLOv11']:
+                masks = (masks_in @ proto.reshape(c, -1)).reshape(-1, mh, mw)    
             downsampled_bboxes = boxes.copy()
-            downsampled_bboxes[:, 0] *= mw / self.input_shape[0]
-            downsampled_bboxes[:, 2] *= mw / self.input_shape[0]
-            downsampled_bboxes[:, 3] *= mh / self.input_shape[1]
-            downsampled_bboxes[:, 1] *= mh / self.input_shape[1]
-        
+            downsampled_bboxes[:, 0] *= mw / self.inputs_shape[0]
+            downsampled_bboxes[:, 2] *= mw / self.inputs_shape[0]
+            downsampled_bboxes[:, 3] *= mh / self.inputs_shape[1]
+            downsampled_bboxes[:, 1] *= mh / self.inputs_shape[1]       
             masks = crop_mask(masks, downsampled_bboxes)
+            boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
+            resized_masks = []
+            for mask in masks:
+                mask = cv2.resize(mask, self.inputs_shape, cv2.INTER_LINEAR)
+                mask = scale_mask(mask, self.inputs_shape, self.image.shape)
+                resized_masks.append(mask)
+            resized_masks = np.array(resized_masks)
+            if self.algo_type in ['YOLOv5']:
+                resized_masks = resized_masks > 0.5
+            if self.algo_type in ['YOLOv8', 'YOLOv11']:
+                resized_masks = resized_masks > 0       
             if self.draw_result:
-                self.result = draw_result(self.image, boxes, masks, self.input_shape)
+                self.result = draw_result(self.image, boxes, resized_masks)

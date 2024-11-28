@@ -1,8 +1,8 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang
- * @LastEditTime: 2024-10-30 20:59:21
+ * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditTime: 2024-11-22 23:20:41
  * @FilePath: \cpp\yolo_segment.h
  * @Description: segmentation algorithm class
  */
@@ -27,14 +27,15 @@ struct OutputSeg
  */
 struct MaskParams
 {
-	int segChannels = 32;
-	int segWidth = 160;
-	int segHeight = 160;
-	int netWidth = 640;
-	int netHeight = 640;
-	float maskThreshold = 0.5;
-	cv::Size srcImgShape;
+	int seg_channels = 32;
+	int seg_width = 160;
+	int seg_height = 160;
+	int net_width = 640;
+	int net_height = 640;
+	float mask_threshold = 0.5;
+	cv::Size input_shape;
 	cv::Vec4d params;
+	Algo_Type algo_type;
 };
 
 /**
@@ -45,21 +46,21 @@ class YOLO_Segment : public YOLO_Detect
 protected:
 	/**
 	 * @description: 					get mask
-	 * @param {Mat&} maskProposals		mask proposals
+	 * @param {Mat&} mask_proposals		mask proposals
 	 * @param {Mat&} mask_protos		mask protos
 	 * @param {OutputSeg&} output		mask output
-	 * @param {MaskParams&} maskParams	mask parameters
+	 * @param {MaskParams&} mask_params	mask parameters
 	 * @return {*}
 	 */
-	void GetMask(const cv::Mat& maskProposals, const cv::Mat& mask_protos, OutputSeg& output, const MaskParams& maskParams)
+	void GetMask(const cv::Mat& mask_proposals, const cv::Mat& mask_protos, OutputSeg& output, const MaskParams& mask_params)
 	{
-		int seg_channels = maskParams.segChannels;
-		int net_width = maskParams.netWidth;
-		int seg_width = maskParams.segWidth;
-		int net_height = maskParams.netHeight;
-		int seg_height = maskParams.segHeight;
-		float mask_threshold = maskParams.maskThreshold;
-		cv::Vec4f params = maskParams.params;
+		int seg_channels = mask_params.seg_channels;
+		int net_width = mask_params.net_width;
+		int seg_width = mask_params.seg_width;
+		int net_height = mask_params.net_height;
+		int seg_height = mask_params.seg_height;
+		float mask_threshold = mask_params.mask_threshold;
+		cv::Vec4f params = mask_params.params;
 		cv::Rect temp_rect = output.box;
 
 		//crop from mask_protos
@@ -94,13 +95,20 @@ protected:
 		//crop
 		cv::Mat temp_mask_protos = mask_protos(roi_rangs).clone();
 		cv::Mat protos = temp_mask_protos.reshape(0, { seg_channels,rang_w * rang_h });
-		cv::Mat matmul_res = (maskProposals * protos).t();
+		cv::Mat matmul_res = (mask_proposals * protos).t();
 		cv::Mat masks_feature = matmul_res.reshape(1, { rang_h,rang_w });
 		cv::Mat dest, mask;
 
 		//sigmoid
-		cv::exp(-masks_feature, dest);
-		dest = 1.0 / (1.0 + dest);
+		if(mask_params.algo_type == YOLOv5)
+		{
+			cv::exp(-masks_feature, dest);
+			dest = 1.0 / (1.0 + dest);
+		}
+		else
+		{
+			dest = masks_feature;
+		}
 
 		int left = floor((net_width / seg_width * rang_x - params[2]) / params[0]);
 		int top = floor((net_height / seg_height * rang_y - params[3]) / params[1]);
@@ -118,19 +126,14 @@ protected:
 	 */	
 	void draw_result(std::vector<OutputSeg> output_seg)
 	{
-		srand(time(0));
-		std::vector<cv::Scalar> color;
-		for (int i = 0; i < m_class_num; i++)
-		{
-			color.push_back(cv::Scalar(rand() % 256, rand() % 256, rand() % 256));
-		}
-
 		cv::Mat mask = m_image.clone();
     	m_result = m_image.clone();
+		srand(time(0));
+
 		for (int i = 0; i < output_seg.size(); i++)
 		{
 			cv::rectangle(m_result, output_seg[i].box, cv::Scalar(255, 0, 0), 1);
-			mask(output_seg[i].box).setTo(color[output_seg[i].id], output_seg[i].mask);
+			mask(output_seg[i].box).setTo(cv::Scalar(rand() % 256, rand() % 256, rand() % 256), output_seg[i].mask);
 			std::string label = "class" + std::to_string(output_seg[i].id) + ":" + cv::format("%.2f", output_seg[i].score);
 			cv::putText(m_result, label, cv::Point(output_seg[i].box.x, output_seg[i].box.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 1);
 		}
@@ -165,3 +168,4 @@ protected:
 	 */
 	std::vector<OutputSeg> m_output_seg;
 };
+

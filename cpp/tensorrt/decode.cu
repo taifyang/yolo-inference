@@ -1,7 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 
+ * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
  * @LastEditTime: 2024-06-17 23:29:18
  * @FilePath: \cpp\tensorrt\decode.cu
  * @Description: cuda post-processing decoding source file for YOLO algorithm
