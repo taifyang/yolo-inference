@@ -1,8 +1,8 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang
- * @LastEditTime: 2024-10-30 21:37:25
+ * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditTime: 2024-11-17 23:40:49
  * @FilePath: \cpp\tensorrt\yolo_tensorrt.h
  * @Description: tensorrt inference header file for YOLO algorithm
  */
@@ -16,6 +16,7 @@
 #include "utils.h"
 #include <NvInfer.h>
 #include <NvInferRuntime.h>
+#include <NvInferVersion.h>
 
 /**
  * @description: tensorrt inference class for YOLO algorithm

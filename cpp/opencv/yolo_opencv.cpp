@@ -1,7 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 
+ * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
  * @LastEditTime: 2024-07-07 16:27:40
  * @FilePath: \cpp\opencv\yolo_opencv.cpp
  * @Description: opencv inference source file for YOLO algorithm
@@ -11,7 +11,7 @@
 
 void YOLO_OpenCV::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	m_algo = algo_type;
+	m_algo_type = algo_type;
 
 	if(!std::filesystem::exists(model_path))
 	{
@@ -54,7 +54,7 @@ void YOLO_OpenCV_Classify::init(const Algo_Type algo_type, const Device_Type dev
 	}
 	YOLO_OpenCV::init(algo_type, device_type, model_type, model_path);
 
-	if (m_algo == YOLOv8 || m_algo == YOLOv11)
+	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11)
 	{
 		m_input_width = 224;
 		m_input_height = 224;
@@ -71,17 +71,17 @@ void YOLO_OpenCV_Detect::init(const Algo_Type algo_type, const Device_Type devic
 	}
 	YOLO_OpenCV::init(algo_type, device_type, model_type, model_path);
 
-	if (m_algo == YOLOv5 || m_algo == YOLOv7)
+	if (m_algo_type == YOLOv5 || m_algo_type == YOLOv7)
 	{
 		m_output_numprob = 5 + m_class_num;
 		m_output_numbox = 3 * (m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32);
 	}
-	if (m_algo == YOLOv6)
+	if (m_algo_type == YOLOv6)
 	{
 		m_output_numprob = 5 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
 	}
-	if (m_algo == YOLOv8 || m_algo == YOLOv9 || m_algo == YOLOv11)
+	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11)
 	{
 		m_output_numprob = 4 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
@@ -98,24 +98,24 @@ void YOLO_OpenCV_Segment::init(const Algo_Type algo_type, const Device_Type devi
 	}
 	YOLO_OpenCV::init(algo_type, device_type, model_type, model_path);
 
-	if (m_algo == YOLOv5)
+	if (m_algo_type == YOLOv5)
 	{
 		m_output_numprob = 37 + m_class_num;
 		m_output_numbox = 3 * (m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32);
 	}
-	if (m_algo == YOLOv8 || m_algo == YOLOv11)
+	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11)
 	{
 		m_output_numprob = 36 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
 	}
 	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
-	m_output_numseg = m_mask_params.segChannels * m_mask_params.segWidth * m_mask_params.segHeight;
+	m_output_numseg = m_mask_params.seg_channels * m_mask_params.seg_width * m_mask_params.seg_height;
 }
 
 void YOLO_OpenCV_Classify::pre_process()
 {
 	cv::Mat crop_image;
-	if (m_algo == YOLOv5)
+	if (m_algo_type == YOLOv5)
 	{
 		//CenterCrop
 		int crop_size = std::min(m_image.cols, m_image.rows);
@@ -128,7 +128,7 @@ void YOLO_OpenCV_Classify::pre_process()
 		cv::subtract(crop_image, cv::Scalar(0.406, 0.456, 0.485), crop_image);
 		cv::divide(crop_image, cv::Scalar(0.225, 0.224, 0.229), crop_image);
 	}
-	if (m_algo == YOLOv8 || m_algo == YOLOv11)
+	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11)
 	{
 		cv::cvtColor(m_image, crop_image, cv::COLOR_BGR2RGB);
 
@@ -188,9 +188,9 @@ void YOLO_OpenCV_Classify::post_process()
 	int id = std::distance(scores.begin(), std::max_element(scores.begin(), scores.end()));
 
 	m_output_cls.id = id;
-	if (m_algo == YOLOv5)
+	if (m_algo_type == YOLOv5)
 		m_output_cls.score = exp(scores[id]) / sum;
-	if (m_algo == YOLOv8 || m_algo == YOLOv11)
+	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11)
 		m_output_cls.score = scores[id];
 
 	if(m_draw_result)
@@ -210,7 +210,7 @@ void YOLO_OpenCV_Detect::post_process()
 		float* ptr = m_output_host + i * m_output_numprob;
 		int class_id;
 		float score;
-		if (m_algo == YOLOv5 || m_algo == YOLOv6 || m_algo == YOLOv7)
+		if (m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7)
 		{
 			float objness = ptr[4];
 			if (objness < m_confidence_threshold)
@@ -219,7 +219,7 @@ void YOLO_OpenCV_Detect::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id] * objness;
 		}
-		if (m_algo == YOLOv8 || m_algo == YOLOv9 || m_algo == YOLOv11)
+		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11)
 		{
 			float* classes_scores = ptr + 4;
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
@@ -229,7 +229,7 @@ void YOLO_OpenCV_Detect::post_process()
 			continue;
 
 		cv::Rect box;
-		if(m_algo == YOLOv5 || m_algo == YOLOv6 || m_algo == YOLOv7 || m_algo == YOLOv8 || m_algo == YOLOv9 || m_algo == YOLOv11)
+		if(m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11)
 		{
 			float x = ptr[0];
 			float y = ptr[1];
@@ -248,7 +248,7 @@ void YOLO_OpenCV_Detect::post_process()
 		class_ids.push_back(class_id);
 	}
 
-	if(m_algo == YOLOv5 || m_algo == YOLOv6 || m_algo == YOLOv7 || m_algo == YOLOv8 || m_algo == YOLOv9 || m_algo == YOLOv11)
+	if(m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11)
 	{
 		std::vector<int> indices;
 		nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
@@ -283,7 +283,7 @@ void YOLO_OpenCV_Segment::post_process()
 		float* ptr = m_output_host + i * m_output_numprob;
 		int class_id;
 		float score;
-		if (m_algo == YOLOv5)
+		if (m_algo_type == YOLOv5)
 		{
 			float objness = ptr[4];
 			if (objness < m_confidence_threshold)
@@ -292,7 +292,7 @@ void YOLO_OpenCV_Segment::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id] * objness;
 		}
-		if (m_algo == YOLOv8 || m_algo == YOLOv11)
+		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11)
 		{
 			float* classes_scores = ptr + 4;
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
@@ -317,12 +317,12 @@ void YOLO_OpenCV_Segment::post_process()
 		scores.push_back(score);
 		class_ids.push_back(class_id);
 
-		if (m_algo == YOLOv5)
+		if (m_algo_type == YOLOv5)
 		{
 			std::vector<float> temp_proto(ptr + m_class_num + 5, ptr + m_class_num + 37);
 			picked_proposals.push_back(temp_proto);
 		}
-		if (m_algo == YOLOv8 || m_algo == YOLOv11)
+		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11)
 		{
 			std::vector<float> temp_proto(ptr + m_class_num + 4, ptr + m_class_num + 36);
 			picked_proposals.push_back(temp_proto);
@@ -348,7 +348,8 @@ void YOLO_OpenCV_Segment::post_process()
 	}
 
 	m_mask_params.params = m_params;	
-	m_mask_params.srcImgShape = m_image.size();
+	m_mask_params.input_shape = m_image.size();
+	m_mask_params.algo_type = m_algo_type;
 	for (int i = 0; i < temp_mask_proposals.size(); ++i)
 	{
 		GetMask(cv::Mat(temp_mask_proposals[i]).t(), m_output[1], m_output_seg[i], m_mask_params);

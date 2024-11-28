@@ -29,7 +29,11 @@ class YOLO_OpenVINO(YOLO):
         super().__init__()
         assert os.path.exists(model_path), 'model not exists!'
         assert device_type in ['CPU', 'GPU'], 'unsupported device type!'
-        core = ov.Core()
+        try:
+            from openvino.runtime import Core
+            core = Core()
+        except:
+            core = ov.Core()
         model  = core.read_model(model_path)
         self.algo_type = algo_type
         self.compiled_model = core.compile_model(model, device_name='GPU' if device_type=='GPU' else 'CPU')
@@ -40,7 +44,7 @@ class YOLO_OpenVINO(YOLO):
     return {*}
     '''       
     def process(self) -> None:
-        self.output = self.compiled_model({0: self.input})
+        self.outputs = self.compiled_model({0: self.inputs})
 
 
 '''
@@ -59,24 +63,24 @@ class YOLO_OpenVINO_Classify(YOLO_OpenVINO):
             left = (self.image.shape[1] - crop_size) // 2
             top = (self.image.shape[0] - crop_size) // 2
             crop_image = self.image[top:(top+crop_size), left:(left+crop_size), ...]
-            input = cv2.resize(crop_image, self.input_shape)
+            input = cv2.resize(crop_image, self.inputs_shape)
             input = input / 255.0
             input = input - np.array([0.406, 0.456, 0.485])
             input = input / np.array([0.225, 0.224, 0.229])
         if self.algo_type in ['YOLOv8', 'YOLOv11']:
-            self.input_shape = (224, 224)
+            self.inputs_shape = (224, 224)
             if self.image.shape[1] > self.image.shape[0]:
-                self.image = cv2.resize(self.image, (self.input_shape[0]*self.image.shape[1]//self.image.shape[0], self.input_shape[0]))
+                self.image = cv2.resize(self.image, (self.inputs_shape[0]*self.image.shape[1]//self.image.shape[0], self.inputs_shape[0]))
             else:
-                self.image = cv2.resize(self.image, (self.input_shape[1], self.input_shape[1]*self.image.shape[0]//self.image.shape[1]))
+                self.image = cv2.resize(self.image, (self.inputs_shape[1], self.inputs_shape[1]*self.image.shape[0]//self.image.shape[1]))
             crop_size = min(self.image.shape[0], self.image.shape[1])
             left = (self.image.shape[1] - crop_size) // 2
             top = (self.image.shape[0] - crop_size) // 2
             crop_image = self.image[top:(top+crop_size), left:(left+crop_size), ...]
-            input = cv2.resize(crop_image, self.input_shape)
+            input = cv2.resize(crop_image, self.inputs_shape)
             input = input / 255.0
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW
-        self.input = np.expand_dims(input, axis=0)
+        self.inputs = np.expand_dims(input, axis=0)
     
     '''
     description:    model post-process
@@ -84,7 +88,7 @@ class YOLO_OpenVINO_Classify(YOLO_OpenVINO):
     return {*}
     '''           
     def post_process(self) -> None:
-        output = self.output[self.compiled_model.output(0)]
+        output = self.outputs[self.compiled_model.output(0)]
         output = np.squeeze(output).astype(dtype=np.float32)
         if self.algo_type in ['YOLOv5'] and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.exp(np.max(output))/np.sum(np.exp(output)))
@@ -103,10 +107,10 @@ class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
     '''    
     def pre_process(self) -> None:
         assert self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11'], 'algo type not supported!'
-        input = letterbox(self.image, self.input_shape)
+        input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
-        self.input = np.expand_dims(input, axis=0)
+        self.inputs = np.expand_dims(input, axis=0)
     
     '''
     description:    model post-process
@@ -114,11 +118,12 @@ class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
     return {*}
     '''        
     def post_process(self) -> None:
-        output = self.output[self.compiled_model.output(0)]
+        output = self.outputs[self.compiled_model.output(0)]
         output = np.squeeze(output).astype(dtype=np.float32)
         boxes = []
         scores = []
         class_ids = []
+        
         if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7']:
             output = output[output[..., 4] > self.confidence_threshold]
             classes_scores = output[..., 5:(5+self.class_num)]     
@@ -152,8 +157,9 @@ class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
                 boxes = xywh2xyxy(boxes)
                 indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
                 boxes = boxes[indices]
+                boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
             if self.draw_result:
-                self.result = draw_result(self.image, boxes, input_shape=self.input_shape)
+                self.result = draw_result(self.image, boxes)
         
 
 '''
@@ -167,10 +173,10 @@ class YOLO_OpenVINO_Segment(YOLO_OpenVINO):
     '''    
     def pre_process(self) -> None:
         assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv11'], 'algo type not supported!'
-        input = letterbox(self.image, self.input_shape)
+        input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
-        self.input = np.expand_dims(input, axis=0)
+        self.inputs = np.expand_dims(input, axis=0)
     
     '''
     description:    model post-process
@@ -178,7 +184,7 @@ class YOLO_OpenVINO_Segment(YOLO_OpenVINO):
     return {*}
     '''           
     def post_process(self) -> None:
-        output0 = self.output[self.compiled_model.output(0)]
+        output0 = self.outputs[self.compiled_model.output(0)]
         output0 = np.squeeze(output0).astype(dtype=np.float32)
         boxes = []
         scores = []
@@ -206,25 +212,35 @@ class YOLO_OpenVINO_Segment(YOLO_OpenVINO):
                     class_ids.append(class_id) 
                     preds.append(output0[i])  
                     
-        if len(boxes):       
+        if len(boxes):   
             boxes = np.array(boxes)
             boxes = xywh2xyxy(boxes)
             scores = np.array(scores)
-            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
-            boxes = boxes[indices]
-            
+            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold)
+            boxes = boxes[indices]          
             masks_in = np.array(preds)[indices][..., -32:]
-            output1 = self.output[self.compiled_model.output(1)]
-            proto = np.squeeze(output1).astype(dtype=np.float32)
+            proto = np.squeeze(self.outputs[1]).astype(dtype=np.float32)
             c, mh, mw = proto.shape 
-            masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)
-            
+            if self.algo_type in ['YOLOv5']:
+                masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)  
+            if self.algo_type in ['YOLOv8', 'YOLOv11']:
+                masks = (masks_in @ proto.reshape(c, -1)).reshape(-1, mh, mw)    
             downsampled_bboxes = boxes.copy()
-            downsampled_bboxes[:, 0] *= mw / self.input_shape[0]
-            downsampled_bboxes[:, 2] *= mw / self.input_shape[0]
-            downsampled_bboxes[:, 3] *= mh / self.input_shape[1]
-            downsampled_bboxes[:, 1] *= mh / self.input_shape[1]
-        
+            downsampled_bboxes[:, 0] *= mw / self.inputs_shape[0]
+            downsampled_bboxes[:, 2] *= mw / self.inputs_shape[0]
+            downsampled_bboxes[:, 3] *= mh / self.inputs_shape[1]
+            downsampled_bboxes[:, 1] *= mh / self.inputs_shape[1]       
             masks = crop_mask(masks, downsampled_bboxes)
+            boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
+            resized_masks = []
+            for mask in masks:
+                mask = cv2.resize(mask, self.inputs_shape, cv2.INTER_LINEAR)
+                mask = scale_mask(mask, self.inputs_shape, self.image.shape)
+                resized_masks.append(mask)
+            resized_masks = np.array(resized_masks)
+            if self.algo_type in ['YOLOv5']:
+                resized_masks = resized_masks > 0.5
+            if self.algo_type in ['YOLOv8', 'YOLOv11']:
+                resized_masks = resized_masks > 0       
             if self.draw_result:
-                self.result = draw_result(self.image, boxes, masks, self.input_shape)
+                self.result = draw_result(self.image, boxes, resized_masks)

@@ -1,7 +1,7 @@
 '''
 Author: taifyang 
 Date: 2024-07-11 23:48:57
-LastEditors: taifyang 
+LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
 LastEditTime: 2024-08-03 21:00:27
 FilePath: \yolo-inference\python\backends\OpenCV\__init__.py
 '''

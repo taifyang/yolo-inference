@@ -1,8 +1,8 @@
 '''
 Author: taifyang 
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang
-LastEditTime: 2024-10-30 21:55:18
+LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+LastEditTime: 2024-11-22 22:43:15
 Description: utilities functions
 '''
 
@@ -93,7 +93,7 @@ param {*} output_shape  output image shape
 return {*}              scaled boxes
 '''
 def scale_boxes(boxes, input_shape, output_shape):
-    # Rescale boxes (xyxy) from self.input_shape to shape
+    # Rescale boxes (xyxy) from self.inputs_shape to shape
     gain = min(input_shape[0] / output_shape[0], input_shape[1] / output_shape[1])  # gain  = old / new
     pad = (input_shape[1] - output_shape[1] * gain) / 2, (input_shape[0] - output_shape[0] * gain) / 2  # wh padding
     boxes[..., [0, 2]] -= pad[0]  # x padding
@@ -143,17 +143,14 @@ param {*} masks         masks
 param {*} input_shape   input image shape
 return {*}              output image
 '''
-def draw_result(image, preds, masks=[], input_shape=(640,640)):
+def draw_result(image, preds, masks=[]):
     image_copy = image.copy()   
-    preds = scale_boxes(preds, input_shape, image.shape)
     boxes = preds[...,:4].astype(np.int32) 
     scores = preds[...,4]
     classes = preds[...,5].astype(np.int32)
     
     for mask in masks:
-        mask = cv2.resize(mask, input_shape, cv2.INTER_LINEAR)
-        mask = scale_mask(mask, input_shape, image.shape)
-        image_copy[mask >= 0.5] = [np.random.randint(0,256), np.random.randint(0,256), np.random.randint(0,256)]
+        image_copy[mask] = [np.random.randint(0,256), np.random.randint(0,256), np.random.randint(0,256)]
     result = (image*0.5 + image_copy*0.5).astype(np.uint8)
     
     for box, score, cl in zip(boxes, scores, classes):
