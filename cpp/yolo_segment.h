@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-11-22 23:20:41
+ * @LastEditTime: 2025-06-30 20:22:52
  * @FilePath: \cpp\yolo_segment.h
  * @Description: segmentation algorithm class
  */
@@ -27,15 +27,14 @@ struct OutputSeg
  */
 struct MaskParams
 {
-	int seg_channels = 32;
-	int seg_width = 160;
-	int seg_height = 160;
-	int net_width = 640;
-	int net_height = 640;
-	float mask_threshold = 0.5;
-	cv::Size input_shape;
-	cv::Vec4d params;
-	Algo_Type algo_type;
+	int seg_channels = 32;		//channels segmentation model 
+	int seg_width = 160;		//output width of segmentation model 
+	int seg_height = 160;		//output height of segmentation model 
+	int net_width = 640;		//input width of segmentation model 
+	int net_height = 640;		//input height of segmentation model 
+	float mask_threshold = 0.5;	//threshold of segmentation mask
+	cv::Size input_shape;		//input shape of image
+	cv::Vec4d params;			//parameters of letterbox
 };
 
 /**
@@ -50,9 +49,10 @@ protected:
 	 * @param {Mat&} mask_protos		mask protos
 	 * @param {OutputSeg&} output		mask output
 	 * @param {MaskParams&} mask_params	mask parameters
+	 * @param {Algo_Type&} algo_type	algorithm type
 	 * @return {*}
 	 */
-	void GetMask(const cv::Mat& mask_proposals, const cv::Mat& mask_protos, OutputSeg& output, const MaskParams& mask_params)
+	void GetMask(const cv::Mat& mask_proposals, const cv::Mat& mask_protos, OutputSeg& output, const MaskParams& mask_params, const Algo_Type algo_type)
 	{
 		int seg_channels = mask_params.seg_channels;
 		int net_width = mask_params.net_width;
@@ -100,7 +100,7 @@ protected:
 		cv::Mat dest, mask;
 
 		//sigmoid
-		if(mask_params.algo_type == YOLOv5)
+		if(algo_type == YOLOv5)
 		{
 			cv::exp(-masks_feature, dest);
 			dest = 1.0 / (1.0 + dest);
@@ -123,6 +123,7 @@ protected:
 	/**
 	 * @description: 						draw result
 	 * @param {vector<OutputSeg>} result	segmentation model output
+	 * @return {*}
 	 */	
 	void draw_result(std::vector<OutputSeg> output_seg)
 	{
@@ -132,10 +133,11 @@ protected:
 
 		for (int i = 0; i < output_seg.size(); i++)
 		{
-			cv::rectangle(m_result, output_seg[i].box, cv::Scalar(255, 0, 0), 1);
-			mask(output_seg[i].box).setTo(cv::Scalar(rand() % 256, rand() % 256, rand() % 256), output_seg[i].mask);
+			cv::Rect bbox = output_seg[i].box & cv::Rect(0, 0, m_image.cols, m_image.rows);
+			cv::rectangle(m_result, bbox, cv::Scalar(255, 0, 0), 1);
+			mask(bbox).setTo(cv::Scalar(rand() % 256, rand() % 256, rand() % 256), output_seg[i].mask);
 			std::string label = "class" + std::to_string(output_seg[i].id) + ":" + cv::format("%.2f", output_seg[i].score);
-			cv::putText(m_result, label, cv::Point(output_seg[i].box.x, output_seg[i].box.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 1);
+			cv::putText(m_result, label, cv::Point(bbox.x, bbox.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 1);
 		}
 		
 		addWeighted(m_result, 0.5, mask, 0.5, 0, m_result);
@@ -169,3 +171,17 @@ protected:
 	std::vector<OutputSeg> m_output_seg;
 };
 
+/**
+ * @description: 			compute affine transformation
+ * @param {float*} matrix	input matrix
+ * @param {float} x			input x
+ * @param {float} y			input y
+ * @param {float*} ox		output x
+ * @param {float*} oy		output y
+ * @return {*}
+ */	
+static void affine_project(float* matrix, float x, float y, float* ox, float* oy)
+{
+    *ox = matrix[0] * x + matrix[1] * y + matrix[2];
+    *oy = matrix[3] * x + matrix[4] * y + matrix[5];
+}

@@ -48,9 +48,9 @@ C++ test in Docker(CPU i7-13700F, GPU RTX4070):
 | YOLOv5n | Detect | CPU | INT8 | × | 22.5ms | × | 13.7ms | × |
 | YOLOv5n | Detect | GPU | INT8 | × | 44.7ms | × | ? | 2.5ms |
 | YOLOv5n | Segment | CPU | FP32 | 27.5ms | 22.9ms | 61.8ms | 20.2ms | × |
-| YOLOv5n | Segment | GPU | FP32 | 6.9ms | 10.7ms | 7.8ms | ? | 4.5ms |
+| YOLOv5n | Segment | GPU | FP32 | 6.9ms | 10.7ms | 7.8ms | ? | 4.0ms |
 | YOLOv5n | Segment | CPU | FP16 | × | 43.7ms | 61.5ms | 20.2ms | × |
-| YOLOv5n | Segment | GPU | FP16 | 6.3ms | 27.8ms | 7.4ms | ? | 4.0ms |
+| YOLOv5n | Segment | GPU | FP16 | 6.3ms | 27.8ms | 7.4ms | ? | 3.6ms |
 | YOLOv5n | Segment | CPU | INT8 | × | 30.4ms | × | ? | × |
 | YOLOv5n | Segment | GPU | INT8 | × | 62.7ms | × | ? | ? |
 | YOLOv6n | Detect | CPU | FP32 | ? | 19.7ms | 21.8ms | 21.7ms | × |
@@ -78,9 +78,9 @@ C++ test in Docker(CPU i7-13700F, GPU RTX4070):
 | YOLOv8n | Detect | CPU | INT8 | × | 32.6ms | × | 19.3ms | × |
 | YOLOv8n | Detect | GPU | INT8 | × | 59.7ms | × | ? | 2.6ms |
 | YOLOv8n | Segment | CPU | FP32 | ? | 34.0ms | 38.1ms | 28.4ms | × |
-| YOLOv8n | Segment | GPU | FP32 | 6.3ms | 10.5ms | 6.8ms | ? | 4.9ms |
+| YOLOv8n | Segment | GPU | FP32 | 6.3ms | 10.5ms | 6.8ms | ? | 4.0ms |
 | YOLOv8n | Segment | CPU | FP16 | × | 55.8ms | 37.9ms | 28.4ms | × |
-| YOLOv8n | Segment | GPU | FP16 | ? | 26.9ms | 6.5ms | ? | 4.3ms |
+| YOLOv8n | Segment | GPU | FP16 | ? | 26.9ms | 6.5ms | ? | 3.4ms |
 | YOLOv8n | Segment | CPU | INT8 | × | 42.8ms | × | ? | × |
 | YOLOv8n | Segment | GPU | INT8 | × | 81.3ms | × | ? | ? |
 | YOLOv9t | Detect | CPU | FP32 | 36.6ms | 27.0ms | 35.4ms | 21.8ms | × |
@@ -108,9 +108,9 @@ C++ test in Docker(CPU i7-13700F, GPU RTX4070):
 | YOLOv11n | Detect | CPU | INT8 | × | ? | × | 17.0ms | × |
 | YOLOv11n | Detect | GPU | INT8 | × | ? | × | ? | 2.9ms |
 | YOLOv11n | Segment | CPU | FP32 | × | 32.3ms | 40.5ms | 25.7ms | × |
-| YOLOv11n | Segment | GPU | FP32 | × | 11.8ms | × | ? | 5.0ms |
+| YOLOv11n | Segment | GPU | FP32 | × | 11.8ms | × | ? | 4.2ms |
 | YOLOv11n | Segment | CPU | FP16 | × | 59.8ms | 40.1ms | 25.6ms | × |
-| YOLOv11n | Segment | GPU | FP16 | × | 27.1ms | × | ? | 4.5ms |
+| YOLOv11n | Segment | GPU | FP16 | × | 27.1ms | × | ? | 3.8ms |
 | YOLOv11n | Segment | CPU | INT8 | × | ? | × | ? | × |
 | YOLOv11n | Segment | GPU | INT8 | × | ? | × | ? | ? |
 

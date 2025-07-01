@@ -440,15 +440,24 @@ void YOLO_ONNXRuntime_Detect::post_process()
 			float y = ptr[1];
 			float w = ptr[2];
 			float h = ptr[3];
-			int left = int(x - 0.5 * w);
-			int top = int(y - 0.5 * h);
-			int width = int(w);
-			int height = int(h);
+
+			int left = int(x - 0.5 * w) > 0 ? int(x - 0.5 * w) : 0;
+			int top = int(y - 0.5 * h) > 0 ? int(y - 0.5 * h) : 0;
+			int width = int(w) > 0 ? int(w) : 0;
+			int height = int(h)> 0 ? int(h) : 0;
+			width = (left + width) < m_image.cols ? width : (m_image.cols - left);
+			height = (top + height) < m_image.rows ? height : (m_image.rows - top);
 			box = cv::Rect(left, top, width, height);
 		}
 		if (m_algo_type == YOLOv10)
 		{
-			box = cv::Rect(ptr[0], ptr[1], ptr[2] - ptr[0], ptr[3] - ptr[1]);
+			int left = int(ptr[0]) > 0 ? int(ptr[0]) : 0;
+			int top = int(ptr[1]) > 0 ? int(ptr[1]) : 0;
+			int width = int(ptr[2] - ptr[0]) > 0 ? int(ptr[2] - ptr[0]) : 0;
+			int height = int(ptr[3] - ptr[1])> 0 ? int(ptr[3] - ptr[1]) : 0;
+			width = (left + width) < m_image.cols ? width : (m_image.cols - left);
+			height = (top + height) < m_image.rows ? height : (m_image.rows - top);
+			box = cv::Rect(left, top, width, height);
 		}
 
 		scale_box(box, m_image.size());
@@ -526,12 +535,15 @@ void YOLO_ONNXRuntime_Segment::post_process()
 		float y = ptr[1];
 		float w = ptr[2];
 		float h = ptr[3];
-		int left = int(x - 0.5 * w);
-		int top = int(y - 0.5 * h);
-		int width = int(w);
-		int height = int(h);
 
+		int left = int(x - 0.5 * w) > 0 ? int(x - 0.5 * w) : 0;
+		int top = int(y - 0.5 * h) > 0 ? int(y - 0.5 * h) : 0;
+		int width = int(w) > 0 ? int(w) : 0;
+		int height = int(h)> 0 ? int(h) : 0;
+		width = (left + width) < m_image.cols ? width : (m_image.cols - left);
+		height = (top + height) < m_image.rows ? height : (m_image.rows - top);
 		cv::Rect box = cv::Rect(left, top, width, height);
+
 		scale_box(box, m_image.size());
 		boxes.push_back(box);
 		scores.push_back(score);
@@ -569,13 +581,12 @@ void YOLO_ONNXRuntime_Segment::post_process()
 
 	m_mask_params.params = m_params;
 	m_mask_params.input_shape = m_image.size();
-	m_mask_params.algo_type = m_algo_type;
 	int shape[4] = { 1, m_mask_params.seg_channels, m_mask_params.seg_width, m_mask_params.seg_height, };
 	cv::Mat output_mat1 = cv::Mat::zeros(4, shape, CV_32FC1);
 	std::copy(m_output1_host, m_output1_host + m_output_numseg, (float*)output_mat1.data);
 	for (int i = 0; i < temp_mask_proposals.size(); ++i)
 	{
-		GetMask(cv::Mat(temp_mask_proposals[i]).t(), output_mat1, m_output_seg[i], m_mask_params);
+		GetMask(cv::Mat(temp_mask_proposals[i]).t(), output_mat1, m_output_seg[i], m_mask_params, m_algo_type);
 	}
 
 	if(m_draw_result)
