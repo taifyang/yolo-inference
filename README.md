@@ -7,7 +7,7 @@ Supported task types include Classify, Detect and Segment.
 
 Supported model types include FP32, FP16 and INT8.
 
-Dependencies:
+Dependencies(tested):
 * [CUDA](https://developer.nvidia.com/cuda-downloads) version 11.8.0/12.5.0
 * [OpenCV](https://github.com/opencv/opencv) version 4.9.0/4.10.0 (built with CUDA)
 * [ONNXRuntime](https://github.com/microsoft/onnxruntime) version 1.18.1/1.20.0
@@ -26,7 +26,7 @@ cmake --build . --config Release
 or
 ```bash
 # Linux
-mkdir build && cd build
+mkdir build ; cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make
 ./run.sh
@@ -221,7 +221,7 @@ docker pull taify/yolo_inference:cuda12.5
 You Can download some model weights in:  <https://pan.baidu.com/s/1L8EyTa59qu_eEb3lKRnPQA?pwd=itda>
 
 
-For your own model, you should convert onnx model with following scirpt to transpose output dims for YOLOv8, YOLOv9, YOLOv11 detection and segmentation:
+For your own model, you should transpose output dims for YOLOv8, YOLOv9, YOLOv11 detection and segmentation. For onnx model, you can use a scirpt like this:
  ```python
 import onnx
 import onnx.helper as helper
