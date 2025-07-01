@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-06-17 21:32:15
+ * @LastEditTime: 2025-06-25 21:39:51
  * @FilePath: \cpp\utils.h
  * @Description: utilities head file
  */
@@ -22,3 +22,4 @@ uint16_t float32_to_float16(float value);
  * @return {*}     float32 
  */
 float float16_to_float32(uint16_t value);
+

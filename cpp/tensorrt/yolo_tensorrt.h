@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-11-17 23:40:49
+ * @LastEditTime: 2025-06-29 22:00:02
  * @FilePath: \cpp\tensorrt\yolo_tensorrt.h
  * @Description: tensorrt inference header file for YOLO algorithm
  */
@@ -75,6 +75,11 @@ protected:
 	 * @description: max bounding box num
 	 */
 	const int m_max_box = 1024;
+
+	/**
+	 * @description: task type
+	 */
+	Task_Type m_task_type;
 };
 
 /**
@@ -199,14 +204,24 @@ private:
 
 #ifdef _CUDA_PREPROCESS
 	/**
-	 * @description: affine matrix on host
+	 * @description: d2s matrix on host
 	 */
-	float* m_affine_matrix_host;
+	float* m_d2s_host;
 
 	/**
-	 * @description: affine matrix on device
+	 * @description: d2s matrix on device
 	 */
-	float* m_affine_matrix_device;
+	float* m_d2s_device;
+
+		/**
+	 * @description: s2d matrix on host
+	 */
+	float* m_s2d_host;
+
+	/**
+	 * @description: s2d matrix on device
+	 */
+	float* m_s2d_device;
 #endif // _CUDA_PREPROCESS
 
 #ifdef _CUDA_POSTPROCESS
@@ -220,6 +235,11 @@ private:
 	 */
 	float* m_output_box_device;
 #endif // _CUDA_POSTPROCESS
+
+	/**
+	 * @description: box num
+	 */
+	const int m_num_box_element = 7;
 };
 
 /**
@@ -292,14 +312,24 @@ private:
 
 #ifdef _CUDA_PREPROCESS
 	/**
-	 * @description: affine matrix on host
+	 * @description: d2s matrix on host
 	 */
-	float* m_affine_matrix_host;
+	float* m_d2s_host;
 
 	/**
-	 * @description: affine matrix on device
+	 * @description: d2s matrix on device
 	 */
-	float* m_affine_matrix_device;
+	float* m_d2s_device;
+
+		/**
+	 * @description: s2d matrix on host
+	 */
+	float* m_s2d_host;
+
+	/**
+	 * @description: s2d matrix on device
+	 */
+	float* m_s2d_device;
 #endif // _CUDA_PREPROCESS
 
 #ifdef _CUDA_POSTPROCESS
@@ -313,4 +343,9 @@ private:
 	 */
 	float* m_output_box_device;
 #endif // _CUDA_POSTPROCESS
+
+	/**
+	 * @description: box num
+	 */
+	const int m_num_box_element = 8;
 };

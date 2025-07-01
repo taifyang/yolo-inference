@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-11-23 09:29:26
+ * @LastEditTime: 2024-12-04 23:48:08
  * @FilePath: \cpp\yolo.cpp
  * @Description: source file for YOLO algorithm
  */

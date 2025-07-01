@@ -1,8 +1,8 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang
- * @LastEditTime: 2024-10-30 20:55:26
+ * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditTime: 2025-06-30 20:12:54
  * @FilePath: \cpp\tensorrt\preprocess.cu
  * @Description: cuda pre-processing decoding source file for YOLO algorithm
  */
@@ -97,7 +97,7 @@ __global__ void warpaffine_kernel( uint8_t* src, int src_line_size, int src_widt
     *pdst_c2 = c2;
 }
 
-void preprocess_kernel_img(uint8_t* src, int src_width, int src_height, float* dst, int dst_width, int dst_height, float* affine_matrix, cudaStream_t stream)
+void preprocess_kernel_img(uint8_t* src, int src_width, int src_height, float* dst, int dst_width, int dst_height, float* affine_matrix, float* affine_matrix_inverse, cudaStream_t stream)
 {
     AffineMatrix s2d,d2s;
     float scale = std::min(dst_height / (float)src_height, dst_width / (float)src_width);
@@ -114,6 +114,7 @@ void preprocess_kernel_img(uint8_t* src, int src_width, int src_height, float* d
     cv::invertAffineTransform(m2x3_s2d, m2x3_d2s);
 
 	memcpy(affine_matrix, m2x3_d2s.data, 6 * sizeof(affine_matrix));
+    memcpy(affine_matrix_inverse, m2x3_s2d.data, 6 * sizeof(affine_matrix_inverse));
     memcpy(d2s.value, m2x3_d2s.ptr<float>(0), sizeof(d2s.value));
 
     int jobs = dst_height * dst_width;
@@ -121,4 +122,3 @@ void preprocess_kernel_img(uint8_t* src, int src_width, int src_height, float* d
     int blocks = ceil(jobs / (float)threads);
     warpaffine_kernel<<<blocks, threads, 0, stream>>>(src, src_width*3, src_width, src_height, dst, dst_width, dst_height, 128, d2s, jobs);
 }
-

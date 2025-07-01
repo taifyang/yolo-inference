@@ -30,6 +30,7 @@ protected:
 	/**
 	 * @description: 								draw result
 	 * @param {OutputCls} output_cls				classification model output
+	 * @return {*}
 	 */
 	void draw_result(OutputCls output_cls)
 	{
