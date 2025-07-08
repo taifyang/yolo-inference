@@ -87,6 +87,7 @@
 
 ./yolo 0 1 2 0 0 ../../weights/yolov7t_fp32_cpu.torchscript
 ./yolo 0 1 2 1 0 ../../weights/yolov7t_fp32_gpu.torchscript
+./yolo 0 1 2 1 1 ../../weights/yolov7t_fp16_gpu.torchscript
 ./yolo 1 1 2 0 0 ../../weights/yolov7t_fp32.onnx
 ./yolo 1 1 2 1 0 ../../weights/yolov7t_fp32.onnx
 ./yolo 1 1 2 0 1 ../../weights/yolov7t_fp16.onnx
@@ -110,6 +111,7 @@
 
 ./yolo 0 0 3 0 0 ../../weights/yolov8n_cls_fp32_cpu.torchscript
 ./yolo 0 0 3 1 0 ../../weights/yolov8n_cls_fp32_gpu.torchscript
+./yolo 0 0 3 1 1 ../../weights/yolov8n_cls_fp16_gpu.torchscript
 ./yolo 1 0 3 0 0 ../../weights/yolov8n_cls_fp32.onnx
 ./yolo 1 0 3 1 0 ../../weights/yolov8n_cls_fp32.onnx
 ./yolo 1 0 3 0 1 ../../weights/yolov8n_cls_fp16.onnx
@@ -130,6 +132,7 @@
 
 ./yolo 0 1 3 0 0 ../../weights/yolov8n_fp32_cpu.torchscript
 ./yolo 0 1 3 1 0 ../../weights/yolov8n_fp32_gpu.torchscript
+./yolo 0 1 3 1 1 ../../weights/yolov8n_fp16_gpu.torchscript
 ./yolo 1 1 3 0 0 ../../weights/yolov8n_fp32.onnx
 ./yolo 1 1 3 1 0 ../../weights/yolov8n_fp32.onnx
 ./yolo 1 1 3 0 1 ../../weights/yolov8n_fp16.onnx
@@ -152,6 +155,7 @@
 
 ./yolo 0 2 3 0 0 ../../weights/yolov8n_seg_fp32_cpu.torchscript
 ./yolo 0 2 3 1 0 ../../weights/yolov8n_seg_fp32_gpu.torchscript
+./yolo 0 2 3 1 1 ../../weights/yolov8n_seg_fp16_gpu.torchscript
 ./yolo 1 2 3 0 0 ../../weights/yolov8n_seg_fp32.onnx
 ./yolo 1 2 3 1 0 ../../weights/yolov8n_seg_fp32.onnx
 ./yolo 1 2 3 0 1 ../../weights/yolov8n_seg_fp16.onnx
@@ -173,6 +177,7 @@
 
 ./yolo 0 1 4 0 0 ../../weights/yolov9t_fp32_cpu.torchscript
 ./yolo 0 1 4 1 0 ../../weights/yolov9t_fp32_gpu.torchscript
+./yolo 0 1 4 1 1 ../../weights/yolov9t_fp16_gpu.torchscript
 ./yolo 1 1 4 0 0 ../../weights/yolov9t_fp32.onnx
 ./yolo 1 1 4 1 0 ../../weights/yolov9t_fp32.onnx
 ./yolo 1 1 4 0 1 ../../weights/yolov9t_fp16.onnx
@@ -196,6 +201,7 @@
 
 ./yolo 0 1 5 0 0 ../../weights/yolov10n_fp32_cpu.torchscript
 ./yolo 0 1 5 1 0 ../../weights/yolov10n_fp32_gpu.torchscript
+./yolo 0 1 5 1 1 ../../weights/yolov10n_fp16_gpu.torchscript
 ./yolo 1 1 5 0 0 ../../weights/yolov10n_fp32.onnx
 ./yolo 1 1 5 1 0 ../../weights/yolov10n_fp32.onnx
 ./yolo 1 1 5 0 1 ../../weights/yolov10n_fp16.onnx
@@ -219,6 +225,7 @@
 
 ./yolo 0 0 6 0 0 ../../weights/yolov11n_cls_fp32_cpu.torchscript
 ./yolo 0 0 6 1 0 ../../weights/yolov11n_cls_fp32_gpu.torchscript
+./yolo 0 0 6 1 1 ../../weights/yolov11n_cls_fp16_gpu.torchscript
 ./yolo 1 0 6 0 0 ../../weights/yolov11n_cls_fp32.onnx
 ./yolo 1 0 6 1 0 ../../weights/yolov11n_cls_fp32.onnx
 ./yolo 1 0 6 0 1 ../../weights/yolov11n_cls_fp16.onnx
@@ -237,6 +244,7 @@
 
 ./yolo 0 1 6 0 0 ../../weights/yolov11n_fp32_cpu.torchscript    
 ./yolo 0 1 6 1 0 ../../weights/yolov11n_fp32_gpu.torchscript
+./yolo 0 1 6 1 1 ../../weights/yolov11n_fp16_gpu.torchscript
 ./yolo 1 1 6 0 0 ../../weights/yolov11n_fp32.onnx
 ./yolo 1 1 6 1 0 ../../weights/yolov11n_fp32.onnx
 ./yolo 1 1 6 0 1 ../../weights/yolov11n_fp16.onnx
@@ -257,6 +265,7 @@
 
 ./yolo 0 2 6 0 0 ../../weights/yolov11n_seg_fp32_cpu.torchscript
 ./yolo 0 2 6 1 0 ../../weights/yolov11n_seg_fp32_gpu.torchscript
+./yolo 0 2 6 1 1 ../../weights/yolov11n_seg_fp16_gpu.torchscript
 ./yolo 1 2 6 0 0 ../../weights/yolov11n_seg_fp32.onnx
 ./yolo 1 2 6 1 0 ../../weights/yolov11n_seg_fp32.onnx
 ./yolo 1 2 6 0 1 ../../weights/yolov11n_seg_fp16.onnx
@@ -272,3 +281,87 @@
 ./yolo 4 2 6 1 0 ../../weights/yolov11n_seg_fp32.engine
 ./yolo 4 2 6 1 1 ../../weights/yolov11n_seg_fp16.engine
 ./yolo 4 2 6 1 2 ../../weights/yolov11n_seg_int8.engine
+
+
+./yolo 0 0 7 0 0 ../../weights/yolov12n_cls_fp32.torchscript
+./yolo 0 0 7 1 0 ../../weights/yolov12n_cls_fp32.torchscript
+./yolo 0 0 7 1 1 ../../weights/yolov12n_cls_fp16.torchscript
+./yolo 1 0 7 0 0 ../../weights/yolov12n_cls_fp32.onnx
+./yolo 1 0 7 1 0 ../../weights/yolov12n_cls_fp32.onnx
+./yolo 1 0 7 0 1 ../../weights/yolov12n_cls_fp16.onnx
+./yolo 1 0 7 1 1 ../../weights/yolov12n_cls_fp16.onnx
+./yolo 2 0 7 0 0 ../../weights/yolov12n_cls_fp32.onnx
+./yolo 2 0 7 1 0 ../../weights/yolov12n_cls_fp32.onnx
+./yolo 2 0 7 0 1 ../../weights/yolov12n_cls_fp16.onnx
+./yolo 2 0 7 1 1 ../../weights/yolov12n_cls_fp16.onnx
+./yolo 3 0 7 0 0 ../../weights/yolov12n_cls_fp32.xml
+./yolo 3 0 7 1 0 ../../weights/yolov12n_cls_fp32.xml
+./yolo 3 0 7 0 1 ../../weights/yolov12n_cls_fp16.xml
+./yolo 3 0 7 1 1 ../../weights/yolov12n_cls_fp16.xml
+./yolo 3 0 7 0 2 ../../weights/yolov12n_cls_int8.xml
+./yolo 3 0 7 1 2 ../../weights/yolov12n_cls_int8.xml
+./yolo 4 0 7 1 0 ../../weights/yolov12n_cls_fp32.engine
+./yolo 4 0 7 1 1 ../../weights/yolov12n_cls_fp16.engine
+./yolo 4 0 7 1 2 ../../weights/yolov12n_cls_int8.engine
+
+./yolo 0 1 7 0 0 ../../weights/yolov12n_fp32.torchscript    
+./yolo 0 1 7 1 0 ../../weights/yolov12n_fp32.torchscript
+./yolo 0 1 7 1 1 ../../weights/yolov12n_fp16.torchscript
+./yolo 1 1 7 0 0 ../../weights/yolov12n_fp32.onnx
+./yolo 1 1 7 1 0 ../../weights/yolov12n_fp32.onnx
+./yolo 1 1 7 0 1 ../../weights/yolov12n_fp16.onnx
+./yolo 1 1 7 1 1 ../../weights/yolov12n_fp16.onnx
+./yolo 2 1 7 0 0 ../../weights/yolov12n_fp32.onnx
+./yolo 2 1 7 1 0 ../../weights/yolov12n_fp32.onnx
+./yolo 2 1 7 0 1 ../../weights/yolov12n_fp16.onnx
+./yolo 2 1 7 1 1 ../../weights/yolov12n_fp16.onnx
+./yolo 3 1 7 0 0 ../../weights/yolov12n_fp32.xml
+./yolo 3 1 7 1 0 ../../weights/yolov12n_fp32.xml
+./yolo 3 1 7 0 1 ../../weights/yolov12n_fp16.xml
+./yolo 3 1 7 1 1 ../../weights/yolov12n_fp16.xml
+./yolo 3 1 7 0 2 ../../weights/yolov12n_int8.xml
+./yolo 3 1 7 1 2 ../../weights/yolov12n_int8.xml
+./yolo 4 1 7 1 0 ../../weights/yolov12n_fp32.engine
+./yolo 4 1 7 1 1 ../../weights/yolov12n_fp16.engine
+./yolo 4 1 7 1 2 ../../weights/yolov12n_int8.engine
+
+./yolo 0 2 7 0 0 ../../weights/yolov12n_seg_fp32.torchscript
+./yolo 0 2 7 1 0 ../../weights/yolov12n_seg_fp32.torchscript
+./yolo 0 2 7 1 1 ../../weights/yolov12n_seg_fp16.torchscript
+./yolo 1 2 7 0 0 ../../weights/yolov12n_seg_fp32.onnx
+./yolo 1 2 7 1 0 ../../weights/yolov12n_seg_fp32.onnx
+./yolo 1 2 7 0 1 ../../weights/yolov12n_seg_fp16.onnx
+./yolo 1 2 7 1 1 ../../weights/yolov12n_seg_fp16.onnx
+./yolo 2 2 7 0 0 ../../weights/yolov12n_seg_fp32.onnx
+./yolo 2 2 7 1 0 ../../weights/yolov12n_seg_fp32.onnx
+./yolo 2 2 7 0 1 ../../weights/yolov12n_seg_fp16.onnx
+./yolo 2 2 7 1 1 ../../weights/yolov12n_seg_fp16.onnx
+./yolo 3 2 7 0 0 ../../weights/yolov12n_seg_fp32.xml
+./yolo 3 2 7 1 0 ../../weights/yolov12n_seg_fp32.xml
+./yolo 3 2 7 0 1 ../../weights/yolov12n_seg_fp16.xml
+./yolo 3 2 7 1 1 ../../weights/yolov12n_seg_fp16.xml
+./yolo 4 2 7 1 0 ../../weights/yolov12n_seg_fp32.engine
+./yolo 4 2 7 1 1 ../../weights/yolov12n_seg_fp16.engine
+./yolo 4 2 7 1 2 ../../weights/yolov12n_seg_int8.engine
+
+
+./yolo 0 1 8 0 0 ../../weights/yolov13n_fp32.torchscript    
+./yolo 0 1 8 1 0 ../../weights/yolov13n_fp32.torchscript
+./yolo 0 1 8 1 1 ../../weights/yolov13n_fp16.torchscript
+./yolo 1 1 8 0 0 ../../weights/yolov13n_fp32.onnx
+./yolo 1 1 8 1 0 ../../weights/yolov13n_fp32.onnx
+./yolo 1 1 8 0 1 ../../weights/yolov13n_fp16.onnx
+./yolo 1 1 8 1 1 ../../weights/yolov13n_fp16.onnx
+./yolo 2 1 8 0 0 ../../weights/yolov13n_fp32.onnx
+./yolo 2 1 8 1 0 ../../weights/yolov13n_fp32.onnx
+./yolo 2 1 8 0 1 ../../weights/yolov13n_fp16.onnx
+./yolo 2 1 8 1 1 ../../weights/yolov13n_fp16.onnx
+./yolo 3 1 8 0 0 ../../weights/yolov13n_fp32.xml
+./yolo 3 1 8 1 0 ../../weights/yolov13n_fp32.xml
+./yolo 3 1 8 0 1 ../../weights/yolov13n_fp16.xml
+./yolo 3 1 8 1 1 ../../weights/yolov13n_fp16.xml
+./yolo 3 1 8 0 2 ../../weights/yolov13n_int8.xml
+./yolo 3 1 8 1 2 ../../weights/yolov13n_int8.xml
+./yolo 4 1 8 1 0 ../../weights/yolov13n_fp32.engine
+./yolo 4 1 8 1 1 ../../weights/yolov13n_fp16.engine
+./yolo 4 1 8 1 2 ../../weights/yolov13n_int8.engine

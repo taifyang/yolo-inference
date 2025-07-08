@@ -2,7 +2,7 @@
 Author: taifyang 
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2024-11-22 22:53:03
+LastEditTime: 2025-07-08 21:33:17
 Description: demo
 '''
 
@@ -13,7 +13,7 @@ from backends.yolo import YOLO
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--algo_type', default='YOLOv8', type=str, help='YOLOv5, YOLOv6, YOLOv7, YOLOv8, YOLOv9, YOLOv10, YOLOv11')
+    parser.add_argument('--algo_type', default='YOLOv8', type=str, help='YOLOv5, YOLOv6, YOLOv7, YOLOv8, YOLOv9, YOLOv10, YOLOv11, YOLOv12, YOLOv13')
     parser.add_argument('--backend_type', default='ONNXRuntime', type=str, help='PyTorch, ONNXRuntime, OpenCV, OpenVINO, TensorRT')
     parser.add_argument('--task_type', default='Classify', type=str, help='Classify, Detect, Segment')
     parser.add_argument('--device_type',  default='GPU', type=str, help='CPU, GPU')
@@ -22,7 +22,7 @@ def parse_args():
     parser.add_argument('--input_path', default='bus.jpg', type=str, help='the input path of input image or video')
     parser.add_argument('--output_path', default='', type=str, help='the output path of input image or video')
     parser.add_argument('--save_result', default=True, type=bool, help='save result')
-    parser.add_argument('--show_result', default=True, type=bool, help='show result')
+    parser.add_argument('--show_result', default=False, type=bool, help='show result')
     return parser.parse_args()
 
 
