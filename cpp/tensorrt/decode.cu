@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2025-06-29 22:20:03
+ * @LastEditTime: 2025-07-02 20:47:08
  * @FilePath: \cpp\tensorrt\decode.cu
  * @Description: cuda post-processing decoding source file for YOLO algorithm
  */
@@ -48,7 +48,7 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 
 		class_confidence = pitem + 5;
 	}
-	if(algo_type == YOLOv8 || algo_type == YOLOv11)
+	if(algo_type == YOLOv8 || algo_type == YOLOv11 || algo_type == YOLOv12 || algo_type == YOLOv13)
 	{
 		pitem = predict + (4 + num_classes) * position;
 		if(task_type == Segment)
@@ -100,7 +100,10 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 	*pout_item++ = confidence;
 	*pout_item++ = label;
 	*pout_item++ = 1; // 1 = keep, 0 = ignore
-	*pout_item++ = position;
+	if(task_type == Segment)
+	{
+		*pout_item++ = position;
+	}
 }
 
 static __device__ float box_iou(float aleft, float atop, float aright, float abottom, float bleft, float btop, float bright, float bbottom) 

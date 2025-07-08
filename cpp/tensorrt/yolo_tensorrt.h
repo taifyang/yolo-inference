@@ -237,7 +237,7 @@ private:
 #endif // _CUDA_POSTPROCESS
 
 	/**
-	 * @description: box num
+	 * @description: box element num
 	 */
 	const int m_num_box_element = 7;
 };
@@ -345,7 +345,7 @@ private:
 #endif // _CUDA_POSTPROCESS
 
 	/**
-	 * @description: box num
+	 * @description: box element num
 	 */
 	const int m_num_box_element = 8;
 };

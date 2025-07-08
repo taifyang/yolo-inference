@@ -2,7 +2,7 @@
 Author: taifyang 
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2024-11-19 22:36:03
+LastEditTime: 2024-11-30 11:20:18
 FilePath: \python\backends\yolo.py
 Description: YOLO algorithm interface class
 '''

@@ -48,6 +48,8 @@ enum Algo_Type
 	YOLOv9,
 	YOLOv10,
 	YOLOv11,
+	YOLOv12,
+	YOLOv13,
 };
 
 /**

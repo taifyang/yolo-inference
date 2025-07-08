@@ -43,14 +43,14 @@ void YOLO_Libtorch::init(const Algo_Type algo_type, const Device_Type device_typ
 
 void YOLO_Libtorch_Classify::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	if (algo_type != YOLOv5 && algo_type != YOLOv8 && algo_type != YOLOv11)
+	if (algo_type != YOLOv5 && algo_type != YOLOv8 && algo_type != YOLOv11 && algo_type != YOLOv12)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
 	}
 	YOLO_Libtorch::init(algo_type, device_type, model_type, model_path);
 
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11)
+	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 	{
 		m_input_width = 224;
 		m_input_height = 224;
@@ -62,7 +62,7 @@ void YOLO_Libtorch_Classify::init(const Algo_Type algo_type, const Device_Type d
 
 void YOLO_Libtorch_Detect::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	if (algo_type != YOLOv5 && algo_type != YOLOv7 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv10 && algo_type != YOLOv11)
+	if (algo_type != YOLOv5 && algo_type != YOLOv7 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv10 && algo_type != YOLOv11  && algo_type != YOLOv12  && algo_type != YOLOv13)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
@@ -74,7 +74,7 @@ void YOLO_Libtorch_Detect::init(const Algo_Type algo_type, const Device_Type dev
 		m_output_numprob = 5 + m_class_num;
 		m_output_numbox = 3 * (m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32);
 	}
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11)
+	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 	{
 		m_output_numprob = 4 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
@@ -91,7 +91,7 @@ void YOLO_Libtorch_Detect::init(const Algo_Type algo_type, const Device_Type dev
 
 void YOLO_Libtorch_Segment::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	if (algo_type != YOLOv5 && algo_type != YOLOv8 && algo_type != YOLOv11)
+	if (algo_type != YOLOv5 && algo_type != YOLOv8 && algo_type != YOLOv11 && algo_type != YOLOv12)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
@@ -103,7 +103,7 @@ void YOLO_Libtorch_Segment::init(const Algo_Type algo_type, const Device_Type de
 		m_output_numprob = 37 + m_class_num;
 		m_output_numbox = 3 * (m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32);
 	}
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11)
+	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 	{
 		m_output_numprob = 36 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
@@ -133,7 +133,7 @@ void YOLO_Libtorch_Classify::pre_process()
 
 		cv::cvtColor(crop_image, crop_image, cv::COLOR_BGR2RGB);
 	}
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11)
+	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 	{
 		cv::cvtColor(m_image, crop_image, cv::COLOR_BGR2RGB);
 
@@ -151,7 +151,6 @@ void YOLO_Libtorch_Classify::pre_process()
 		//Normalize
 		crop_image.convertTo(crop_image, CV_32FC3, 1. / 255.);
 	}
-
 
 	torch::Tensor input;
 	if (m_model_type == FP32)
@@ -232,7 +231,7 @@ void YOLO_Libtorch_Classify::process()
 			pred = m_output.toTensor().to(torch::kFloat).to(at::kCPU);
 		}
 	}
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11)
+	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 	{
 		if (m_device == at::kCPU)
 		{
@@ -256,7 +255,7 @@ void YOLO_Libtorch_Detect::process()
 	{
 		pred = m_output.toTuple()->elements()[0].toTensor().to(torch::kFloat).to(at::kCPU);
 	}
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11)
+	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11|| m_algo_type == YOLOv12|| m_algo_type == YOLOv13)
 	{
 		pred = m_output.toTensor().to(at::kCPU);
 	}
@@ -268,8 +267,8 @@ void YOLO_Libtorch_Segment::process()
 {	
 	m_output = m_module.forward(m_input);
 	torch::Tensor pred0, pred1;
-	pred0 = m_output.toTuple()->elements()[0].toTensor().to(torch::kFloat).to(at::kCPU);
-	pred1 = m_output.toTuple()->elements()[1].toTensor().to(torch::kFloat).to(at::kCPU);
+	pred0 = m_output.toTuple()->elements()[0].toTensor().to(at::kCPU);
+	pred1 = m_output.toTuple()->elements()[1].toTensor().to(at::kCPU);
 	std::copy(pred0.data_ptr<float>(), pred0.data_ptr<float>() + m_output_numdet, m_output0_host);
 	std::copy(pred1.data_ptr<float>(), pred1.data_ptr<float>() + m_output_numseg, m_output1_host);
 }
@@ -288,7 +287,7 @@ void YOLO_Libtorch_Classify::post_process()
 	m_output_cls.id = id;
 	if (m_algo_type == YOLOv5)
 		m_output_cls.score = exp(scores[id]) / sum;
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11)
+	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 		m_output_cls.score = scores[id];
 
 	if(m_draw_result)
@@ -315,7 +314,7 @@ void YOLO_Libtorch_Detect::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id] * objness;
 		}
-		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11)
+		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 		{
 			float* classes_scores = ptr + 4;
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
@@ -330,7 +329,7 @@ void YOLO_Libtorch_Detect::post_process()
 			continue;
 
 		cv::Rect box;
-		if(m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11)
+		if(m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 		{
 			float x = ptr[0];
 			float y = ptr[1];
@@ -362,7 +361,7 @@ void YOLO_Libtorch_Detect::post_process()
 		class_ids.push_back(class_id);
 	}
 
-	if(m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11)
+	if(m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 	{
 		std::vector<int> indices;
 		nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
@@ -417,7 +416,7 @@ void YOLO_Libtorch_Segment::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id] * objness;
 		}
-		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11)
+		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 		{
 			float* classes_scores = ptr + 4;
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
@@ -450,7 +449,7 @@ void YOLO_Libtorch_Segment::post_process()
 			std::vector<float> temp_proto(ptr + m_class_num + 5, ptr + m_class_num + 37);
 			picked_proposals.push_back(temp_proto);
 		}
-		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11)
+		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 		{
 			std::vector<float> temp_proto(ptr + m_class_num + 4, ptr + m_class_num + 36);
 			picked_proposals.push_back(temp_proto);
