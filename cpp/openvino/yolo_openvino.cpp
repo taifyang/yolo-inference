@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2025-07-03 20:28:00
+ * @LastEditTime: 2025-09-02 21:33:56
  * @FilePath: \cpp\openvino\yolo_openvino.cpp
  * @Description: openvino inference source file for YOLO algorithm
  */
@@ -61,16 +61,12 @@ void YOLO_OpenVINO_Detect::init(const Algo_Type algo_type, const Device_Type dev
 		m_output_numprob = 5 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
 	}
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
+	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 	{
 		m_output_numprob = 4 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
 	}
-	if(m_algo_type == YOLOv10)
-	{
-		m_output_numprob = 6;
-		m_output_numbox = 300;
-	}
+
 	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
 }
 
@@ -215,16 +211,11 @@ void YOLO_OpenVINO_Detect::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id] * objness;
 		}
-		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
+		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 		{
 			float* classes_scores = ptr + 4;
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id];
-		}
-		if (m_algo_type == YOLOv10)
-		{
-			score = ptr[4];
-			class_id = int(ptr[5]);
 		}
 		if (score < m_score_threshold)
 			continue;
@@ -262,34 +253,18 @@ void YOLO_OpenVINO_Detect::post_process()
 		class_ids.push_back(class_id);
 	}
 
-	if(m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
+	std::vector<int> indices;
+	nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
+	m_output_det.clear();
+	m_output_det.resize(indices.size());
+	for (int i = 0; i < indices.size(); i++)
 	{
-		std::vector<int> indices;
-		nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
-		m_output_det.clear();
-		m_output_det.resize(indices.size());
-		for (int i = 0; i < indices.size(); i++)
-		{
-			int idx = indices[i];
-			OutputDet output;
-			output.id = class_ids[idx];
-			output.score = scores[idx];
-			output.box = boxes[idx];
-			m_output_det[i] = output;
-		}
-	}
-	if (m_algo_type == YOLOv10)
-	{
-		m_output_det.clear();
-		m_output_det.resize(boxes.size());
-		for (int i = 0; i < boxes.size(); i++)
-		{
-			OutputDet output;
-			output.id = class_ids[i];
-			output.score = scores[i];
-			output.box = boxes[i];
-			m_output_det[i] = output;
-		}
+		int idx = indices[i];
+		OutputDet output;
+		output.id = class_ids[idx];
+		output.score = scores[idx];
+		output.box = boxes[idx];
+		m_output_det[i] = output;
 	}
 
 	if(m_draw_result)

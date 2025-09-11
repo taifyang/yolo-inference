@@ -15,6 +15,8 @@ python main.py --algo_type YOLOv5 --backend_type OpenVINO --task_type Classify -
 python main.py --algo_type YOLOv5 --backend_type OpenVINO --task_type Classify --device_type GPU --model_type FP32 --model_path ../weights/yolov5n_cls_fp32.xml
 python main.py --algo_type YOLOv5 --backend_type OpenVINO --task_type Classify --device_type CPU --model_type FP16 --model_path ../weights/yolov5n_cls_fp16.xml
 python main.py --algo_type YOLOv5 --backend_type OpenVINO --task_type Classify --device_type GPU --model_type FP16 --model_path ../weights/yolov5n_cls_fp16.xml
+python main.py --algo_type YOLOv5 --backend_type OpenVINO --task_type Classify --device_type CPU --model_type INT8 --model_path ../weights/yolov5n_cls_int8.xml
+python main.py --algo_type YOLOv5 --backend_type OpenVINO --task_type Classify --device_type GPU --model_type INT8 --model_path ../weights/yolov5n_cls_int8.xml
 python main.py --algo_type YOLOv5 --backend_type TensorRT --task_type Classify --device_type GPU --model_type FP32 --model_path ../weights/yolov5n_cls_fp32.engine
 python main.py --algo_type YOLOv5 --backend_type TensorRT --task_type Classify --device_type GPU --model_type FP16 --model_path ../weights/yolov5n_cls_fp16.engine
 python main.py --algo_type YOLOv5 --backend_type TensorRT --task_type Classify --device_type GPU --model_type INT8 --model_path ../weights/yolov5n_cls_int8.engine
@@ -59,6 +61,8 @@ python main.py --algo_type YOLOv5 --backend_type OpenVINO --task_type Segment --
 python main.py --algo_type YOLOv5 --backend_type OpenVINO --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov5n_seg_fp32.xml
 python main.py --algo_type YOLOv5 --backend_type OpenVINO --task_type Segment --device_type CPU --model_type FP16 --model_path ../weights/yolov5n_seg_fp16.xml
 python main.py --algo_type YOLOv5 --backend_type OpenVINO --task_type Segment --device_type GPU --model_type FP16 --model_path ../weights/yolov5n_seg_fp16.xml
+python main.py --algo_type YOLOv5 --backend_type OpenVINO --task_type Segment --device_type CPU --model_type INT8 --model_path ../weights/yolov5n_seg_int8.xml
+python main.py --algo_type YOLOv5 --backend_type OpenVINO --task_type Segment --device_type GPU --model_type INT8 --model_path ../weights/yolov5n_seg_int8.xml
 python main.py --algo_type YOLOv5 --backend_type TensorRT --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov5n_seg_fp32.engine
 python main.py --algo_type YOLOv5 --backend_type TensorRT --task_type Segment --device_type GPU --model_type FP16 --model_path ../weights/yolov5n_seg_fp16.engine
 python main.py --algo_type YOLOv5 --backend_type TensorRT --task_type Segment --device_type GPU --model_type INT8 --model_path ../weights/yolov5n_seg_int8.engine
@@ -126,6 +130,8 @@ python main.py --algo_type YOLOv8 --backend_type OpenVINO --task_type Classify -
 python main.py --algo_type YOLOv8 --backend_type OpenVINO --task_type Classify --device_type GPU --model_type FP32 --model_path ../weights/yolov8n_cls_fp32.xml
 python main.py --algo_type YOLOv8 --backend_type OpenVINO --task_type Classify --device_type CPU --model_type FP16 --model_path ../weights/yolov8n_cls_fp16.xml
 python main.py --algo_type YOLOv8 --backend_type OpenVINO --task_type Classify --device_type GPU --model_type FP16 --model_path ../weights/yolov8n_cls_fp16.xml
+python main.py --algo_type YOLOv8 --backend_type OpenVINO --task_type Classify --device_type CPU --model_type INT8 --model_path ../weights/yolov8n_cls_int8.xml
+python main.py --algo_type YOLOv8 --backend_type OpenVINO --task_type Classify --device_type GPU --model_type INT8 --model_path ../weights/yolov8n_cls_int8.xml
 python main.py --algo_type YOLOv8 --backend_type TensorRT --task_type Classify --device_type GPU --model_type FP32 --model_path ../weights/yolov8n_cls_fp32.engine
 python main.py --algo_type YOLOv8 --backend_type TensorRT --task_type Classify --device_type GPU --model_type FP16 --model_path ../weights/yolov8n_cls_fp16.engine
 python main.py --algo_type YOLOv8 --backend_type TensorRT --task_type Classify --device_type GPU --model_type INT8 --model_path ../weights/yolov8n_cls_int8.engine
@@ -170,6 +176,8 @@ python main.py --algo_type YOLOv8 --backend_type OpenVINO --task_type Segment --
 python main.py --algo_type YOLOv8 --backend_type OpenVINO --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov8n_seg_fp32.xml
 python main.py --algo_type YOLOv8 --backend_type OpenVINO --task_type Segment --device_type CPU --model_type FP16 --model_path ../weights/yolov8n_seg_fp16.xml
 python main.py --algo_type YOLOv8 --backend_type OpenVINO --task_type Segment --device_type GPU --model_type FP16 --model_path ../weights/yolov8n_seg_fp16.xml
+python main.py --algo_type YOLOv8 --backend_type OpenVINO --task_type Segment --device_type CPU --model_type INT8 --model_path ../weights/yolov8n_seg_int8.xml
+python main.py --algo_type YOLOv8 --backend_type OpenVINO --task_type Segment --device_type GPU --model_type INT8 --model_path ../weights/yolov8n_seg_int8.xml
 python main.py --algo_type YOLOv8 --backend_type TensorRT --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov8n_seg_fp32.engine
 python main.py --algo_type YOLOv8 --backend_type TensorRT --task_type Segment --device_type GPU --model_type FP16 --model_path ../weights/yolov8n_seg_fp16.engine
 python main.py --algo_type YOLOv8 --backend_type TensorRT --task_type Segment --device_type GPU --model_type INT8 --model_path ../weights/yolov8n_seg_int8.engine
@@ -230,6 +238,8 @@ python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type Classi
 python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type Classify --device_type GPU --model_type FP32 --model_path ../weights/yolov11n_cls_fp32.onnx
 python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type Classify --device_type CPU --model_type FP16 --model_path ../weights/yolov11n_cls_fp16.onnx 
 python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type Classify --device_type GPU --model_type FP16 --model_path ../weights/yolov11n_cls_fp16.onnx
+python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type Classify --device_type CPU --model_type INT8 --model_path ../weights/yolov11n_cls_int8.onnx 
+python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type Classify --device_type GPU --model_type INT8 --model_path ../weights/yolov11n_cls_int8.onnx
 python main.py --algo_type YOLOv11 --backend_type OpenCV --task_type Classify --device_type CPU --model_type FP32 --model_path ../weights/yolov11n_cls_fp32.onnx
 python main.py --algo_type YOLOv11 --backend_type OpenCV --task_type Classify --device_type GPU --model_type FP32 --model_path ../weights/yolov11n_cls_fp32.onnx
 python main.py --algo_type YOLOv11 --backend_type OpenCV --task_type Classify --device_type CPU --model_type FP16 --model_path ../weights/yolov11n_cls_fp16.onnx
@@ -238,6 +248,8 @@ python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type Classify 
 python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type Classify --device_type GPU --model_type FP32 --model_path ../weights/yolov11n_cls_fp32.xml
 python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type Classify --device_type CPU --model_type FP16 --model_path ../weights/yolov11n_cls_fp16.xml
 python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type Classify --device_type GPU --model_type FP16 --model_path ../weights/yolov11n_cls_fp16.xml
+python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type Classify --device_type CPU --model_type INT8 --model_path ../weights/yolov11n_cls_int8.xml
+python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type Classify --device_type GPU --model_type INT8 --model_path ../weights/yolov11n_cls_int8.xml
 python main.py --algo_type YOLOv11 --backend_type TensorRT --task_type Classify --device_type GPU --model_type FP32 --model_path ../weights/yolov11n_cls_fp32.engine
 python main.py --algo_type YOLOv11 --backend_type TensorRT --task_type Classify --device_type GPU --model_type FP16 --model_path ../weights/yolov11n_cls_fp16.engine
 python main.py --algo_type YOLOv11 --backend_type TensorRT --task_type Classify --device_type GPU --model_type INT8 --model_path ../weights/yolov11n_cls_int8.engine
@@ -249,6 +261,8 @@ python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type Detect
 python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type Detect --device_type GPU --model_type FP32 --model_path ../weights/yolov11n_fp32.onnx
 python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type Detect --device_type CPU --model_type FP16 --model_path ../weights/yolov11n_fp16.onnx 
 python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type Detect --device_type GPU --model_type FP16 --model_path ../weights/yolov11n_fp16.onnx
+python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type Detect --device_type CPU --model_type INT8 --model_path ../weights/yolov11n_int8.onnx 
+python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type Detect --device_type GPU --model_type INT8 --model_path ../weights/yolov11n_int8.onnx
 python main.py --algo_type YOLOv11 --backend_type OpenCV --task_type Detect --device_type CPU --model_type FP32 --model_path ../weights/yolov11n_fp32.onnx
 python main.py --algo_type YOLOv11 --backend_type OpenCV --task_type Detect --device_type GPU --model_type FP32 --model_path ../weights/yolov11n_fp32.onnx
 python main.py --algo_type YOLOv11 --backend_type OpenCV --task_type Detect --device_type CPU --model_type FP16 --model_path ../weights/yolov11n_fp16.onnx
@@ -270,6 +284,8 @@ python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type Segmen
 python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov11n_seg_fp32.onnx
 python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type Segment --device_type CPU --model_type FP16 --model_path ../weights/yolov11n_seg_fp16.onnx 
 python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type Segment --device_type GPU --model_type FP16 --model_path ../weights/yolov11n_seg_fp16.onnx
+python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type Segment --device_type CPU --model_type INT8 --model_path ../weights/yolov11n_seg_int8.onnx 
+python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type Segment --device_type GPU --model_type INT8 --model_path ../weights/yolov11n_seg_int8.onnx
 python main.py --algo_type YOLOv11 --backend_type OpenCV --task_type Segment --device_type CPU --model_type FP32 --model_path ../weights/yolov11n_seg_fp32.onnx
 python main.py --algo_type YOLOv11 --backend_type OpenCV --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov11n_seg_fp32.onnx
 python main.py --algo_type YOLOv11 --backend_type OpenCV --task_type Segment --device_type CPU --model_type FP16 --model_path ../weights/yolov11n_seg_fp16.onnx
@@ -278,13 +294,15 @@ python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type Segment -
 python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov11n_seg_fp32.xml
 python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type Segment --device_type CPU --model_type FP16 --model_path ../weights/yolov11n_seg_fp16.xml
 python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type Segment --device_type GPU --model_type FP16 --model_path ../weights/yolov11n_seg_fp16.xml
+python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type Segment --device_type CPU --model_type INT8 --model_path ../weights/yolov11n_seg_int8.xml
+python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type Segment --device_type GPU --model_type INT8 --model_path ../weights/yolov11n_seg_int8.xml
 python main.py --algo_type YOLOv11 --backend_type TensorRT --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov11n_seg_fp32.engine
 python main.py --algo_type YOLOv11 --backend_type TensorRT --task_type Segment --device_type GPU --model_type FP16 --model_path ../weights/yolov11n_seg_fp16.engine
 python main.py --algo_type YOLOv11 --backend_type TensorRT --task_type Segment --device_type GPU --model_type INT8 --model_path ../weights/yolov11n_seg_int8.engine
 
 
-python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Classify --device_type CPU --model_type FP32 --model_path ../weights/yolov12n_cls_fp32.torchscript
-python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Classify --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_cls_fp32.torchscript
+python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Classify --device_type CPU --model_type FP32 --model_path ../weights/yolov12n_cls_fp32_cpu.torchscript
+python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Classify --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_cls_fp32_gpu.torchscript
 python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Classify --device_type GPU --model_type FP16 --model_path ../weights/yolov12n_cls_fp16_gpu.torchscript
 python main.py --algo_type YOLOv12 --backend_type ONNXRuntime --task_type Classify --device_type CPU --model_type FP32 --model_path ../weights/yolov12n_cls_fp32.onnx
 python main.py --algo_type YOLOv12 --backend_type ONNXRuntime --task_type Classify --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_cls_fp32.onnx
@@ -306,9 +324,9 @@ python main.py --algo_type YOLOv12 --backend_type TensorRT --task_type Classify 
 python main.py --algo_type YOLOv12 --backend_type TensorRT --task_type Classify --device_type GPU --model_type FP16 --model_path ../weights/yolov12n_cls_fp16.engine
 python main.py --algo_type YOLOv12 --backend_type TensorRT --task_type Classify --device_type GPU --model_type INT8 --model_path ../weights/yolov12n_cls_int8.engine
 
-python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Detect --device_type CPU --model_type FP32 --model_path ../weights/yolov12n_fp32.torchscript
-python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Detect --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_fp32.torchscript
-python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Detect --device_type GPU --model_type FP16 --model_path ../weights/yolov12n_fp16.torchscript
+python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Detect --device_type CPU --model_type FP32 --model_path ../weights/yolov12n_fp32_cpu.torchscript
+python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Detect --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_fp32_gpu.torchscript
+python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Detect --device_type GPU --model_type FP16 --model_path ../weights/yolov12n_fp16_gpu.torchscript
 python main.py --algo_type YOLOv12 --backend_type ONNXRuntime --task_type Detect --device_type CPU --model_type FP32 --model_path ../weights/yolov12n_fp32.onnx
 python main.py --algo_type YOLOv12 --backend_type ONNXRuntime --task_type Detect --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_fp32.onnx
 python main.py --algo_type YOLOv12 --backend_type ONNXRuntime --task_type Detect --device_type CPU --model_type FP16 --model_path ../weights/yolov12n_fp16.onnx 
@@ -329,13 +347,15 @@ python main.py --algo_type YOLOv12 --backend_type TensorRT --task_type Detect --
 python main.py --algo_type YOLOv12 --backend_type TensorRT --task_type Detect --device_type GPU --model_type FP16 --model_path ../weights/yolov12n_fp16.engine
 python main.py --algo_type YOLOv12 --backend_type TensorRT --task_type Detect --device_type GPU --model_type INT8 --model_path ../weights/yolov12n_int8.engine
 
-python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Segment --device_type CPU --model_type FP32 --model_path ../weights/yolov12n_seg_fp32.torchscript
-python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_seg_fp32.torchscript
-python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Segment --device_type GPU --model_type FP16 --model_path ../weights/yolov12n_seg_fp16.torchscript
+python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Segment --device_type CPU --model_type FP32 --model_path ../weights/yolov12n_seg_fp32_cpu.torchscript
+python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_seg_fp32_gpu.torchscript
+python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Segment --device_type GPU --model_type FP16 --model_path ../weights/yolov12n_seg_fp16_gpu.torchscript
 python main.py --algo_type YOLOv12 --backend_type ONNXRuntime --task_type Segment --device_type CPU --model_type FP32 --model_path ../weights/yolov12n_seg_fp32.onnx
 python main.py --algo_type YOLOv12 --backend_type ONNXRuntime --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_seg_fp32.onnx
 python main.py --algo_type YOLOv12 --backend_type ONNXRuntime --task_type Segment --device_type CPU --model_type FP16 --model_path ../weights/yolov12n_seg_fp16.onnx 
 python main.py --algo_type YOLOv12 --backend_type ONNXRuntime --task_type Segment --device_type GPU --model_type FP16 --model_path ../weights/yolov12n_seg_fp16.onnx
+python main.py --algo_type YOLOv12 --backend_type ONNXRuntime --task_type Segment --device_type CPU --model_type INT8 --model_path ../weights/yolov12n_seg_int8.onnx 
+python main.py --algo_type YOLOv12 --backend_type ONNXRuntime --task_type Segment --device_type GPU --model_type INT8 --model_path ../weights/yolov12n_seg_int8.onnx
 python main.py --algo_type YOLOv12 --backend_type OpenCV --task_type Segment --device_type CPU --model_type FP32 --model_path ../weights/yolov12n_seg_fp32.onnx
 python main.py --algo_type YOLOv12 --backend_type OpenCV --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_seg_fp32.onnx
 python main.py --algo_type YOLOv12 --backend_type OpenCV --task_type Segment --device_type CPU --model_type FP16 --model_path ../weights/yolov12n_seg_fp16.onnx
@@ -344,14 +364,16 @@ python main.py --algo_type YOLOv12 --backend_type OpenVINO --task_type Segment -
 python main.py --algo_type YOLOv12 --backend_type OpenVINO --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_seg_fp32.xml
 python main.py --algo_type YOLOv12 --backend_type OpenVINO --task_type Segment --device_type CPU --model_type FP16 --model_path ../weights/yolov12n_seg_fp16.xml
 python main.py --algo_type YOLOv12 --backend_type OpenVINO --task_type Segment --device_type GPU --model_type FP16 --model_path ../weights/yolov12n_seg_fp16.xml
+python main.py --algo_type YOLOv12 --backend_type OpenVINO --task_type Segment --device_type CPU --model_type INT8 --model_path ../weights/yolov12n_seg_int8.xml
+python main.py --algo_type YOLOv12 --backend_type OpenVINO --task_type Segment --device_type GPU --model_type INT8 --model_path ../weights/yolov12n_seg_int8.xml
 python main.py --algo_type YOLOv12 --backend_type TensorRT --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_seg_fp32.engine
 python main.py --algo_type YOLOv12 --backend_type TensorRT --task_type Segment --device_type GPU --model_type FP16 --model_path ../weights/yolov12n_seg_fp16.engine
 python main.py --algo_type YOLOv12 --backend_type TensorRT --task_type Segment --device_type GPU --model_type INT8 --model_path ../weights/yolov12n_seg_int8.engine
 
 
-python main.py --algo_type YOLOv13 --backend_type PyTorch --task_type Detect --device_type CPU --model_type FP32 --model_path ../weights/yolov13n_fp32.torchscript
-python main.py --algo_type YOLOv13 --backend_type PyTorch --task_type Detect --device_type GPU --model_type FP32 --model_path ../weights/yolov13n_fp32.torchscript
-python main.py --algo_type YOLOv13 --backend_type PyTorch --task_type Detect --device_type GPU --model_type FP16 --model_path ../weights/yolov13n_fp16.torchscript
+python main.py --algo_type YOLOv13 --backend_type PyTorch --task_type Detect --device_type CPU --model_type FP32 --model_path ../weights/yolov13n_fp32_cpu.torchscript
+python main.py --algo_type YOLOv13 --backend_type PyTorch --task_type Detect --device_type GPU --model_type FP32 --model_path ../weights/yolov13n_fp32_gpu.torchscript
+python main.py --algo_type YOLOv13 --backend_type PyTorch --task_type Detect --device_type GPU --model_type FP16 --model_path ../weights/yolov13n_fp16_gpu.torchscript
 python main.py --algo_type YOLOv13 --backend_type ONNXRuntime --task_type Detect --device_type CPU --model_type FP32 --model_path ../weights/yolov13n_fp32.onnx
 python main.py --algo_type YOLOv13 --backend_type ONNXRuntime --task_type Detect --device_type GPU --model_type FP32 --model_path ../weights/yolov13n_fp32.onnx
 python main.py --algo_type YOLOv13 --backend_type ONNXRuntime --task_type Detect --device_type CPU --model_type FP16 --model_path ../weights/yolov13n_fp16.onnx 

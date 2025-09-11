@@ -1,8 +1,8 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang
- * @LastEditTime: 2024-10-30 21:21:20
+ * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+ * @LastEditTime: 2025-09-09 08:13:29
  * @FilePath: \cpp\libtorch\yolo_libtorch.cpp
  * @Description: libtorch inference source file for YOLO algorithm
  */
@@ -32,7 +32,6 @@ void YOLO_Libtorch::init(const Algo_Type algo_type, const Device_Type device_typ
 	{
 		std::cerr << "FP16 only support GPU!" << std::endl;
 		std::exit(-1);
-
 	}
 	m_model_type = model_type;
 	if (model_type == FP16)
@@ -74,6 +73,11 @@ void YOLO_Libtorch_Detect::init(const Algo_Type algo_type, const Device_Type dev
 		m_output_numprob = 5 + m_class_num;
 		m_output_numbox = 3 * (m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32);
 	}
+	if (m_algo_type == YOLOv6)
+	{
+		m_output_numprob = 5 + m_class_num;
+		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
+	}
 	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 	{
 		m_output_numprob = 4 + m_class_num;
@@ -84,6 +88,7 @@ void YOLO_Libtorch_Detect::init(const Algo_Type algo_type, const Device_Type dev
 		m_output_numprob = 6;
 		m_output_numbox = 300;
 	}
+
 	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
 
 	m_output_host = new float[m_output_numdet];
@@ -267,8 +272,8 @@ void YOLO_Libtorch_Segment::process()
 {	
 	m_output = m_module.forward(m_input);
 	torch::Tensor pred0, pred1;
-	pred0 = m_output.toTuple()->elements()[0].toTensor().to(at::kCPU);
-	pred1 = m_output.toTuple()->elements()[1].toTensor().to(at::kCPU);
+	pred0 = m_output.toTuple()->elements()[0].toTensor().to(torch::kFloat).to(at::kCPU);
+	pred1 = m_output.toTuple()->elements()[1].toTensor().to(torch::kFloat).to(at::kCPU);
 	std::copy(pred0.data_ptr<float>(), pred0.data_ptr<float>() + m_output_numdet, m_output0_host);
 	std::copy(pred1.data_ptr<float>(), pred1.data_ptr<float>() + m_output_numseg, m_output1_host);
 }
@@ -314,7 +319,7 @@ void YOLO_Libtorch_Detect::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id] * objness;
 		}
-		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
+		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9  || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 		{
 			float* classes_scores = ptr + 4;
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;

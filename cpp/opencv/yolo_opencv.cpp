@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2025-07-03 20:21:16
+ * @LastEditTime: 2025-09-02 22:03:21
  * @FilePath: \cpp\opencv\yolo_opencv.cpp
  * @Description: opencv inference source file for YOLO algorithm
  */
@@ -64,7 +64,7 @@ void YOLO_OpenCV_Classify::init(const Algo_Type algo_type, const Device_Type dev
 
 void YOLO_OpenCV_Detect::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	if (algo_type != YOLOv5 && algo_type != YOLOv6 && algo_type != YOLOv7 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv11 && algo_type != YOLOv12 && algo_type != YOLOv13)
+	if (algo_type != YOLOv5 && algo_type != YOLOv6 && algo_type != YOLOv7 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv10 && algo_type != YOLOv11 && algo_type != YOLOv12 && algo_type != YOLOv13)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
@@ -81,7 +81,7 @@ void YOLO_OpenCV_Detect::init(const Algo_Type algo_type, const Device_Type devic
 		m_output_numprob = 5 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
 	}
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
+	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 	{
 		m_output_numprob = 4 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
@@ -219,7 +219,7 @@ void YOLO_OpenCV_Detect::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id] * objness;
 		}
-		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
+		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 		{
 			float* classes_scores = ptr + 4;
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
@@ -229,7 +229,7 @@ void YOLO_OpenCV_Detect::post_process()
 			continue;
 
 		cv::Rect box;
-		if(m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
+		if(m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 		{
 			float x = ptr[0];
 			float y = ptr[1];
@@ -244,6 +244,16 @@ void YOLO_OpenCV_Detect::post_process()
 			height = (top + height) < m_image.rows ? height : (m_image.rows - top);
 			box = cv::Rect(left, top, width, height);
 		}
+		if (m_algo_type == YOLOv10)
+		{
+			int left = int(ptr[0]) > 0 ? int(ptr[0]) : 0;
+			int top = int(ptr[1]) > 0 ? int(ptr[1]) : 0;
+			int width = int(ptr[2] - ptr[0]) > 0 ? int(ptr[2] - ptr[0]) : 0;
+			int height = int(ptr[3] - ptr[1])> 0 ? int(ptr[3] - ptr[1]) : 0;
+			width = (left + width) < m_image.cols ? width : (m_image.cols - left);
+			height = (top + height) < m_image.rows ? height : (m_image.rows - top);
+			box = cv::Rect(left, top, width, height);
+		}
 
 		scale_box(box, m_image.size());
 		boxes.push_back(box);
@@ -251,21 +261,18 @@ void YOLO_OpenCV_Detect::post_process()
 		class_ids.push_back(class_id);
 	}
 
-	if(m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
+	std::vector<int> indices;
+	nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
+	m_output_det.clear();
+	m_output_det.resize(indices.size());
+	for (int i = 0; i < indices.size(); i++)
 	{
-		std::vector<int> indices;
-		nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
-		m_output_det.clear();
-		m_output_det.resize(indices.size());
-		for (int i = 0; i < indices.size(); i++)
-		{
-			int idx = indices[i];
-			OutputDet output;
-			output.id = class_ids[idx];
-			output.score = scores[idx];
-			output.box = boxes[idx];
-			m_output_det[i] = output;
-		}
+		int idx = indices[i];
+		OutputDet output;
+		output.id = class_ids[idx];
+		output.score = scores[idx];
+		output.box = boxes[idx];
+		m_output_det[i] = output;
 	}
 
 	if(m_draw_result)
