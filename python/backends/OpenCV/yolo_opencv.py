@@ -2,7 +2,7 @@
 Author: taifyang  
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2024-11-27 22:50:12
+LastEditTime: 2025-09-04 11:20:01
 FilePath: \python\backends\OpenCV\yolo_opencv.py
 Description: opencv inference class for YOLO algorithm
 '''
@@ -110,7 +110,7 @@ class YOLO_OpenCV_Detect(YOLO_OpenCV):
     return {*}
     '''    
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLOv13'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13'], 'algo type not supported!'
         input = letterbox(self.image, self.inputs_shape)
         self.inputs = cv2.dnn.blobFromImage(input, 1/255., size=self.inputs_shape, swapRB=True, crop=False)
         self.net.setInput(self.inputs)
@@ -136,7 +136,7 @@ class YOLO_OpenCV_Detect(YOLO_OpenCV):
                     boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
                     scores.append(score)
                     class_ids.append(class_id) 
-        if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
+        if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
             classes_scores = output[..., 4:(4+self.class_num)]          
             for i in range(output.shape[0]):              
                 class_id = np.argmax(classes_scores[i])
@@ -151,9 +151,9 @@ class YOLO_OpenCV_Detect(YOLO_OpenCV):
             scores = np.array(scores)
             if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLOv13']:
                 boxes = xywh2xyxy(boxes)
-                indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
-                boxes = boxes[indices]
-                boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
+            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
+            boxes = boxes[indices]
+            boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
             if self.draw_result:
                 self.result = draw_result(self.image, boxes)
 

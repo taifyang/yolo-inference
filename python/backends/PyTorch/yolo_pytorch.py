@@ -2,7 +2,7 @@
 Author: taifyang  
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2025-07-03 22:03:32
+LastEditTime: 2025-09-04 11:23:57
 FilePath: \python\backends\PyTorch_\yolo_pytorch.py
 Description: pytorch inference class for YOLO algorithm
 '''
@@ -30,7 +30,7 @@ class YOLO_PyTorch(YOLO):
         assert os.path.exists(model_path), 'model not exists!'
         assert device_type in ['CPU', 'GPU'], 'unsupported device type!'
         assert model_type in ['FP32', 'FP16'], 'unsupported model type!'
-        self.net = torch.load(model_path)
+        self.net = torch.load(model_path, weights_only=False)
         self.algo_type = algo_type
         self.device_type = device_type
         self.model_type = model_type
@@ -163,7 +163,7 @@ class YOLO_PyTorch_Detect(YOLO_PyTorch):
                 boxes = xywh2xyxy(boxes)
                 indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
                 boxes = boxes[indices]
-                boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
+            boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
             if self.draw_result:
                 self.result = draw_result(self.image, boxes)
 

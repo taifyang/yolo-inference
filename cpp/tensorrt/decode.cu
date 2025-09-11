@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2025-07-02 20:47:08
+ * @LastEditTime: 2025-09-03 08:20:21
  * @FilePath: \cpp\tensorrt\decode.cu
  * @Description: cuda post-processing decoding source file for YOLO algorithm
  */
@@ -35,7 +35,7 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 	float* pitem;
 	float objectness;
 	float* class_confidence;
-	if(algo_type == YOLOv5)
+	if(algo_type == YOLOv5 || algo_type == YOLOv6 || algo_type == YOLOv7)
 	{
 		pitem = predict + (5 + num_classes) * position;
 		if(task_type == Segment)
@@ -48,7 +48,7 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 
 		class_confidence = pitem + 5;
 	}
-	if(algo_type == YOLOv8 || algo_type == YOLOv11 || algo_type == YOLOv12 || algo_type == YOLOv13)
+	if(algo_type == YOLOv8 || algo_type == YOLOv9 || algo_type == YOLOv10 || algo_type == YOLOv11 || algo_type == YOLOv12 || algo_type == YOLOv13)
 	{
 		pitem = predict + (4 + num_classes) * position;
 		if(task_type == Segment)
@@ -57,7 +57,6 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 		}
 		class_confidence = pitem + 4;
 	}
-
 
 	float confidence = *class_confidence++;
 	int label = 0;
@@ -70,7 +69,7 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 		}
 	}
 	
-	if(algo_type == YOLOv5)
+	if(algo_type == YOLOv5 || algo_type == YOLOv6 || algo_type == YOLOv7)
 	{
 		confidence *= objectness;
 	}
@@ -81,14 +80,26 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 	if (index >= max_objects)
 		return;
 
-	float cx = *pitem++;
-	float cy = *pitem++;
-	float width = *pitem++;
-	float height = *pitem++;
-	float left = cx - width * 0.5f;
-	float top = cy - height * 0.5f;
-	float right = cx + width * 0.5f;
-	float bottom = cy + height * 0.5f;
+	float left, top, right, bottom;
+	if(algo_type == YOLOv5 || algo_type == YOLOv6 || algo_type == YOLOv7 || algo_type == YOLOv8 || algo_type == YOLOv9 || algo_type == YOLOv11 || algo_type == YOLOv12 || algo_type == YOLOv13)	
+	{
+		float cx = *pitem++;
+		float cy = *pitem++;
+		float width = *pitem++;
+		float height = *pitem++;
+		left = cx - width * 0.5f;
+		top = cy - height * 0.5f;
+		right = cx + width * 0.5f;
+		bottom = cy + height * 0.5f;
+	}
+	if (algo_type == YOLOv10)
+	{
+		left = *pitem++;
+		top = *pitem++;
+		right = *pitem++;
+		bottom = *pitem++;
+	}
+
 	affine_project_gpu(inverse_affine_matrix, left, top, &left, &top);
 	affine_project_gpu(inverse_affine_matrix, right, bottom, &right, &bottom);
 

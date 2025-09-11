@@ -134,7 +134,7 @@ class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
                     boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
                     scores.append(score)
                     class_ids.append(class_id) 
-        if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
+        if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
             classes_scores = output[..., 4:(4+self.class_num)]          
             for i in range(output.shape[0]):              
                 class_id = np.argmax(classes_scores[i])
@@ -142,22 +142,16 @@ class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
                 if score > self.score_threshold:
                     boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
                     scores.append(score)
-                    class_ids.append(class_id)              
-        if self.algo_type in ['YOLOv10']: 
-            output = output[output[..., 4] > self.confidence_threshold] 
-            for i in range(output.shape[0]):
-                boxes.append(output[i, :6])
-                scores.append(output[i][4])
-                class_ids.append(output[i][5])     
+                    class_ids.append(class_id)                 
              
         if len(boxes):   
             boxes = np.array(boxes)
             scores = np.array(scores)
             if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLOv13']:
                 boxes = xywh2xyxy(boxes)
-                indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
-                boxes = boxes[indices]
-                boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
+            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
+            boxes = boxes[indices]
+            boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
             if self.draw_result:
                 self.result = draw_result(self.image, boxes)
         
