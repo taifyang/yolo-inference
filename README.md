@@ -32,7 +32,7 @@ make
 ./run.sh
 ```
 
-C++ test in Docker(Intel(R) Xeon(R) Gold 5317 CPU , RTX4090 GPU):
+C++ test in Docker with Intel(R) Xeon(R) Gold 5317 CPU , RTX4090 GPU:
 |       Model       |       Task       |       Device       |       Precision       | LibTorch | ONNXRuntime | OpenCV  | OpenVINO | TensorRT |
 | :---------------: | :--------------: | :----------------: | :-------------------: | :------: | :---------: | :-----: | :------: | :------: |
 | YOLOv5n           | Classify         | CPU                | FP32                  | 13.8ms   | 19.5ms      | 23.1ms  | 8.6ms    | ×        |
@@ -151,7 +151,7 @@ pip install -r requirements.txt
 ./run.sh
 ```
 
-Python test in Docker(Intel(R) Xeon(R) Gold 5317 CPU , RTX4090 GPU):
+Python test in Docker with Intel(R) Xeon(R) Gold 5317 CPU , RTX4090 GPU
 |       Model       |       Task       |       Device       |       Precision       | PyTorch | ONNXRuntime | OpenCV  | OpenVINO | TensorRT |
 | :---------------: | :--------------: | :----------------: | :-------------------: | :-----: | :---------: | :-----: | :------: | :------: |
 | YOLOv5n           | Classify         | CPU                | FP32                  | 21.3ms  | 21.7ms      | 41.0ms  | 23.3ms   | ×        |
@@ -271,7 +271,7 @@ or
 docker pull taify/yolo_inference:cuda12.8
 ```
 
-You Can download some model weights in:  <https://pan.baidu.com/s/1L8EyTa59qu_eEb3lKRnPQA?pwd=itda>
+You can download some model weights in: <https://pan.baidu.com/s/1BkXd60sw9cF0g77b7QR-lQ?pwd=deub>
 
 
 For your own model, you should transpose output dims for YOLOv8, YOLOv9, YOLOv11, YOLOv12, YOLOv13 detection and segmentation. For onnx model, you can use a scirpt like this:
