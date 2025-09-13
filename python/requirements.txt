@@ -1,8 +1,5 @@
-cuda-python == 12.6.2.post1
-numpy == 2.0.2
-opencv-python == 4.10.0 # built with cuda from local
-onnxruntime-gpu == 1.20.0
-openvino == 2024.4.0
-pycuda==2024.1
-tensorrt == 10.6.0 # from local
-torch == 2.5.1+cu124
+cuda-python == 12.8.0
+opencv-python == 4.11.0 # built with cuda from local
+onnxruntime-gpu == 1.22.0
+openvino == 2025.2.0
+torch == 2.7.0+cu128
