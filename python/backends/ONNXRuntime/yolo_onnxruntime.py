@@ -8,7 +8,7 @@ Description: onnxruntime inference class for YOLO algorithm
 '''
 
 
-import onnxruntime
+import onnxruntime as ort
 from backends.yolo import *
 from backends.utils import *
 
@@ -30,10 +30,12 @@ class YOLO_ONNXRuntime(YOLO):
         super().__init__()
         assert os.path.exists(model_path), 'model not exists!'
         assert device_type in ['CPU', 'GPU'], 'unsupported device type!'
+        options = ort.SessionOptions()
+        options.intra_op_num_threads = max(1, os.cpu_count() // 2)
         if device_type == 'CPU':
-            self.onnx_session = onnxruntime.InferenceSession(model_path, providers=['CPUExecutionProvider'])
+            self.onnx_session = ort.InferenceSession(model_path, sess_options=options, providers=['CPUExecutionProvider'])
         elif device_type == 'GPU':
-            self.onnx_session = onnxruntime.InferenceSession(model_path, providers=['CUDAExecutionProvider'])
+            self.onnx_session = ort.InferenceSession(model_path, sess_options=options, providers=['CUDAExecutionProvider'])
         self.algo_type = algo_type
         self.model_type = model_type
          
@@ -140,7 +142,7 @@ class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
         scores = []
         class_ids = []
         
-        if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7']:
+        if self.algo_type in ['YOLOv5', 'YOLOv7']:
             output = output[output[..., 4] > self.confidence_threshold]
             classes_scores = output[..., 5:(5+self.class_num)]     
             for i in range(output.shape[0]):
@@ -150,7 +152,7 @@ class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
                     boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
                     scores.append(score)
                     class_ids.append(class_id) 
-        if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
+        if self.algo_type in ['YOLOv6', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
             classes_scores = output[..., 4:(4+self.class_num)]          
             for i in range(output.shape[0]):              
                 class_id = np.argmax(classes_scores[i])

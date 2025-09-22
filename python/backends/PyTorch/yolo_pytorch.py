@@ -30,7 +30,7 @@ class YOLO_PyTorch(YOLO):
         assert os.path.exists(model_path), 'model not exists!'
         assert device_type in ['CPU', 'GPU'], 'unsupported device type!'
         assert model_type in ['FP32', 'FP16'], 'unsupported model type!'
-        self.net = torch.load(model_path, weights_only=False)
+        self.net = torch.jit.load(model_path)
         self.algo_type = algo_type
         self.device_type = device_type
         self.model_type = model_type
@@ -130,7 +130,7 @@ class YOLO_PyTorch_Detect(YOLO_PyTorch):
         scores = []
         class_ids = []
 
-        if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7']:
+        if self.algo_type in ['YOLOv5',  'YOLOv7']:
             output = output[output[..., 4] > self.confidence_threshold]
             classes_scores = output[..., 5:(5+self.class_num)]     
             for i in range(output.shape[0]):
@@ -140,7 +140,7 @@ class YOLO_PyTorch_Detect(YOLO_PyTorch):
                     boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
                     scores.append(score)
                     class_ids.append(class_id) 
-        if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
+        if self.algo_type in ['YOLOv6','YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
             classes_scores = output[..., 4:(4+self.class_num)]          
             for i in range(output.shape[0]):              
                 class_id = np.argmax(classes_scores[i])

@@ -35,7 +35,7 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 	float* pitem;
 	float objectness;
 	float* class_confidence;
-	if(algo_type == YOLOv5 || algo_type == YOLOv6 || algo_type == YOLOv7)
+	if(algo_type == YOLOv5 || algo_type == YOLOv7)
 	{
 		pitem = predict + (5 + num_classes) * position;
 		if(task_type == Segment)
@@ -48,7 +48,7 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 
 		class_confidence = pitem + 5;
 	}
-	if(algo_type == YOLOv8 || algo_type == YOLOv9 || algo_type == YOLOv10 || algo_type == YOLOv11 || algo_type == YOLOv12 || algo_type == YOLOv13)
+	if(algo_type == YOLOv6 || algo_type == YOLOv8 || algo_type == YOLOv9 || algo_type == YOLOv10 || algo_type == YOLOv11 || algo_type == YOLOv12 || algo_type == YOLOv13)
 	{
 		pitem = predict + (4 + num_classes) * position;
 		if(task_type == Segment)
@@ -69,7 +69,7 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 		}
 	}
 	
-	if(algo_type == YOLOv5 || algo_type == YOLOv6 || algo_type == YOLOv7)
+	if(algo_type == YOLOv5 || algo_type == YOLOv7)
 	{
 		confidence *= objectness;
 	}
