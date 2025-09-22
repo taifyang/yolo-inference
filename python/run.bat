@@ -68,6 +68,9 @@ python main.py --algo_type YOLOv5 --backend_type TensorRT --task_type Segment --
 python main.py --algo_type YOLOv5 --backend_type TensorRT --task_type Segment --device_type GPU --model_type INT8 --model_path ../weights/yolov5n_seg_int8.engine
 
 
+python main.py --algo_type YOLOv6 --backend_type PyTorch --task_type Detect --device_type CPU --model_type FP32 --model_path ../weights/yolov6n_fp32_cpu.torchscript
+python main.py --algo_type YOLOv6 --backend_type PyTorch --task_type Detect --device_type GPU --model_type FP32 --model_path ../weights/yolov6n_fp32_gpu.torchscript
+python main.py --algo_type YOLOv6 --backend_type PyTorch --task_type Detect --device_type GPU --model_type FP16 --model_path ../weights/yolov6n_fp16_gpu.torchscript
 python main.py --algo_type YOLOv6 --backend_type ONNXRuntime --task_type Detect --device_type CPU --model_type FP32 --model_path ../weights/yolov6n_fp32.onnx
 python main.py --algo_type YOLOv6 --backend_type ONNXRuntime --task_type Detect --device_type GPU --model_type FP32 --model_path ../weights/yolov6n_fp32.onnx
 python main.py --algo_type YOLOv6 --backend_type ONNXRuntime --task_type Detect --device_type CPU --model_type FP16 --model_path ../weights/yolov6n_fp16.onnx 

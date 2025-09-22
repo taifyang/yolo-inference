@@ -15,7 +15,7 @@ void YOLO_ONNXRuntime::init(const Algo_Type algo_type, const Device_Type device_
 	m_algo_type = algo_type;
 
 	Ort::SessionOptions session_options;
-	session_options.SetIntraOpNumThreads(std::thread::hardware_concurrency());
+	session_options.SetIntraOpNumThreads(std::thread::hardware_concurrency()/2);
 	session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
 
 	if (device_type == GPU)
@@ -44,6 +44,9 @@ void YOLO_ONNXRuntime::init(const Algo_Type algo_type, const Device_Type device_
 #ifdef __linux__
 	m_session = new Ort::Session(m_env, model_path.c_str(), session_options);
 #endif
+
+	m_input_names.push_back("images");
+	m_output_names.push_back("output0");
 }
 
 void YOLO_ONNXRuntime_Classify::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
@@ -60,16 +63,6 @@ void YOLO_ONNXRuntime_Classify::init(const Algo_Type algo_type, const Device_Typ
 		m_input_width = 224;
 		m_input_height = 224;
 		m_input_numel = 1 * 3 * m_input_width * m_input_height;
-	}
-
-	for (size_t i = 0; i < m_session->GetInputCount(); i++)
-	{
-		m_input_names.push_back("images");
-	}
-
-	for (size_t i = 0; i < m_session->GetOutputCount(); i++)
-	{
-		m_output_names.push_back("output0");
 	}
 
 	if (m_model_type == FP16)
@@ -94,28 +87,13 @@ void YOLO_ONNXRuntime_Detect::init(const Algo_Type algo_type, const Device_Type 
 		m_output_numprob = 5 + m_class_num;
 		m_output_numbox = 3 * (m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32);
 	}
-	if (m_algo_type == YOLOv6)
-	{
-		m_output_numprob = 5 + m_class_num;
-		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
-	}
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12  || m_algo_type == YOLOv13)
+	if (m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12  || m_algo_type == YOLOv13)
 	{
 		m_output_numprob = 4 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
 	}
 
 	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
-
-	for (size_t i = 0; i < m_session->GetInputCount(); i++)
-	{
-		m_input_names.push_back("images");
-	}
-
-	for (size_t i = 0; i < m_session->GetOutputCount(); i++)
-	{
-		m_output_names.push_back("output0");
-	}
 
 	if (m_model_type == FP16)
 	{
@@ -149,16 +127,7 @@ void YOLO_ONNXRuntime_Segment::init(const Algo_Type algo_type, const Device_Type
 		m_output_numseg = m_mask_params.seg_channels * m_mask_params.seg_width * m_mask_params.seg_height;
 	}
 
-	for (size_t i = 0; i < m_session->GetInputCount(); i++)
-	{
-		m_input_names.push_back("images");
-	}
-
-	for (size_t i = 0; i < m_session->GetOutputCount(); i++)
-	{
-		m_output_names.push_back("output0");
-		m_output_names.push_back("output1");
-	}
+	m_output_names.push_back("output1");
 
 	if (m_model_type == FP16)
 	{
@@ -191,12 +160,10 @@ void YOLO_ONNXRuntime_Classify::pre_process()
 	}
 	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 	{
-		cv::cvtColor(m_image, crop_image, cv::COLOR_BGR2RGB);
-
 		if (m_image.cols > m_image.rows)
-			cv::resize(crop_image, crop_image, cv::Size(m_input_height * m_image.cols / m_image.rows, m_input_height));
+			cv::resize(m_image, crop_image, cv::Size(m_input_height * m_image.cols / m_image.rows, m_input_height));
 		else
-			cv::resize(crop_image, crop_image, cv::Size(m_input_width, m_input_width * m_image.rows / m_image.cols));
+			cv::resize(m_image, crop_image, cv::Size(m_input_width, m_input_width * m_image.rows / m_image.cols));
 
 		//CenterCrop
 		int crop_size = std::min(crop_image.cols, crop_image.rows);
@@ -276,22 +243,19 @@ void YOLO_ONNXRuntime_Segment::pre_process()
 
 void YOLO_ONNXRuntime_Classify::process()
 {
-	//input_tensor
-	auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
 	Ort::Value input_tensor{ nullptr };
-
+	auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
 	std::vector<int64_t> input_node_dims = { 1, m_image.channels(), m_input_width, m_input_height };
+
 	if (m_model_type == FP32 || m_model_type == INT8)
 		input_tensor = Ort::Value::CreateTensor(memory_info, m_input.data(), sizeof(float) * m_input_numel, input_node_dims.data(), input_node_dims.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT);
 	else if (m_model_type == FP16)
 		input_tensor = Ort::Value::CreateTensor(memory_info, m_input_fp16.data(), sizeof(uint16_t) * m_input_numel, input_node_dims.data(), input_node_dims.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
 	
-	std::vector<Ort::Value> ort_inputs;
-	ort_inputs.push_back(std::move(input_tensor));
+	std::vector<Ort::Value> inputs;
+	inputs.push_back(std::move(input_tensor)); 
+	std::vector<Ort::Value> outputs = m_session->Run(Ort::RunOptions{ nullptr }, m_input_names.data(), inputs.data(), m_input_names.size(), m_output_names.data(), m_output_names.size());
 
-	std::vector<Ort::Value> outputs = m_session->Run(Ort::RunOptions{ nullptr }, m_input_names.data(), ort_inputs.data(), m_input_names.size(), m_output_names.data(), m_output_names.size());
-
-	//output_tensor
 	if (m_model_type == FP32 || m_model_type == INT8)
 	{
 		m_output_host = const_cast<float*> (outputs[0].GetTensorData<float>());
@@ -308,21 +272,19 @@ void YOLO_ONNXRuntime_Classify::process()
 
 void YOLO_ONNXRuntime_Detect::process()
 {
-	//input_tensor
-	std::vector<int64_t> input_node_dims = { 1, m_image.channels(), m_input_width, m_input_height };
-	auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
 	Ort::Value input_tensor{ nullptr };
+	auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+	std::vector<int64_t> input_node_dims = { 1, m_image.channels(), m_input_width, m_input_height };
+	
 	if(m_model_type == FP32 || m_model_type == INT8)
 		input_tensor = Ort::Value::CreateTensor(memory_info, m_input.data(), sizeof(float) * m_input_numel, input_node_dims.data(), input_node_dims.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT);		
 	else if (m_model_type == FP16)
 		input_tensor = Ort::Value::CreateTensor(memory_info, m_input_fp16.data(), sizeof(uint16_t) * m_input_numel, input_node_dims.data(), input_node_dims.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
 	
-	std::vector<Ort::Value> ort_inputs;
-	ort_inputs.push_back(std::move(input_tensor)); 
+	std::vector<Ort::Value> inputs;
+	inputs.push_back(std::move(input_tensor)); 
+	std::vector<Ort::Value> outputs = m_session->Run(Ort::RunOptions{ nullptr }, m_input_names.data(), inputs.data(), m_input_names.size(), m_output_names.data(), m_output_names.size());
 
-	std::vector<Ort::Value> outputs = m_session->Run(Ort::RunOptions{ nullptr }, m_input_names.data(), ort_inputs.data(), m_input_names.size(), m_output_names.data(), m_output_names.size());
-
-	//output_tensor
 	if (m_model_type == FP32 || m_model_type == INT8)
 	{
 		m_output_host = const_cast<float*> (outputs[0].GetTensorData<float>());
@@ -339,21 +301,19 @@ void YOLO_ONNXRuntime_Detect::process()
 
 void YOLO_ONNXRuntime_Segment::process()
 {
-	//input_tensor
-	std::vector<int64_t> input_node_dims = { 1, m_image.channels(), m_input_width, m_input_height };
-	auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
 	Ort::Value input_tensor{ nullptr };
+	auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+	std::vector<int64_t> input_node_dims = { 1, m_image.channels(), m_input_width, m_input_height };
+
 	if (m_model_type == FP32 || m_model_type == INT8)
 		input_tensor = Ort::Value::CreateTensor(memory_info, m_input.data(), sizeof(float) * m_input_numel, input_node_dims.data(), input_node_dims.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT);
 	else if (m_model_type == FP16)
 		input_tensor = Ort::Value::CreateTensor(memory_info, m_input_fp16.data(), sizeof(uint16_t) * m_input_numel, input_node_dims.data(), input_node_dims.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
 
-	std::vector<Ort::Value> ort_inputs;
-	ort_inputs.push_back(std::move(input_tensor));
+	std::vector<Ort::Value> inputs;
+	inputs.push_back(std::move(input_tensor)); 
+	std::vector<Ort::Value> outputs = m_session->Run(Ort::RunOptions{ nullptr }, m_input_names.data(), inputs.data(), m_input_names.size(), m_output_names.data(), m_output_names.size());
 
-	std::vector<Ort::Value> outputs = m_session->Run(Ort::RunOptions{ nullptr }, m_input_names.data(), ort_inputs.data(), m_input_names.size(), m_output_names.data(), m_output_names.size());
-
-	//output_tensor
 	if (m_model_type == FP32 || m_model_type == INT8)
 	{
 		m_output0_host = const_cast<float*> (outputs[0].GetTensorData<float>());
@@ -376,11 +336,11 @@ void YOLO_ONNXRuntime_Segment::process()
 
 void YOLO_ONNXRuntime_Classify::post_process()
 {
-	std::vector<float> scores;
+	std::vector<float> scores(m_class_num); 
 	float sum = 0.0f;
 	for (size_t i = 0; i < m_class_num; i++)
 	{
-		scores.push_back(m_output_host[i]);
+		scores[i] = m_output_host[i];
 		sum += exp(m_output_host[i]);
 	}
 	int id = std::distance(scores.begin(), std::max_element(scores.begin(), scores.end()));
@@ -406,7 +366,7 @@ void YOLO_ONNXRuntime_Detect::post_process()
 		float* ptr = m_output_host + i * m_output_numprob;
 		int class_id;
 		float score;
-		if (m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7)
+		if (m_algo_type == YOLOv5 || m_algo_type == YOLOv7)
 		{
 			float objness = ptr[4];
 			if (objness < m_confidence_threshold)
@@ -415,7 +375,7 @@ void YOLO_ONNXRuntime_Detect::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id] * objness;
 		}
-		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
+		if (m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 		{
 			float* classes_scores = ptr + 4;
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;

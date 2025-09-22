@@ -68,6 +68,9 @@
 ./yolo 4 2 0 1 2 ../../weights/yolov5n_seg_int8.engine
 
 
+./yolo 0 1 1 0 0 ../../weights/yolov6n_fp32_cpu.torchscript
+./yolo 0 1 1 1 0 ../../weights/yolov6n_fp32_gpu.torchscript
+./yolo 0 1 1 1 1 ../../weights/yolov6n_fp16_gpu.torchscript
 ./yolo 1 1 1 0 0 ../../weights/yolov6n_fp32.onnx
 ./yolo 1 1 1 1 0 ../../weights/yolov6n_fp32.onnx
 ./yolo 1 1 1 0 1 ../../weights/yolov6n_fp16.onnx

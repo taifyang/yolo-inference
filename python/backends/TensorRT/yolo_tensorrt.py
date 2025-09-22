@@ -110,7 +110,6 @@ class YOLO_TensorRT_Classify(YOLO_TensorRT):
             input = cv2.resize(crop_image, self.inputs_shape)
             input = input / 255.0
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW
-        input = np.expand_dims(input, axis=0) 
         np.copyto(self.inputs[0].host, input.ravel())
     
     '''
@@ -154,7 +153,6 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
         input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
-        input = np.expand_dims(input, axis=0) 
         np.copyto(self.inputs[0].host, input.ravel())
     
     '''
@@ -168,7 +166,7 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
         scores = []
         class_ids = []
         
-        if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7']:
+        if self.algo_type in ['YOLOv5', 'YOLOv7']:
             output = output[output[..., 4] > self.confidence_threshold]
             classes_scores = output[..., 5:(5+self.class_num)]     
             for i in range(output.shape[0]):
@@ -178,7 +176,7 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
                     boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
                     scores.append(score)
                     class_ids.append(class_id) 
-        if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
+        if self.algo_type in ['YOLOv6', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
             classes_scores = output[..., 4:(4+self.class_num)]          
             for i in range(output.shape[0]):              
                 class_id = np.argmax(classes_scores[i])
@@ -229,7 +227,6 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
         input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
-        input = np.expand_dims(input, axis=0) 
         np.copyto(self.inputs[0].host, input.ravel())
     
     '''

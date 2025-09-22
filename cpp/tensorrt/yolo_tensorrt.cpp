@@ -98,12 +98,7 @@ void YOLO_TensorRT_Detect::init(const Algo_Type algo_type, const Device_Type dev
 		m_output_numprob = 5 + m_class_num;
 		m_output_numbox = 3 * (m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32);
 	}
-	if (m_algo_type == YOLOv6)
-	{
-		m_output_numprob = 5 + m_class_num;
-		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
-	}
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
+	if (m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 	{
 		m_output_numprob = 4 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
@@ -208,12 +203,10 @@ void YOLO_TensorRT_Classify::pre_process()
 	}
 	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 	{
-		cv::cvtColor(m_image, crop_image, cv::COLOR_BGR2RGB);
-
 		if (m_image.cols > m_image.rows)
-			cv::resize(crop_image, crop_image, cv::Size(m_input_height * m_image.cols / m_image.rows, m_input_height));
+			cv::resize(m_image, crop_image, cv::Size(m_input_height * m_image.cols / m_image.rows, m_input_height));
 		else
-			cv::resize(crop_image, crop_image, cv::Size(m_input_width, m_input_width * m_image.rows / m_image.cols));
+			cv::resize(m_image, crop_image, cv::Size(m_input_width, m_input_width * m_image.rows / m_image.cols));
 
 		//CenterCrop
 		int crop_size = std::min(crop_image.cols, crop_image.rows);
@@ -334,11 +327,11 @@ void YOLO_TensorRT_Segment::process()
 
 void YOLO_TensorRT_Classify::post_process()
 {
-	std::vector<float> scores;
+	std::vector<float> scores(m_class_num); 
 	float sum = 0.0f;
 	for (size_t i = 0; i < m_class_num; i++)
 	{
-		scores.push_back(m_output_host[i]);
+		scores[i] = m_output_host[i];
 		sum += exp(m_output_host[i]);
 	}
 	int id = std::distance(scores.begin(), std::max_element(scores.begin(), scores.end()));
@@ -408,7 +401,7 @@ void YOLO_TensorRT_Detect::post_process()
 		float* ptr = m_output_host + i * m_output_numprob;
 		int class_id;
 		float score;
-		if (m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7)
+		if (m_algo_type == YOLOv5 || m_algo_type == YOLOv7)
 		{
 			float objness = ptr[4];
 			if (objness < m_confidence_threshold)
@@ -417,7 +410,7 @@ void YOLO_TensorRT_Detect::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id] * objness;
 		}
-		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
+		if (m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 		{
 			float* classes_scores = ptr + 4;
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
