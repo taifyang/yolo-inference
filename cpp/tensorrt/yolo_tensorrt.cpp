@@ -132,7 +132,7 @@ void YOLO_TensorRT_Detect::init(const Algo_Type algo_type, const Device_Type dev
 
 void YOLO_TensorRT_Segment::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	if (algo_type != YOLOv5 && algo_type != YOLOv8 && algo_type != YOLOv11 && algo_type != YOLOv12)
+	if (algo_type != YOLOv5 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv11 && algo_type != YOLOv12)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
@@ -144,7 +144,7 @@ void YOLO_TensorRT_Segment::init(const Algo_Type algo_type, const Device_Type de
 		m_output_numprob = 37 + m_class_num;
 		m_output_numbox = 3 * (m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32);
 	}
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 	{
 		m_output_numprob = 36 + m_class_num;
 		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
@@ -512,7 +512,7 @@ void YOLO_TensorRT_Segment::post_process()
 			{
 				mask_weights = m_output0_device + row_index * m_output_numprob + m_class_num + 5;
 			}
-			if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+			if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 			{
 				mask_weights = m_output0_device + row_index * m_output_numprob + m_class_num + 4;
 			}
@@ -574,7 +574,7 @@ void YOLO_TensorRT_Segment::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id] * objness;
 		}
-		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 		{
 			float* classes_scores = ptr + 4;
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
@@ -607,7 +607,7 @@ void YOLO_TensorRT_Segment::post_process()
 			std::vector<float> temp_proto(ptr + m_class_num + 5, ptr + m_class_num + 37);
 			picked_proposals.push_back(temp_proto);
 		}
-		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 		{
 			std::vector<float> temp_proto(ptr + m_class_num + 4, ptr + m_class_num + 36);
 			picked_proposals.push_back(temp_proto);

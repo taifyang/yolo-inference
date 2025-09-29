@@ -32,7 +32,7 @@ make
 ./run.sh
 ```
 
-C++ test in Docker with Intel(R) Xeon(R) Gold 5317 CPU , RTX4090 GPU:
+C++ test in Docker with Intel Xeon Gold 5317 CPU , NVIDIA GeForce RTX 4090 GPU:
 |       Model       |       Task       |       Device       |       Precision       | LibTorch | ONNXRuntime | OpenCV  | OpenVINO | TensorRT |
 | :---------------: | :--------------: | :----------------: | :-------------------: | :------: | :---------: | :-----: | :------: | :------: |
 | YOLOv5n           | Classify         | CPU                | FP32                  | 12.9ms   | 15.6ms      | 21.7ms  | 7.4ms    | ×        |
@@ -89,6 +89,12 @@ C++ test in Docker with Intel(R) Xeon(R) Gold 5317 CPU , RTX4090 GPU:
 | YOLOv9t           | Detect           | GPU                | FP16                  | 9.3ms    | 19.3ms      | 14.9ms  | ?        | 1.3ms    |
 | YOLOv9t           | Detect           | CPU                | INT8                  | ×        | 60.7ms      | ×       | 8.7ms    | ×        |
 | YOLOv9t           | Detect           | GPU                | INT8                  | ×        | 54.1ms      | ×       | ?        | 1.4ms    |
+| YOLOv9c           | Segment          | CPU                | FP32                  | 134.7ms   | 121.2ms     | 292.3ms   | 117.9ms   | ×         |
+| YOLOv9c           | Segment          | GPU                | FP32                  | 12.1ms    | 28.9ms      | 18.5ms    | ?         | 5.2ms     |
+| YOLOv9c           | Segment          | CPU                | FP16                  | ×         | 213.4ms     | 285.5ms   | 113.8ms   | ×         |
+| YOLOv9c           | Segment          | GPU                | FP16                  | 11.7ms    | 53.5ms      | 16.9ms    | ?         | 2.9ms     |
+| YOLOv9c           | Segment          | CPU                | INT8                  | ×         | 199.2ms     | ×         | 38.8ms    | ×         |
+| YOLOv9c           | Segment          | GPU                | INT8                  | ×         | 185.8ms     | ×         | ?         | 2.4ms     |
 | YOLOv10n          | Detect           | CPU                | FP32                  | 24.1ms   | 30.3ms      | 55.4ms  | 9.8ms    | ×        |
 | YOLOv10n          | Detect           | GPU                | FP32                  | 5.7ms    | 11.3ms      | ×       | ?        | 1.2ms    |
 | YOLOv10n          | Detect           | CPU                | FP16                  | ×        | 57.9ms      | 54.2ms  | 9.8ms    | ×        |
@@ -152,7 +158,7 @@ pip install -r requirements.txt
 ./run.sh
 ```
 
-Python test in Docker with Intel(R) Xeon(R) Gold 5317 CPU , RTX4090 GPU
+Python test in Docker with Intel Xeon Gold 5317 CPU , NVIDIA GeForce RTX 4090 GPU
 |       Model       |       Task       |       Device       |       Precision       | LibTorch | ONNXRuntime | OpenCV  | OpenVINO | TensorRT |
 | :---------------: | :--------------: | :----------------: | :-------------------: | :------: | :---------: | :-----: | :------: | :------: |
 | YOLOv5n           | Classify         | CPU                | FP32                  | 18.5ms   | 23.8ms      | 41.4ms  | 23.6ms   | ×        |
@@ -209,6 +215,12 @@ Python test in Docker with Intel(R) Xeon(R) Gold 5317 CPU , RTX4090 GPU
 | YOLOv9t           | Detect           | GPU                | FP16                  | 37.8ms   | 43.2ms      | 42.6ms  | ?        | 30.7ms   |
 | YOLOv9t           | Detect           | CPU                | INT8                  | ×        | 89.6ms      | ×       | 48.1ms   | ×        |
 | YOLOv9t           | Detect           | GPU                | INT8                  | ×        | 80.3ms      | ×       | ?        | 30.6ms   |
+| YOLOv9c           | Segment          | CPU                | FP32                  | 276.0ms   | 224.4ms     | 364.6ms   | 198.8ms   | ×         |
+| YOLOv9c           | Segment          | GPU                | FP32                  | 101.5ms   | 117.9ms     | 101.7ms   | ?         | 95.1ms    |
+| YOLOv9c           | Segment          | CPU                | FP16                  | ×         | 312.1ms     | 352.4ms   | 195.4ms   | ×         |
+| YOLOv9c           | Segment          | GPU                | FP16                  | 100.0ms   | 144.2ms     | 96.9ms    | ?         | 94.6ms    |
+| YOLOv9c           | Segment          | CPU                | INT8                  | ×         | 300.1ms     | ×         | 127.7ms   | ×         |
+| YOLOv9c           | Segment          | GPU                | INT8                  | ×         | 279.6ms     | ×         | ?         | 89.7ms    |
 | YOLOv10n          | Detect           | CPU                | FP32                  | 53.7ms   | 60.7ms      | 93.7ms  | 54.0ms   | ×        |
 | YOLOv10n          | Detect           | GPU                | FP32                  | 33.9ms   | 35.5ms      | ×       | ?        | 29.8ms   |
 | YOLOv10n          | Detect           | CPU                | FP16                  | ×        | 82.7ms      | 93.1ms  | 53.4ms   | ×        |
@@ -275,7 +287,7 @@ docker pull taify/yolo_inference:cuda12.8
 You can download some model weights in: <https://pan.baidu.com/s/1843WW7tNQK1ycqIALje_fA?pwd=adis>
 
 
-For your own model, you should transpose output dims for YOLOv8, YOLOv9, YOLOv11, YOLOv12, YOLOv13 detection and segmentation. For onnx model, you can use a scirpt like this:
+For your own model, you should transpose output dims for YOLOv8, YOLOv9, YOLOv11, YOLOv12, YOLOv13 detection and segmentation. You can use a scirpt like this with onnx model:
  ```python
 import onnx
 import onnx.helper as helper

@@ -209,6 +209,29 @@ python main.py --algo_type YOLOv9 --backend_type TensorRT --task_type Detect --d
 python main.py --algo_type YOLOv9 --backend_type TensorRT --task_type Detect --device_type GPU --model_type FP16 --model_path ../weights/yolov9t_fp16.engine
 python main.py --algo_type YOLOv9 --backend_type TensorRT --task_type Detect --device_type GPU --model_type INT8 --model_path ../weights/yolov9t_int8.engine
 
+python main.py --algo_type YOLOv9 --backend_type PyTorch --task_type Segment --device_type CPU --model_type FP32 --model_path ../weights/yolov9c_seg_fp32_cpu.torchscript
+python main.py --algo_type YOLOv9 --backend_type PyTorch --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov9c_seg_fp32_gpu.torchscript
+python main.py --algo_type YOLOv9 --backend_type PyTorch --task_type Segment --device_type GPU --model_type FP16 --model_path ../weights/yolov9c_seg_fp16_gpu.torchscript
+python main.py --algo_type YOLOv9 --backend_type ONNXRuntime --task_type Segment --device_type CPU --model_type FP32 --model_path ../weights/yolov9c_seg_fp32.onnx
+python main.py --algo_type YOLOv9 --backend_type ONNXRuntime --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov9c_seg_fp32.onnx
+python main.py --algo_type YOLOv9 --backend_type ONNXRuntime --task_type Segment --device_type CPU --model_type FP16 --model_path ../weights/yolov9c_seg_fp16.onnx 
+python main.py --algo_type YOLOv9 --backend_type ONNXRuntime --task_type Segment --device_type GPU --model_type FP16 --model_path ../weights/yolov9c_seg_fp16.onnx
+python main.py --algo_type YOLOv9 --backend_type ONNXRuntime --task_type Segment --device_type CPU --model_type INT8 --model_path ../weights/yolov9c_seg_int8.onnx
+python main.py --algo_type YOLOv9 --backend_type ONNXRuntime --task_type Segment --device_type GPU --model_type INT8 --model_path ../weights/yolov9c_seg_int8.onnx
+python main.py --algo_type YOLOv9 --backend_type OpenCV --task_type Segment --device_type CPU --model_type FP32 --model_path ../weights/yolov9c_seg_fp32.onnx
+python main.py --algo_type YOLOv9 --backend_type OpenCV --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov9c_seg_fp32.onnx
+python main.py --algo_type YOLOv9 --backend_type OpenCV --task_type Segment --device_type CPU --model_type FP16 --model_path ../weights/yolov9c_seg_fp16.onnx
+python main.py --algo_type YOLOv9 --backend_type OpenCV --task_type Segment --device_type GPU --model_type FP16 --model_path ../weights/yolov9c_seg_fp16.onnx
+python main.py --algo_type YOLOv9 --backend_type OpenVINO --task_type Segment --device_type CPU --model_type FP32 --model_path ../weights/yolov9c_seg_fp32.xml
+python main.py --algo_type YOLOv9 --backend_type OpenVINO --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov9c_seg_fp32.xml
+python main.py --algo_type YOLOv9 --backend_type OpenVINO --task_type Segment --device_type CPU --model_type FP16 --model_path ../weights/yolov9c_seg_fp16.xml
+python main.py --algo_type YOLOv9 --backend_type OpenVINO --task_type Segment --device_type GPU --model_type FP16 --model_path ../weights/yolov9c_seg_fp16.xml
+python main.py --algo_type YOLOv9 --backend_type OpenVINO --task_type Segment --device_type CPU --model_type INT8 --model_path ../weights/yolov9c_seg_int8.xml
+python main.py --algo_type YOLOv9 --backend_type OpenVINO --task_type Segment --device_type GPU --model_type INT8 --model_path ../weights/yolov9c_seg_int8.xml
+python main.py --algo_type YOLOv9 --backend_type TensorRT --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov9c_seg_fp32.engine
+python main.py --algo_type YOLOv9 --backend_type TensorRT --task_type Segment --device_type GPU --model_type FP16 --model_path ../weights/yolov9c_seg_fp16.engine
+python main.py --algo_type YOLOv9 --backend_type TensorRT --task_type Segment --device_type GPU --model_type INT8 --model_path ../weights/yolov9c_seg_int8.engine
+
 
 python main.py --algo_type YOLOv10 --backend_type PyTorch --task_type Detect --device_type CPU --model_type FP32 --model_path ../weights/yolov10n_fp32_cpu.torchscript
 python main.py --algo_type YOLOv10 --backend_type PyTorch --task_type Detect --device_type GPU --model_type FP32 --model_path ../weights/yolov10n_fp32_gpu.torchscript
