@@ -2,7 +2,7 @@
 Author: taifyang  
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2025-09-04 11:21:29
+LastEditTime: 2025-10-13 21:54:16
 FilePath: \python\backends\TensorRT\yolo_tensorrt.py
 Description: tensorrt inference class for YOLO algorithm
 '''
@@ -97,7 +97,7 @@ class YOLO_TensorRT_Classify(YOLO_TensorRT):
             input = input / 255.0
             input = input - np.array([0.406, 0.456, 0.485])
             input = input / np.array([0.225, 0.224, 0.229])
-        if self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']:
+        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']:
             self.inputs_shape = (224, 224)
             if self.image.shape[1] > self.image.shape[0]:
                 self.image = cv2.resize(self.image, (self.inputs_shape[0]*self.image.shape[1]//self.image.shape[0], self.inputs_shape[0]))
@@ -109,8 +109,7 @@ class YOLO_TensorRT_Classify(YOLO_TensorRT):
             crop_image = self.image[top:(top+crop_size), left:(left+crop_size), ...]
             input = cv2.resize(crop_image, self.inputs_shape)
             input = input / 255.0
-        input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW
-        #input = np.expand_dims(input, axis=0) 
+        input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW 
         np.copyto(self.inputs[0].host, input.ravel())
     
     '''
@@ -122,7 +121,7 @@ class YOLO_TensorRT_Classify(YOLO_TensorRT):
         output = np.squeeze(self.outputs[0].host.reshape(self.outputs_shape[0]))
         if self.algo_type in ['YOLOv5'] and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.exp(np.max(output))/np.sum(np.exp(output)))
-        if self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'] and self.draw_result:
+        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'] and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.max(output))
     
  
@@ -141,7 +140,7 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
     '''      
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__(algo_type, device_type, model_type, model_path)
-        assert self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv3', 'YOLOv4', 'YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13'], 'algo type not supported!'
         if int(trt.__version__.split(".")[0]) < 10:
             self.outputs_shape.append(self.context.get_binding_shape(1))
 
@@ -154,7 +153,6 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
         input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
-        #input = np.expand_dims(input, axis=0) 
         np.copyto(self.inputs[0].host, input.ravel())
     
     '''
@@ -162,13 +160,22 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
     param {*} self  instance of class
     return {*}
     '''       
-    def post_process(self) -> None:
-        output = np.squeeze(self.outputs[0].host.reshape(self.outputs_shape[0]))
+    def post_process(self) -> None:       
         boxes = []
         scores = []
         class_ids = []
-        
-        if self.algo_type in ['YOLOv5', 'YOLOv7']:
+        output = np.squeeze(self.outputs[0].host.reshape(self.outputs_shape[0]))
+
+        if self.algo_type in ['YOLOv3', 'YOLOv4', 'YOLOv6', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
+            classes_scores = output[..., 4:(4+self.class_num)]          
+            for i in range(output.shape[0]):              
+                class_id = np.argmax(classes_scores[i])
+                score = classes_scores[i][class_id]
+                if score > self.score_threshold:
+                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
+                    scores.append(score)
+                    class_ids.append(class_id)  
+        elif self.algo_type in ['YOLOv5', 'YOLOv7']:
             output = output[output[..., 4] > self.confidence_threshold]
             classes_scores = output[..., 5:(5+self.class_num)]     
             for i in range(output.shape[0]):
@@ -177,22 +184,16 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
                 if score > self.score_threshold:
                     boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
                     scores.append(score)
-                    class_ids.append(class_id) 
-        if self.algo_type in ['YOLOv6', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
-            classes_scores = output[..., 4:(4+self.class_num)]          
-            for i in range(output.shape[0]):              
-                class_id = np.argmax(classes_scores[i])
-                score = classes_scores[i][class_id]
-                if score > self.score_threshold:
-                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
-                    scores.append(score)
-                    class_ids.append(class_id)    
-                               
+                    class_ids.append(class_id)   
+             
         if len(boxes):   
             boxes = np.array(boxes)
             scores = np.array(scores)
-            if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLOv13']:
+            if self.algo_type in ['YOLOv3', 'YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLOv13']:
                 boxes = xywh2xyxy(boxes)
+            elif self.algo_type in ['YOLOv4']:
+                boxes[..., [0, 2]] *= self.inputs_shape[0]
+                boxes[..., [1, 3]] *= self.inputs_shape[1]
             indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
             boxes = boxes[indices]
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
@@ -229,7 +230,6 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
         input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
-        #input = np.expand_dims(input, axis=0) 
         np.copyto(self.inputs[0].host, input.ravel())
     
     '''
@@ -283,7 +283,7 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
             c, mh, mw = proto.shape 
             if self.algo_type in ['YOLOv5']:
                 masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)  
-            if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
+            elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
                 masks = (masks_in @ proto.reshape(c, -1)).reshape(-1, mh, mw)    
             downsampled_bboxes = boxes.copy()
             downsampled_bboxes[:, 0] *= mw / self.inputs_shape[0]
@@ -300,7 +300,7 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
             resized_masks = np.array(resized_masks)
             if self.algo_type in ['YOLOv5']:
                 resized_masks = resized_masks > 0.5
-            if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
+            elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
                 resized_masks = resized_masks > 0       
             if self.draw_result:
                 self.result = draw_result(self.image, boxes, resized_masks)

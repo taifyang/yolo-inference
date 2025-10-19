@@ -50,6 +50,11 @@ protected:
 	Ort::Session* m_session;
 
 	/**
+	 * @description: options allocator
+	 */
+	Ort::AllocatorWithDefaultOptions m_allocator;
+
+	/**
 	 * @description: input data
 	 */
 	std::vector<float> m_input;

@@ -2,7 +2,7 @@
 Author: taifyang  
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2025-09-04 11:23:57
+LastEditTime: 2025-10-13 21:53:58
 FilePath: \python\backends\PyTorch_\yolo_pytorch.py
 Description: pytorch inference class for YOLO algorithm
 '''
@@ -31,6 +31,7 @@ class YOLO_PyTorch(YOLO):
         assert device_type in ['CPU', 'GPU'], 'unsupported device type!'
         assert model_type in ['FP32', 'FP16'], 'unsupported model type!'
         self.net = torch.jit.load(model_path)
+        assert self.net is not None, 'load model failed!'
         self.algo_type = algo_type
         self.device_type = device_type
         self.model_type = model_type
@@ -65,7 +66,7 @@ class YOLO_PyTorch_Classify(YOLO_PyTorch):
             input = input / 255.0
             input = input - np.array([0.406, 0.456, 0.485])
             input = input / np.array([0.225, 0.224, 0.229])
-        if self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']:
+        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']:
             self.inputs_shape = (224, 224)
             if self.image.shape[1] > self.image.shape[0]:
                 self.image = cv2.resize(self.image, (self.inputs_shape[0]*self.image.shape[1]//self.image.shape[0], self.inputs_shape[0]))
@@ -94,7 +95,7 @@ class YOLO_PyTorch_Classify(YOLO_PyTorch):
         output = np.squeeze(self.outputs.cpu().detach().numpy()).astype(dtype=np.float32)
         if self.algo_type in ['YOLOv5'] and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.exp(np.max(output))/np.sum(np.exp(output)))
-        if self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'] and self.draw_result:
+        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'] and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.max(output))
     
 
@@ -108,7 +109,7 @@ class YOLO_PyTorch_Detect(YOLO_PyTorch):
     return {*}
     '''    
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv3', 'YOLOv4', 'YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13'], 'algo type not supported!'
         input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
@@ -124,13 +125,33 @@ class YOLO_PyTorch_Detect(YOLO_PyTorch):
     param {*} self  instance of class
     return {*}
     '''     
-    def post_process(self) -> None:
-        output = np.squeeze(self.outputs[0].cpu().detach().numpy()).astype(dtype=np.float32)
+    def post_process(self) -> None:       
         boxes = []
         scores = []
         class_ids = []
 
-        if self.algo_type in ['YOLOv5',  'YOLOv7']:
+        if self.algo_type in ['YOLOv3', 'YOLOv6', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
+            output = np.squeeze(self.outputs[0].cpu().detach().numpy()).astype(dtype=np.float32)
+            classes_scores = output[..., 4:(4+self.class_num)]          
+            for i in range(output.shape[0]):              
+                class_id = np.argmax(classes_scores[i])
+                score = classes_scores[i][class_id]
+                if score > self.score_threshold:
+                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
+                    scores.append(score)
+                    class_ids.append(class_id)  
+        elif self.algo_type in ['YOLOv4']:
+            output = np.concatenate([self.outputs[0].squeeze(), self.outputs[1].squeeze()], axis=-1)
+            classes_scores = output[..., 4:(4+self.class_num)]  
+            for i in range(output.shape[0]):              
+                class_id = np.argmax(classes_scores[i])
+                score = classes_scores[i][class_id]
+                if score > self.score_threshold:
+                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
+                    scores.append(score)
+                    class_ids.append(class_id)
+        elif self.algo_type in ['YOLOv5', 'YOLOv7']:
+            output = np.squeeze(self.outputs[0]).astype(dtype=np.float32)
             output = output[output[..., 4] > self.confidence_threshold]
             classes_scores = output[..., 5:(5+self.class_num)]     
             for i in range(output.shape[0]):
@@ -139,24 +160,15 @@ class YOLO_PyTorch_Detect(YOLO_PyTorch):
                 if score > self.score_threshold:
                     boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
                     scores.append(score)
-                    class_ids.append(class_id) 
-        if self.algo_type in ['YOLOv6','YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
-            classes_scores = output[..., 4:(4+self.class_num)]          
-            for i in range(output.shape[0]):              
-                class_id = np.argmax(classes_scores[i])
-                score = classes_scores[i][class_id]
-                if score > self.score_threshold:
-                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
-                    scores.append(score)
-                    class_ids.append(class_id)     
+                    class_ids.append(class_id)   
              
         if len(boxes):   
             boxes = np.array(boxes)
             scores = np.array(scores)
-            if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLOv13']:
+            if self.algo_type in ['YOLOv3', 'YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLOv13']:
                 boxes = xywh2xyxy(boxes)
-                indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
-                boxes = boxes[indices]
+            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
+            boxes = boxes[indices]
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
             if self.draw_result:
                 self.result = draw_result(self.image, boxes)
@@ -206,7 +218,7 @@ class YOLO_PyTorch_Segment(YOLO_PyTorch):
                     scores.append(score)
                     class_ids.append(class_id) 
                     preds.append(output[i])  
-        if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']: 
+        elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']: 
             classes_scores = output[..., 4:(4+self.class_num)]          
             for i in range(output.shape[0]):              
                 class_id = np.argmax(classes_scores[i])
@@ -228,7 +240,7 @@ class YOLO_PyTorch_Segment(YOLO_PyTorch):
             c, mh, mw = proto.shape 
             if self.algo_type in ['YOLOv5']:
                 masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)  
-            if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
+            elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
                 masks = (masks_in @ proto.reshape(c, -1)).reshape(-1, mh, mw)    
             downsampled_bboxes = boxes.copy()
             downsampled_bboxes[:, 0] *= mw / self.inputs_shape[0]
@@ -245,7 +257,7 @@ class YOLO_PyTorch_Segment(YOLO_PyTorch):
             resized_masks = np.array(resized_masks)
             if self.algo_type in ['YOLOv5']:
                 resized_masks = resized_masks > 0.5
-            if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
+            elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
                 resized_masks = resized_masks > 0       
             if self.draw_result:
                 self.result = draw_result(self.image, boxes, resized_masks)

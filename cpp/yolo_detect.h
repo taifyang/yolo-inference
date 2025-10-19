@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-11-30 11:53:48
+ * @LastEditTime: 2025-10-16 20:53:46
  * @FilePath: \cpp\yolo_detect.h
  * @Description: detection algorithm class
  */
@@ -136,9 +136,9 @@ protected:
 	 */
 	void scale_box(cv::Rect& box, cv::Size size)
 	{
-		float gain = std::min(m_input_width * 1.0 / size.width, m_input_height * 1.0 / size.height);
-		int pad_w = (m_input_width - size.width * gain) / 2;
-		int pad_h = (m_input_height - size.height * gain) / 2;
+		float gain = std::min(m_input_size.width * 1.0 / size.width, m_input_size.height * 1.0 / size.height);
+		int pad_w = (m_input_size.width - size.width * gain) / 2;
+		int pad_h = (m_input_size.height - size.height * gain) / 2;
 		box.x -= pad_w;
 		box.y -= pad_h;
 		box.x /= gain;

@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2025-09-09 10:01:30
+ * @LastEditTime: 2025-10-16 21:09:23
  * @FilePath: \cpp\tensorrt\yolo_tensorrt.cpp
  * @Description: tensorrt inference source file for YOLO algorithm
  */
@@ -51,6 +51,11 @@ void YOLO_TensorRT::init(const Algo_Type algo_type, const Device_Type device_typ
 	TRTLogger logger;
 	m_runtime = nvinfer1::createInferRuntime(logger);
 	m_engine = m_runtime->deserializeCudaEngine(stream_model.data(), stream_model.size());
+	if (m_engine == nullptr)
+	{
+		std::cerr << "tensorrt create engine error!" << std::endl;
+		std::exit(-1);
+	}
 
 	cudaStreamCreate(&m_stream);
 	m_execution_context = m_engine->createExecutionContext();
@@ -67,9 +72,9 @@ void YOLO_TensorRT_Classify::init(const Algo_Type algo_type, const Device_Type d
 
 	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 	{
-		m_input_width = 224;
-		m_input_height = 224;
-		m_input_numel = 1 * 3 * m_input_width * m_input_height;
+		m_input_size.width = 224;
+		m_input_size.height = 224;
+		m_input_numel = 1 * 3 * m_input_size.width * m_input_size.height;
 	}
 
 	m_task_type = Classify;
@@ -86,22 +91,27 @@ void YOLO_TensorRT_Classify::init(const Algo_Type algo_type, const Device_Type d
 
 void YOLO_TensorRT_Detect::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	if (algo_type != YOLOv5 && algo_type != YOLOv6 && algo_type != YOLOv7 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv10 && algo_type != YOLOv11 && algo_type != YOLOv12  && algo_type != YOLOv13)
+	if (algo_type != YOLOv3 && algo_type != YOLOv4 && algo_type != YOLOv5 && algo_type != YOLOv6 && algo_type != YOLOv7 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv10 && algo_type != YOLOv11 && algo_type != YOLOv12  && algo_type != YOLOv13)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
 	}
 	YOLO_TensorRT::init(algo_type, device_type, model_type, model_path);
 
-	if (m_algo_type == YOLOv5 || m_algo_type == YOLOv7)
-	{
-		m_output_numprob = 5 + m_class_num;
-		m_output_numbox = 3 * (m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32);
-	}
-	if (m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
+	if (m_algo_type == YOLOv3 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 	{
 		m_output_numprob = 4 + m_class_num;
-		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
+		m_output_numbox = m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32;
+	}
+	else if (m_algo_type == YOLOv4)
+	{
+		m_output_numprob = 4 + m_class_num;
+		m_output_numbox = 3 * (m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32);
+	}
+	else if (m_algo_type == YOLOv5 || m_algo_type == YOLOv7)
+	{
+		m_output_numprob = 5 + m_class_num;
+		m_output_numbox = 3 * (m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32);
 	}
 
 	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
@@ -142,12 +152,12 @@ void YOLO_TensorRT_Segment::init(const Algo_Type algo_type, const Device_Type de
 	if (m_algo_type == YOLOv5)
 	{
 		m_output_numprob = 37 + m_class_num;
-		m_output_numbox = 3 * (m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32);
+		m_output_numbox = 3 * (m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32);
 	}
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 	{
 		m_output_numprob = 36 + m_class_num;
-		m_output_numbox = m_input_width / 8 * m_input_height / 8 + m_input_width / 16 * m_input_height / 16 + m_input_width / 32 * m_input_height / 32;
+		m_output_numbox = m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32;
 	}
 	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
 	m_output_numseg = m_mask_params.seg_channels * m_mask_params.seg_width * m_mask_params.seg_height;
@@ -194,25 +204,25 @@ void YOLO_TensorRT_Classify::pre_process()
 		int crop_size = std::min(m_image.cols, m_image.rows);
 		int left = (m_image.cols - crop_size) / 2, top = (m_image.rows - crop_size) / 2;
 		crop_image = m_image(cv::Rect(left, top, crop_size, crop_size));
-		cv::resize(crop_image, crop_image, cv::Size(m_input_width, m_input_height));
+		cv::resize(crop_image, crop_image, cv::Size(m_input_size.width, m_input_size.height));
 
 		//Normalize
 		crop_image.convertTo(crop_image, CV_32FC3, 1. / 255.);
 		cv::subtract(crop_image, cv::Scalar(0.406, 0.456, 0.485), crop_image);
 		cv::divide(crop_image, cv::Scalar(0.225, 0.224, 0.229), crop_image);
 	}
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 	{
 		if (m_image.cols > m_image.rows)
-			cv::resize(m_image, crop_image, cv::Size(m_input_height * m_image.cols / m_image.rows, m_input_height));
+			cv::resize(m_image, crop_image, cv::Size(m_input_size.height * m_image.cols / m_image.rows, m_input_size.height));
 		else
-			cv::resize(m_image, crop_image, cv::Size(m_input_width, m_input_width * m_image.rows / m_image.cols));
+			cv::resize(m_image, crop_image, cv::Size(m_input_size.width, m_input_size.width * m_image.rows / m_image.cols));
 
 		//CenterCrop
 		int crop_size = std::min(crop_image.cols, crop_image.rows);
 		int  left = (crop_image.cols - crop_size) / 2, top = (crop_image.rows - crop_size) / 2;
 		crop_image = crop_image(cv::Rect(left, top, crop_size, crop_size));
-		cv::resize(crop_image, crop_image, cv::Size(m_input_width, m_input_height));
+		cv::resize(crop_image, crop_image, cv::Size(m_input_size.width, m_input_size.height));
 
 		//Normalize
 		crop_image.convertTo(crop_image, CV_32FC3, 1. / 255.);
@@ -237,12 +247,12 @@ void YOLO_TensorRT_Detect::pre_process()
 {
 #ifdef _CUDA_PREPROCESS
 	cudaMemcpyAsync(m_input_host, m_image.data, sizeof(uint8_t) * 3 * m_image.cols * m_image.rows, cudaMemcpyHostToDevice, m_stream);
-	preprocess_kernel_img(m_input_host, m_image.cols, m_image.rows, m_input_device, m_input_width, m_input_height, m_d2s_host, m_s2d_host, m_stream);
+	preprocess_kernel_img(m_input_host, m_image.cols, m_image.rows, m_input_device, m_input_size.width, m_input_size.height, m_d2s_host, m_s2d_host, m_stream);
 	cudaMemcpyAsync(m_d2s_device, m_d2s_host, sizeof(float) * 6, cudaMemcpyHostToDevice, m_stream);
 	cudaMemcpyAsync(m_s2d_device, m_s2d_host, sizeof(float) * 6, cudaMemcpyHostToDevice, m_stream);
 #else
 	cv::Mat letterbox;
-	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_width, m_input_height));
+	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
 
 	int image_area = letterbox.cols * letterbox.rows;
 	uchar* pimage = letterbox.data;
@@ -264,12 +274,12 @@ void YOLO_TensorRT_Segment::pre_process()
 {
 #ifdef _CUDA_PREPROCESS
 	cudaMemcpyAsync(m_input_host, m_image.data, sizeof(uint8_t) * 3 * m_image.cols * m_image.rows, cudaMemcpyHostToDevice, m_stream);
-	preprocess_kernel_img(m_input_host, m_image.cols, m_image.rows, m_input_device, m_input_width, m_input_height, m_d2s_host, m_s2d_host, m_stream);
+	preprocess_kernel_img(m_input_host, m_image.cols, m_image.rows, m_input_device, m_input_size.width, m_input_size.height, m_d2s_host, m_s2d_host, m_stream);
 	cudaMemcpyAsync(m_d2s_device, m_d2s_host, sizeof(float) * 6, cudaMemcpyHostToDevice, m_stream);
 	cudaMemcpyAsync(m_s2d_device, m_s2d_host, sizeof(float) * 6, cudaMemcpyHostToDevice, m_stream);
 #else
 	cv::Mat letterbox;
-	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_width, m_input_height));
+	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
 	int image_area = letterbox.cols * letterbox.rows;
 	uchar* pimage = letterbox.data;
 	float* phost_r = m_input_host + image_area * 0;
@@ -339,7 +349,7 @@ void YOLO_TensorRT_Classify::post_process()
 	m_output_cls.id = id;
 	if (m_algo_type == YOLOv5)
 		m_output_cls.score = exp(scores[id]) / sum;
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 		m_output_cls.score = scores[id];
 
 	if(m_draw_result)
@@ -354,7 +364,7 @@ void YOLO_TensorRT_Detect::post_process()
 
 #ifdef _CUDA_POSTPROCESS
 	cudaMemset(m_output_box_device, 0, sizeof(float) * (m_num_box_element * m_max_box + 1));	
-	decode_kernel_invoker(m_output_device, m_output_numbox, m_class_num, m_confidence_threshold, m_d2s_device, m_output_box_device, m_max_box, m_num_box_element, m_stream, m_algo_type, m_task_type);
+	decode_kernel_invoker(m_output_device, m_output_numbox, m_class_num, m_confidence_threshold, m_d2s_device, m_output_box_device, m_max_box, m_num_box_element, m_input_size, m_stream, m_algo_type, m_task_type);
 	nms_kernel_invoker(m_output_box_device, m_nms_threshold, m_max_box, m_num_box_element, m_stream);
 	cudaMemcpyAsync(m_output_box_host, m_output_box_device, sizeof(float) * (m_num_box_element * m_max_box + 1), cudaMemcpyDeviceToHost, m_stream);
 	cudaStreamSynchronize(m_stream);
@@ -367,14 +377,12 @@ void YOLO_TensorRT_Detect::post_process()
 			float y1 = m_output_box_host[7 * i + 2];
 			float x2 = m_output_box_host[7 * i + 3];
 			float y2 = m_output_box_host[7 * i + 4];
-
 			int left = int(x1) > 0 ? int(x1) : 0;
 			int top = int(y1) > 0 ? int(y1) : 0;
 			int width = int(x2 - x1) > 0 ? int(x2 - x1) : 0;
 			int height = int(y2 - y1)> 0 ? int(y2 - y1) : 0;
 			width = (left + width) < m_image.cols ? width : (m_image.cols - left);
 			height = (top + height) < m_image.rows ? height : (m_image.rows - top);
-
 			boxes.push_back(cv::Rect(left, top, width, height));
 			scores.push_back(m_output_box_host[7 * i + 5]);
 			class_ids.push_back(m_output_box_host[7 * i + 6]);
@@ -401,7 +409,13 @@ void YOLO_TensorRT_Detect::post_process()
 		float* ptr = m_output_host + i * m_output_numprob;
 		int class_id;
 		float score;
-		if (m_algo_type == YOLOv5 || m_algo_type == YOLOv7)
+		if (m_algo_type == YOLOv3 || m_algo_type == YOLOv4 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
+		{
+			float* classes_scores = ptr + 4;
+			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
+			score = classes_scores[class_id];
+		}
+		else if (m_algo_type == YOLOv5 || m_algo_type == YOLOv7)
 		{
 			float objness = ptr[4];
 			if (objness < m_confidence_threshold)
@@ -410,23 +424,17 @@ void YOLO_TensorRT_Detect::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id] * objness;
 		}
-		if (m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
-		{
-			float* classes_scores = ptr + 4;
-			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
-			score = classes_scores[class_id];
-		}
+
 		if (score < m_score_threshold)
 			continue;
 
 		cv::Rect box;
-		if(m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
+		if(m_algo_type == YOLOv3 || m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 		{
 			float x = ptr[0];
 			float y = ptr[1];
 			float w = ptr[2];
 			float h = ptr[3];
-
 			int left = int(x - 0.5 * w) > 0 ? int(x - 0.5 * w) : 0;
 			int top = int(y - 0.5 * h) > 0 ? int(y - 0.5 * h) : 0;
 			int width = int(w) > 0 ? int(w) : 0;
@@ -435,7 +443,19 @@ void YOLO_TensorRT_Detect::post_process()
 			height = (top + height) < m_image.rows ? height : (m_image.rows - top);
 			box = cv::Rect(left, top, width, height);
 		}
-		if (m_algo_type == YOLOv10)
+		else if (m_algo_type == YOLOv4)
+		{
+			float x1 = ptr[0] * m_input_size.width;
+			float y1 = ptr[1] * m_input_size.height;
+			float x2 = ptr[2] * m_input_size.width;
+			float y2 = ptr[3] * m_input_size.height;
+			int left = int(x1) > 0 ? int(x1) : 0;
+			int top = int(y1) > 0 ? int(y1) : 0;
+			int width = int(x2 - x1) > 0 ? int(x2 - x1) : 0;
+			int height = int(y2 - y1)> 0 ? int(y2 - y1) : 0;
+			box = cv::Rect(left, top, width, height);
+		}
+		else if (m_algo_type == YOLOv10)
 		{
 			int left = int(ptr[0]) > 0 ? int(ptr[0]) : 0;
 			int top = int(ptr[1]) > 0 ? int(ptr[1]) : 0;
@@ -481,7 +501,7 @@ void YOLO_TensorRT_Segment::post_process()
 
 #ifdef _CUDA_POSTPROCESS
 	cudaMemset(m_output_box_device, 0, sizeof(float) * (m_num_box_element * m_max_box + 1));	
-	decode_kernel_invoker(m_output0_device, m_output_numbox, m_class_num, m_confidence_threshold, m_d2s_device, m_output_box_device, m_max_box, m_num_box_element, m_stream, m_algo_type, m_task_type);
+	decode_kernel_invoker(m_output0_device, m_output_numbox, m_class_num, m_confidence_threshold, m_d2s_device, m_output_box_device, m_max_box, m_num_box_element, m_input_size, m_stream, m_algo_type, m_task_type);
 	nms_kernel_invoker(m_output_box_device, m_nms_threshold, m_max_box, m_num_box_element, m_stream);
 	cudaMemcpyAsync(m_output_box_host, m_output_box_device, sizeof(float) * (m_num_box_element * m_max_box + 1), cudaMemcpyDeviceToHost, m_stream);
 	cudaStreamSynchronize(m_stream);
@@ -494,14 +514,12 @@ void YOLO_TensorRT_Segment::post_process()
 			float y1 = m_output_box_host[8 * i + 2];
 			float x2 = m_output_box_host[8 * i + 3];
 			float y2 = m_output_box_host[8 * i + 4];
-
 			int left = int(x1) > 0 ? int(x1) : 0;
 			int top = int(y1) > 0 ? int(y1) : 0;
 			int width = int(x2 - x1) > 0 ? int(x2 - x1) : 0;
 			int height = int(y2 - y1)> 0 ? int(y2 - y1) : 0;
 			width = (left + width) < m_image.cols ? width : (m_image.cols - left);
 			height = (top + height) < m_image.rows ? height : (m_image.rows - top);
-
 			boxes.push_back(cv::Rect(left, top, width, height));
 			scores.push_back(m_output_box_host[8 * i + 5]);
 			class_ids.push_back(m_output_box_host[8 * i + 6]);
@@ -512,7 +530,7 @@ void YOLO_TensorRT_Segment::post_process()
 			{
 				mask_weights = m_output0_device + row_index * m_output_numprob + m_class_num + 5;
 			}
-			if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+			else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 			{
 				mask_weights = m_output0_device + row_index * m_output_numprob + m_class_num + 4;
 			}
@@ -574,7 +592,7 @@ void YOLO_TensorRT_Segment::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id] * objness;
 		}
-		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+		else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 		{
 			float* classes_scores = ptr + 4;
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
@@ -588,7 +606,6 @@ void YOLO_TensorRT_Segment::post_process()
 		float y = ptr[1];
 		float w = ptr[2];
 		float h = ptr[3];
-
 		int left = int(x - 0.5 * w) > 0 ? int(x - 0.5 * w) : 0;
 		int top = int(y - 0.5 * h) > 0 ? int(y - 0.5 * h) : 0;
 		int width = int(w) > 0 ? int(w) : 0;
@@ -607,7 +624,7 @@ void YOLO_TensorRT_Segment::post_process()
 			std::vector<float> temp_proto(ptr + m_class_num + 5, ptr + m_class_num + 37);
 			picked_proposals.push_back(temp_proto);
 		}
-		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+		else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 		{
 			std::vector<float> temp_proto(ptr + m_class_num + 4, ptr + m_class_num + 36);
 			picked_proposals.push_back(temp_proto);

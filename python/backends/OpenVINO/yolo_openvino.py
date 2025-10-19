@@ -1,8 +1,8 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang
-LastEditTime: 2024-10-30 22:01:31
+LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
+LastEditTime: 2025-10-13 21:24:25
 FilePath: \python\backends\OpenVINO\yolo_openvino.py
 Description: openvino inference class for YOLO algorithm
 '''
@@ -37,6 +37,7 @@ class YOLO_OpenVINO(YOLO):
         model  = core.read_model(model_path)
         self.algo_type = algo_type
         self.compiled_model = core.compile_model(model, device_name='GPU' if device_type=='GPU' else 'CPU')
+        assert self.compiled_model, 'compile model failed!'
     
     '''
     description:    model inference
@@ -67,7 +68,7 @@ class YOLO_OpenVINO_Classify(YOLO_OpenVINO):
             input = input / 255.0
             input = input - np.array([0.406, 0.456, 0.485])
             input = input / np.array([0.225, 0.224, 0.229])
-        if self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']:
+        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']:
             self.inputs_shape = (224, 224)
             if self.image.shape[1] > self.image.shape[0]:
                 self.image = cv2.resize(self.image, (self.inputs_shape[0]*self.image.shape[1]//self.image.shape[0], self.inputs_shape[0]))
@@ -92,7 +93,7 @@ class YOLO_OpenVINO_Classify(YOLO_OpenVINO):
         output = np.squeeze(output).astype(dtype=np.float32)
         if self.algo_type in ['YOLOv5'] and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.exp(np.max(output))/np.sum(np.exp(output)))
-        if self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'] and self.draw_result:
+        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'] and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.max(output))
        
  
@@ -106,7 +107,7 @@ class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
     return {*}
     '''    
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv3', 'YOLOv4', 'YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13'], 'algo type not supported!'
         input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
@@ -117,14 +118,23 @@ class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
     param {*} self  instance of class
     return {*}
     '''        
-    def post_process(self) -> None:
-        output = self.outputs[self.compiled_model.output(0)]
-        output = np.squeeze(output).astype(dtype=np.float32)
+    def post_process(self) -> None:       
         boxes = []
         scores = []
         class_ids = []
-        
-        if self.algo_type in ['YOLOv5', 'YOLOv7']:
+        output = np.squeeze(self.outputs[0]).astype(dtype=np.float32)
+
+        if self.algo_type in ['YOLOv3', 'YOLOv4', 'YOLOv6', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
+            output = np.squeeze(self.outputs[0]).astype(dtype=np.float32)
+            classes_scores = output[..., 4:(4+self.class_num)]          
+            for i in range(output.shape[0]):              
+                class_id = np.argmax(classes_scores[i])
+                score = classes_scores[i][class_id]
+                if score > self.score_threshold:
+                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
+                    scores.append(score)
+                    class_ids.append(class_id)  
+        elif self.algo_type in ['YOLOv5', 'YOLOv7']:
             output = output[output[..., 4] > self.confidence_threshold]
             classes_scores = output[..., 5:(5+self.class_num)]     
             for i in range(output.shape[0]):
@@ -133,22 +143,16 @@ class YOLO_OpenVINO_Detect(YOLO_OpenVINO):
                 if score > self.score_threshold:
                     boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
                     scores.append(score)
-                    class_ids.append(class_id) 
-        if self.algo_type in ['YOLOv6', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
-            classes_scores = output[..., 4:(4+self.class_num)]          
-            for i in range(output.shape[0]):              
-                class_id = np.argmax(classes_scores[i])
-                score = classes_scores[i][class_id]
-                if score > self.score_threshold:
-                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
-                    scores.append(score)
-                    class_ids.append(class_id)                 
+                    class_ids.append(class_id)   
              
         if len(boxes):   
             boxes = np.array(boxes)
             scores = np.array(scores)
-            if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLOv13']:
+            if self.algo_type in ['YOLOv3', 'YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLOv13']:
                 boxes = xywh2xyxy(boxes)
+            elif self.algo_type in ['YOLOv4']:
+                boxes[..., [0, 2]] *= self.inputs_shape[0]
+                boxes[..., [1, 3]] *= self.inputs_shape[1]
             indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
             boxes = boxes[indices]
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
@@ -195,7 +199,7 @@ class YOLO_OpenVINO_Segment(YOLO_OpenVINO):
                     scores.append(score)
                     class_ids.append(class_id) 
                     preds.append(output0[i])                            
-        if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']: 
+        elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']: 
             classes_scores = output0[..., 4:(4+self.class_num)]          
             for i in range(output0.shape[0]):              
                 class_id = np.argmax(classes_scores[i])
@@ -234,7 +238,7 @@ class YOLO_OpenVINO_Segment(YOLO_OpenVINO):
             resized_masks = np.array(resized_masks)
             if self.algo_type in ['YOLOv5']:
                 resized_masks = resized_masks > 0.5
-            if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
+            elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
                 resized_masks = resized_masks > 0       
             if self.draw_result:
                 self.result = draw_result(self.image, boxes, resized_masks)

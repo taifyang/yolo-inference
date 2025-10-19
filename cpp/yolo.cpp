@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-12-04 23:48:08
+ * @LastEditTime: 2025-10-15 21:59:51
  * @FilePath: \cpp\yolo.cpp
  * @Description: source file for YOLO algorithm
  */
@@ -71,7 +71,7 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 
 		if (save_result)
 		{
-			std::string result_name = "./result/" + std::string(argv[1]) + std::string(argv[2]) + std::string(argv[3]) + std::string(argv[4]) + std::string(argv[5]) + ".jpg";
+			std::string result_name = "./result/" + std::string(argv[1]) + "_" + std::string(argv[2]) + "_" +std::string(argv[3]) + "_"  + std::string(argv[4]) + "_"  + std::string(argv[5]) + ".jpg";
 			cv::imwrite(result_name, m_result);
 		}
 		if (show_result)
@@ -86,14 +86,14 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 		cv::VideoCapture cap;
 		if (!cap.open(file_path))
 		{
-			std::cerr << "read video empty!" << std::endl;
+			std::cerr << "cannot read video!" << std::endl;
 			std::exit(-1);
 		}
 
 		cv::VideoWriter wri;
 		if (save_result)
 		{
-			std::string result_name = "./result/" + std::string(argv[1]) + std::string(argv[2]) + std::string(argv[3]) + std::string(argv[4]) + std::string(argv[5]) + ".avi";
+			std::string result_name = "./result/" + std::string(argv[1]) + "_" + std::string(argv[2]) + "_" +std::string(argv[3]) + "_"  + std::string(argv[4]) + "_"  + std::string(argv[5]) + ".avi";
 			int width = int(cap.get(cv::CAP_PROP_FRAME_WIDTH));
     		int height = int(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
 			wri.open(result_name, cv::VideoWriter::fourcc('M', 'P', '4', '2'), 30, cv::Size(width, height));
@@ -159,17 +159,6 @@ void CreateFactory::register_class(const Backend_Type& backend_type, const Task_
 
 std::unique_ptr<YOLO> CreateFactory::create(const Backend_Type& backend_type, const Task_Type& task_type)
 {
-	if (backend_type >= m_create_registry.size())
-	{
-		std::cerr << "unsupported backend type!" << std::endl;
-		std::exit(-1);
-	}
-	if (task_type >= m_create_registry[task_type].size())
-	{
-		std::cerr << "unsupported task type!" << std::endl;
-		std::exit(-1);
-	}
-
 	std::unique_ptr<YOLO> yolo = m_create_registry[backend_type][task_type]();
 	if(yolo == nullptr)
 	{
@@ -184,7 +173,9 @@ std::unique_ptr<YOLO> CreateFactory::create(const Backend_Type& backend_type, co
 
 CreateFactory::CreateFactory()
 {
-	m_create_registry.resize(5, std::vector<CreateFunction>(3));
+	size_t backend_size = magic_enum::enum_count<Backend_Type>();
+	size_t task_size = magic_enum::enum_count<Task_Type>();
+	m_create_registry.resize(backend_size, std::vector<CreateFunction>(task_size));
 
 #ifdef _YOLO_LIBTORCH
 	register_class(Backend_Type::Libtorch, Task_Type::Classify, []() -> std::unique_ptr<YOLO> { return std::make_unique<YOLO_Libtorch_Classify>(); });

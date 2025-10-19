@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-11-22 22:58:34
+ * @LastEditTime: 2025-10-16 21:04:01
  * @FilePath: \cpp\yolo.h
  * @Description: header file for YOLO algorithm
  */
@@ -13,6 +13,9 @@
 #include <fstream>
 #include <filesystem>
 #include <opencv2/opencv.hpp>
+
+#include "magic_enum.hpp"
+
 
 /**
  * @description: backend type
@@ -41,6 +44,8 @@ enum Task_Type
  */
 enum Algo_Type
 {
+	YOLOv3,
+	YOLOv4,
 	YOLOv5,
 	YOLOv6,
 	YOLOv7,
@@ -136,22 +141,17 @@ protected:
 	/**
 	 * @description: result
 	 */
-	cv::Mat m_result;
-
-	/**
-	 * @description: model input image width
-	 */
-	int m_input_width = 640;
-
-	/**
-	 * @description: model input image height
-	 */
-	int m_input_height = 640;
+	cv::Mat m_result;	
 
 	/**
 	 * @description: model input image size
 	 */
-	int m_input_numel = 1 * 3 * m_input_width * m_input_height;
+	cv::Size m_input_size = cv::Size(640, 640);
+
+	/**
+	 * @description: model input image size
+	 */
+	int m_input_numel = 1 * 3 * m_input_size.width * m_input_size.height;
 
 	/**
 	 * @description: algorithm type

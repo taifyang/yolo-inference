@@ -8,16 +8,38 @@
  */
 #include "yolo.h"
 
+
 int main(int argc, char* argv[])
 {
 	if (argc != 7)
 	{
-		std::cerr << "argv input error" << std::endl;
+		std::cerr << "argc input error" << std::endl;
 		return -1;
 	}
 	std::cout << argv[1] << " " << argv[2] << " " << argv[3] << " " << argv[4] << " " << argv[5] << " " << argv[6] << std::endl;
-	std::unique_ptr<YOLO> yolo = CreateFactory::instance().create(Backend_Type(atoi(argv[1])), Task_Type(atoi(argv[2])));
-	yolo->init(Algo_Type(atoi(argv[3])), Device_Type(atoi(argv[4])), Model_Type(atoi(argv[5])), argv[6]);
+	Backend_Type backend;
+	Task_Type task;
+	Algo_Type algo;
+	Device_Type device;
+	Model_Type model;
+	std::string model_path = argv[6];
+
+	try
+	{
+		backend = magic_enum::enum_cast<Backend_Type>(argv[1]).value();
+		task = magic_enum::enum_cast<Task_Type>(argv[2]).value();
+		algo = magic_enum::enum_cast<Algo_Type>(argv[3]).value();
+		device = magic_enum::enum_cast<Device_Type>(argv[4]).value();
+		model = magic_enum::enum_cast<Model_Type>(argv[5]).value();
+	}
+	catch (const std::bad_optional_access& e)
+	{
+        	std::cerr << "argv input error: " << e.what() << std::endl;
+		return -1;
+    	}
+
+	std::unique_ptr<YOLO> yolo = CreateFactory::instance().create(backend, task);
+	yolo->init(algo, device, model, model_path);
 	yolo->infer("bus.jpg", true, false, argv);
 	yolo->release();
 	return 0;

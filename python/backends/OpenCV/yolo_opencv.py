@@ -2,7 +2,7 @@
 Author: taifyang  
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2025-09-04 11:20:01
+LastEditTime: 2025-10-13 21:25:52
 FilePath: \python\backends\OpenCV\yolo_opencv.py
 Description: opencv inference class for YOLO algorithm
 '''
@@ -35,12 +35,13 @@ class YOLO_OpenCV(YOLO):
         if device_type == 'CPU':
             self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
             self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
-        if device_type == 'GPU':
+        elif device_type == 'GPU':
             self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
             if model_type == 'FP32':
                 self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
-            if model_type == 'FP16':
+            elif model_type == 'FP16':
                 self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA_FP16)
+        assert self.net.empty() == False, 'model load failed!'
     
     '''
     description:    model inference
@@ -71,7 +72,7 @@ class YOLO_OpenCV_Classify(YOLO_OpenCV):
             input = input / 255.0
             input = input - np.array([0.406, 0.456, 0.485])
             input = input / np.array([0.225, 0.224, 0.229])
-        if self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']:
+        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']:
             self.inputs_shape = (224, 224)
             if self.image.shape[1] > self.image.shape[0]:
                 self.image = cv2.resize(self.image, (self.inputs_shape[0]*self.image.shape[1]//self.image.shape[0], self.inputs_shape[0]))
@@ -96,7 +97,7 @@ class YOLO_OpenCV_Classify(YOLO_OpenCV):
         output = np.squeeze(self.outputs).astype(dtype=np.float32)
         if self.algo_type in ['YOLOv5'] and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.exp(np.max(output))/np.sum(np.exp(output)))
-        if self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'] and self.draw_result:
+        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'] and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.max(output))
     
 
@@ -110,7 +111,7 @@ class YOLO_OpenCV_Detect(YOLO_OpenCV):
     return {*}
     '''    
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv3', 'YOLOv4', 'YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13'], 'algo type not supported!'
         input = letterbox(self.image, self.inputs_shape)
         self.inputs = cv2.dnn.blobFromImage(input, 1/255., size=self.inputs_shape, swapRB=True, crop=False)
         self.net.setInput(self.inputs)
@@ -120,13 +121,23 @@ class YOLO_OpenCV_Detect(YOLO_OpenCV):
     param {*} self  instance of class
     return {*}
     '''     
-    def post_process(self) -> None:
-        output = np.squeeze(self.outputs[0]).astype(dtype=np.float32)
+    def post_process(self) -> None:       
         boxes = []
         scores = []
         class_ids = []
+        output = np.squeeze(self.outputs[0]).astype(dtype=np.float32)
 
-        if self.algo_type in ['YOLOv5', 'YOLOv7']:
+        if self.algo_type in ['YOLOv3', 'YOLOv4', 'YOLOv6', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
+            classes_scores = output[..., 4:(4+self.class_num)]          
+            for i in range(output.shape[0]):              
+                class_id = np.argmax(classes_scores[i])
+                score = classes_scores[i][class_id]
+                if score > self.score_threshold:
+                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
+                    scores.append(score)
+                    class_ids.append(class_id)  
+        elif self.algo_type in ['YOLOv5', 'YOLOv7']:
+            output = np.squeeze(self.outputs[0]).astype(dtype=np.float32)
             output = output[output[..., 4] > self.confidence_threshold]
             classes_scores = output[..., 5:(5+self.class_num)]     
             for i in range(output.shape[0]):
@@ -135,22 +146,16 @@ class YOLO_OpenCV_Detect(YOLO_OpenCV):
                 if score > self.score_threshold:
                     boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
                     scores.append(score)
-                    class_ids.append(class_id) 
-        if self.algo_type in ['YOLOv6', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
-            classes_scores = output[..., 4:(4+self.class_num)]          
-            for i in range(output.shape[0]):              
-                class_id = np.argmax(classes_scores[i])
-                score = classes_scores[i][class_id]
-                if score > self.score_threshold:
-                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
-                    scores.append(score)
-                    class_ids.append(class_id)    
+                    class_ids.append(class_id)   
              
         if len(boxes):   
             boxes = np.array(boxes)
             scores = np.array(scores)
-            if self.algo_type in ['YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLOv13']:
+            if self.algo_type in ['YOLOv3', 'YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLOv13']:
                 boxes = xywh2xyxy(boxes)
+            elif self.algo_type in ['YOLOv4']:
+                boxes[..., [0, 2]] *= self.inputs_shape[0]
+                boxes[..., [1, 3]] *= self.inputs_shape[1]
             indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
             boxes = boxes[indices]
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
@@ -195,7 +200,7 @@ class YOLO_OpenCV_Segment(YOLO_OpenCV):
                     scores.append(score)
                     class_ids.append(class_id) 
                     preds.append(output[i])  
-        if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']: 
+        elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']: 
             classes_scores = output[..., 4:(4+self.class_num)]          
             for i in range(output.shape[0]):              
                 class_id = np.argmax(classes_scores[i])
@@ -217,7 +222,7 @@ class YOLO_OpenCV_Segment(YOLO_OpenCV):
             c, mh, mw = proto.shape 
             if self.algo_type in ['YOLOv5']:
                 masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)  
-            if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
+            elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
                 masks = (masks_in @ proto.reshape(c, -1)).reshape(-1, mh, mw)    
             downsampled_bboxes = boxes.copy()
             downsampled_bboxes[:, 0] *= mw / self.inputs_shape[0]
@@ -234,7 +239,7 @@ class YOLO_OpenCV_Segment(YOLO_OpenCV):
             resized_masks = np.array(resized_masks)
             if self.algo_type in ['YOLOv5']:
                 resized_masks = resized_masks > 0.5
-            if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
+            elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
                 resized_masks = resized_masks > 0       
             if self.draw_result:
                 self.result = draw_result(self.image, boxes, resized_masks)
