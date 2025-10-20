@@ -41,10 +41,10 @@ C++ test in Docker with Intel(R) Xeon(R) Gold 5317 CPU , RTX4090 GPU:
 | YOLOv3u           | Detect           | GPU                | FP16                  | 8.1ms    | 20.4ms      | 9.1ms   | ?        | 2.2ms    |
 | YOLOv3u           | Detect           | CPU                | INT8                  | ×        | 251.8ms     | ×       | 58.8ms   | ×        |
 | YOLOv3u           | Detect           | GPU                | INT8                  | ×        | 242.1ms     | ×       | ?        | 1.5ms    |
-| YOLOv4            | Detect           | CPU                | FP32                  | ×        | 189.5ms     | 260.8ms | 105.2ms  | ×        |
-| YOLOv4            | Detect           | GPU                | FP32                  | ×        | 13.2ms      | 16.9ms  | ?        | 4.5ms    |
+| YOLOv4            | Detect           | CPU                | FP32                  | ?        | 189.5ms     | 260.8ms | 105.2ms  | ×        |
+| YOLOv4            | Detect           | GPU                | FP32                  | ?        | 13.2ms      | 16.9ms  | ?        | 4.5ms    |
 | YOLOv4            | Detect           | CPU                | FP16                  | ×        | 258.6ms     | 259.3ms | 102.8ms  | ×        |
-| YOLOv4            | Detect           | GPU                | FP16                  | ×        | 21.7ms      | 14.3ms  | ?        | 2.0ms    |
+| YOLOv4            | Detect           | GPU                | FP16                  | ?        | 21.7ms      | 14.3ms  | ?        | 2.0ms    |
 | YOLOv4            | Detect           | CPU                | INT8                  | ×        | 262.4ms     | ×       | 38.0ms   | ×        |
 | YOLOv4            | Detect           | GPU                | INT8                  | ×        | 180.4ms     | ×       | ?        | 1.6ms    |
 | YOLOv5n           | Classify         | CPU                | FP32                  | 12.9ms   | 15.6ms      | 21.7ms  | 7.4ms    | ×        |
@@ -173,10 +173,10 @@ Python test in Docker with Intel(R) Xeon(R) Gold 5317 CPU , RTX4090 GPU
 | YOLOv3u           | Detect           | GPU                | FP16                  | 34.4ms   | 47.0ms      | 34.9ms  | ?        | 34.6ms   |
 | YOLOv3u           | Detect           | CPU                | INT8                  | ×        | 286.0ms     | ×       | 81.1ms   | ×        |
 | YOLOv3u           | Detect           | GPU                | INT8                  | ×        | 276.6ms     | ×       | ?        | 33.6ms   |
-| YOLOv4            | Detect           | CPU                | FP32                  | ×        | 264.7ms     | 347.1ms | 177.9ms  | ×        | 
-| YOLOv4            | Detect           | GPU                | FP32                  | ×        | 91.1ms      | 91.7ms  | ?        | 85.3ms   | 
+| YOLOv4            | Detect           | CPU                | FP32                  | ?        | 264.7ms     | 347.1ms | 177.9ms  | ×        | 
+| YOLOv4            | Detect           | GPU                | FP32                  | ?        | 91.1ms      | 91.7ms  | ?        | 85.3ms   | 
 | YOLOv4            | Detect           | CPU                | FP16                  | ×        | 333.0ms     | 346.7ms | 175.9ms  | ×        | 
-| YOLOv4            | Detect           | GPU                | FP16                  | ×        | 96.1ms      | 88.0ms  | ?        | 84.4ms   | 
+| YOLOv4            | Detect           | GPU                | FP16                  | ?        | 96.1ms      | 88.0ms  | ?        | 84.4ms   | 
 | YOLOv4            | Detect           | CPU                | INT8                  | ×        | 336.6ms     | ×       | 125.3ms  | ×        |
 | YOLOv4            | Detect           | GPU                | INT8                  | ×        | 256.6ms     | ×       | ?        | 84.5ms   |
 | YOLOv5n           | Classify         | CPU                | FP32                  | 18.5ms   | 23.8ms      | 41.4ms  | 23.6ms   | ×        |
@@ -297,57 +297,3 @@ docker pull taify/yolo_inference:cuda12.8
 ```
 
 You can download some model weights in: <https://pan.baidu.com/s/1843WW7tNQK1ycqIALje_fA?pwd=adis>
-
-
-For your own model, you should transpose output dims for YOLOv8, YOLOv9, YOLOv11, YOLOv12, YOLOv13 detection and segmentation. For onnx model, you can use a scirpt like this:
- ```python
-import onnx
-import onnx.helper as helper
-import sys
-import os
-
-def main():
-    if len(sys.argv) < 2:
-        print("Usage:\n python transpose.py yolov8n.onnx")
-        return 1
-
-    file = sys.argv[1]
-    if not os.path.exists(file):
-        print(f"Not exist path: {file}")
-        return 1
-
-    prefix, suffix = os.path.splitext(file)
-    dst = prefix + ".trans" + suffix
-
-    model = onnx.load(file)
-    node  = model.graph.node[-1]
-
-    old_output = node.output[0]
-    node.output[0] = "pre_transpose"
-
-    for specout in model.graph.output:
-        if specout.name == old_output:
-            shape0 = specout.type.tensor_type.shape.dim[0]
-            shape1 = specout.type.tensor_type.shape.dim[1]
-            shape2 = specout.type.tensor_type.shape.dim[2]
-            new_out = helper.make_tensor_value_info(
-                specout.name,
-                specout.type.tensor_type.elem_type,
-                [0, 0, 0]
-            )
-            new_out.type.tensor_type.shape.dim[0].CopyFrom(shape0)
-            new_out.type.tensor_type.shape.dim[2].CopyFrom(shape1)
-            new_out.type.tensor_type.shape.dim[1].CopyFrom(shape2)
-            specout.CopyFrom(new_out)
-
-    model.graph.node.append(
-        helper.make_node("Transpose", ["pre_transpose"], [old_output], perm=[0, 2, 1])
-    )
-
-    print(f"Model save to {dst}")
-    onnx.save(model, dst)
-    return 0
-
-if __name__ == "__main__":
-    sys.exit(main())
-```
