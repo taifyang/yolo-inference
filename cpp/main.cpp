@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 	}
 	catch (const std::bad_optional_access& e)
 	{
-        	std::cerr << "argv input error: " << e.what() << std::endl;
+        		std::cerr << "argv input error: " << e.what() << std::endl;
 		return -1;
     	}
 

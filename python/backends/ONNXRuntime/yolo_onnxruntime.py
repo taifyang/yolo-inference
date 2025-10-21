@@ -234,7 +234,8 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
             c, mh, mw = proto.shape 
             if self.algo_type in ['YOLOv5']:
                 masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)  
-                masks = (masks_in @ proto.reshape(c, -1)).reshape(-1, mh, mw)    
+            if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
+                masks = (masks_in @ proto.reshape(c, -1)).reshape(-1, mh, mw)     
             downsampled_bboxes = boxes.copy()
             downsampled_bboxes[:, 0] *= mw / self.inputs_shape[0]
             downsampled_bboxes[:, 2] *= mw / self.inputs_shape[0]
