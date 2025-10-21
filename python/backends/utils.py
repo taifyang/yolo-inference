@@ -153,8 +153,8 @@ def draw_result(image, preds, masks=[]):
         image_copy[mask] = [np.random.randint(0,256), np.random.randint(0,256), np.random.randint(0,256)]
     result = (image*0.5 + image_copy*0.5).astype(np.uint8)
     
-    for box, score, cl in zip(boxes, scores, classes):
+    for box, score, cls in zip(boxes, scores, classes):
         top, left, right, bottom = box
         cv2.rectangle(result, (top, left), (right, bottom), (255, 0, 0), 1)
-        cv2.putText(result, 'class:{0} score:{1:.2f}'.format(cl, score), (top, left), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 1)
+        cv2.putText(result, 'class:{0} score:{1:.2f}'.format(cls, score), (top, left), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 1)
     return result
