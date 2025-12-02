@@ -34,13 +34,13 @@ int main(int argc, char* argv[])
 	}
 	catch (const std::bad_optional_access& e)
 	{
-        		std::cerr << "argv input error: " << e.what() << std::endl;
+        std::cerr << "argv input error: " << e.what() << std::endl;
 		return -1;
-    	}
+    }
 
 	std::unique_ptr<YOLO> yolo = CreateFactory::instance().create(backend, task);
 	yolo->init(algo, device, model, model_path);
-	yolo->infer("bus.jpg", true, false, argv);
+	yolo->infer("bus.jpg", false, false, argv);
 	yolo->release();
 	return 0;
 }

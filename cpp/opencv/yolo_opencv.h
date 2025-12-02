@@ -15,6 +15,11 @@
 #include "utils.h"
 #include <opencv2/opencv.hpp>
 
+#ifdef OPENCV_WITH_CUDA
+	#include <opencv2/cudaarithm.hpp>
+	#include <opencv2/cudaimgproc.hpp>
+#endif
+
 /**
  * @description: opencv inference class for YOLO algorithm
  */

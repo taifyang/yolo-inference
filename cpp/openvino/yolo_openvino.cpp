@@ -108,16 +108,9 @@ void YOLO_OpenVINO_Classify::pre_process()
 	cv::Mat crop_image;
 	if (m_algo_type == YOLOv5)
 	{
-		//CenterCrop
-		int crop_size = std::min(m_image.cols, m_image.rows);
-		int left = (m_image.cols - crop_size) / 2, top = (m_image.rows - crop_size) / 2;
-		crop_image = m_image(cv::Rect(left, top, crop_size, crop_size));
-		cv::resize(crop_image, crop_image, cv::Size(m_input_size.width, m_input_size.height));
-
-		//Normalize
-		crop_image.convertTo(crop_image, CV_32FC3, 1. / 255.);
-		cv::subtract(crop_image, cv::Scalar(0.406, 0.456, 0.485), crop_image);
-		cv::divide(crop_image, cv::Scalar(0.225, 0.224, 0.229), crop_image);
+		CenterCrop(m_image, crop_image);
+		Normalize(crop_image, crop_image, m_algo_type);
+		cv::cvtColor(crop_image, crop_image, cv::COLOR_BGR2RGB);
 	}
 	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 	{
@@ -126,14 +119,9 @@ void YOLO_OpenVINO_Classify::pre_process()
 		else
 			cv::resize(m_image, crop_image, cv::Size(m_input_size.width, m_input_size.width * m_image.rows / m_image.cols));
 
-		//CenterCrop
-		int crop_size = std::min(crop_image.cols, crop_image.rows);
-		int  left = (crop_image.cols - crop_size) / 2, top = (crop_image.rows - crop_size) / 2;
-		crop_image = crop_image(cv::Rect(left, top, crop_size, crop_size));
-		cv::resize(crop_image, crop_image, cv::Size(m_input_size.width, m_input_size.height));
-
-		//Normalize
-		crop_image.convertTo(crop_image, CV_32FC3, 1. / 255.);
+		CenterCrop(m_image, crop_image);
+		Normalize(crop_image, crop_image, m_algo_type);
+		cv::cvtColor(crop_image, crop_image, cv::COLOR_BGR2RGB);
 	}
 
 	cv::dnn::blobFromImage(crop_image, m_input, 1, cv::Size(crop_image.cols, crop_image.rows), cv::Scalar(), true, false);

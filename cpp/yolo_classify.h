@@ -27,7 +27,25 @@ struct OutputCls
 class YOLO_Classify : virtual public YOLO
 {
 protected:
-	/**
+	void CenterCrop(cv::Mat& input_image, cv::Mat& output_image)
+	{
+		int crop_size = std::min(input_image.cols, input_image.rows);
+		int left = (input_image.cols - crop_size) / 2, top = (input_image.rows - crop_size) / 2;
+		output_image = input_image(cv::Rect(left, top, crop_size, crop_size));
+		cv::resize(output_image, output_image, cv::Size(m_input_size.width, m_input_size.height));
+	}
+
+	void Normalize(cv::Mat& input_image, cv::Mat& output_image, Algo_Type algo_type)
+	{
+		output_image.convertTo(input_image, CV_32FC3, 1. / 255.);
+		if (m_algo_type == YOLOv5)
+		{
+			cv::subtract(output_image, cv::Scalar(0.406, 0.456, 0.485), output_image);
+			cv::divide(output_image, cv::Scalar(0.225, 0.224, 0.229), output_image);
+		}
+	}
+
+	/**	
 	 * @description: 								draw result
 	 * @param {OutputCls} output_cls				classification model output
 	 * @return {*}

@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2025-10-13 23:34:57
+ * @LastEditTime: 2025-12-02 19:52:08
  * @FilePath: \cpp\libtorch\yolo_libtorch.cpp
  * @Description: libtorch inference source file for YOLO algorithm
  */
@@ -124,17 +124,8 @@ void YOLO_Libtorch_Classify::pre_process()
 	cv::Mat crop_image;
 	if (m_algo_type == YOLOv5)
 	{
-		//CenterCrop
-		int crop_size = std::min(m_image.cols, m_image.rows);
-		int left = (m_image.cols - crop_size) / 2, top = (m_image.rows - crop_size) / 2;
-		crop_image = m_image(cv::Rect(left, top, crop_size, crop_size));
-		cv::resize(crop_image, crop_image, cv::Size(m_input_size.width, m_input_size.height));
-
-		//Normalize
-		crop_image.convertTo(crop_image, CV_32FC3, 1. / 255.);
-		cv::subtract(crop_image, cv::Scalar(0.406, 0.456, 0.485), crop_image);
-		cv::divide(crop_image, cv::Scalar(0.225, 0.224, 0.229), crop_image);
-
+		CenterCrop(m_image, crop_image);
+		Normalize(crop_image, crop_image, m_algo_type);
 		cv::cvtColor(crop_image, crop_image, cv::COLOR_BGR2RGB);
 	}
 	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
@@ -144,14 +135,9 @@ void YOLO_Libtorch_Classify::pre_process()
 		else
 			cv::resize(m_image, crop_image, cv::Size(m_input_size.width, m_input_size.width * m_image.rows / m_image.cols));
 
-		//CenterCrop
-		int crop_size = std::min(crop_image.cols, crop_image.rows);
-		int  left = (crop_image.cols - crop_size) / 2, top = (crop_image.rows - crop_size) / 2;
-		crop_image = crop_image(cv::Rect(left, top, crop_size, crop_size));
-		cv::resize(crop_image, crop_image, cv::Size(m_input_size.width, m_input_size.height));
-
-		//Normalize
-		crop_image.convertTo(crop_image, CV_32FC3, 1. / 255.);
+		CenterCrop(m_image, crop_image);
+		Normalize(crop_image, crop_image, m_algo_type);
+		cv::cvtColor(crop_image, crop_image, cv::COLOR_BGR2RGB);
 	}
 
 	torch::Tensor input;
@@ -171,7 +157,6 @@ void YOLO_Libtorch_Classify::pre_process()
 
 void YOLO_Libtorch_Detect::pre_process()
 {
-	//LetterBox
 	cv::Mat letterbox;
 	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
 
@@ -195,7 +180,6 @@ void YOLO_Libtorch_Detect::pre_process()
 
 void YOLO_Libtorch_Segment::pre_process()
 {
-	//LetterBox
 	cv::Mat letterbox;
 	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
 

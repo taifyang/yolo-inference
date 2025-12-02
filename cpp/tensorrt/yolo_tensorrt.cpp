@@ -200,16 +200,8 @@ void YOLO_TensorRT_Classify::pre_process()
 	cv::Mat crop_image;
 	if (m_algo_type == YOLOv5)
 	{
-		//CenterCrop
-		int crop_size = std::min(m_image.cols, m_image.rows);
-		int left = (m_image.cols - crop_size) / 2, top = (m_image.rows - crop_size) / 2;
-		crop_image = m_image(cv::Rect(left, top, crop_size, crop_size));
-		cv::resize(crop_image, crop_image, cv::Size(m_input_size.width, m_input_size.height));
-
-		//Normalize
-		crop_image.convertTo(crop_image, CV_32FC3, 1. / 255.);
-		cv::subtract(crop_image, cv::Scalar(0.406, 0.456, 0.485), crop_image);
-		cv::divide(crop_image, cv::Scalar(0.225, 0.224, 0.229), crop_image);
+		CenterCrop(m_image, crop_image);
+		Normalize(crop_image, crop_image, m_algo_type);
 	}
 	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 	{
@@ -218,14 +210,8 @@ void YOLO_TensorRT_Classify::pre_process()
 		else
 			cv::resize(m_image, crop_image, cv::Size(m_input_size.width, m_input_size.width * m_image.rows / m_image.cols));
 
-		//CenterCrop
-		int crop_size = std::min(crop_image.cols, crop_image.rows);
-		int  left = (crop_image.cols - crop_size) / 2, top = (crop_image.rows - crop_size) / 2;
-		crop_image = crop_image(cv::Rect(left, top, crop_size, crop_size));
-		cv::resize(crop_image, crop_image, cv::Size(m_input_size.width, m_input_size.height));
-
-		//Normalize
-		crop_image.convertTo(crop_image, CV_32FC3, 1. / 255.);
+		CenterCrop(m_image, crop_image);
+		Normalize(crop_image, crop_image, m_algo_type);
 	}
 
 	int image_area = crop_image.cols * crop_image.rows;
@@ -253,7 +239,6 @@ void YOLO_TensorRT_Detect::pre_process()
 #else
 	cv::Mat letterbox;
 	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
-
 	int image_area = letterbox.cols * letterbox.rows;
 	uchar* pimage = letterbox.data;
 	float* phost_r = m_input_host + image_area * 0;
@@ -265,7 +250,6 @@ void YOLO_TensorRT_Detect::pre_process()
 		*phost_g++ = pimage[1] / 255.0f;
 		*phost_b++ = pimage[0] / 255.0f;
 	}
-
 	cudaMemcpyAsync(m_input_device, m_input_host, sizeof(float) * m_input_numel, cudaMemcpyHostToDevice, m_stream);
 #endif // _CUDA_PREPROCESS
 }
@@ -291,48 +275,33 @@ void YOLO_TensorRT_Segment::pre_process()
 		*phost_g++ = pimage[1] / 255.0f;
 		*phost_b++ = pimage[0] / 255.0f;
 	}
-
 	cudaMemcpyAsync(m_input_device, m_input_host, sizeof(float) * m_input_numel, cudaMemcpyHostToDevice, m_stream);
 #endif // _CUDA_PREPROCESS
 }
 
 void YOLO_TensorRT_Classify::process()
 {
-#if NV_TENSORRT_MAJOR < 10
-	m_execution_context->enqueueV2((void**)m_bindings, m_stream, nullptr);
-#else
 	m_execution_context->executeV2((void**)m_bindings);
-#endif 
-
 	cudaMemcpyAsync(m_output_host, m_output_device, sizeof(float) * m_class_num, cudaMemcpyDeviceToHost, m_stream);
-	cudaStreamSynchronize(m_stream);
 }
 
 void YOLO_TensorRT_Detect::process()
 {
-#if NV_TENSORRT_MAJOR < 10
-	m_execution_context->enqueueV2((void**)m_bindings, m_stream, nullptr);
-#else
 	m_execution_context->executeV2((void**)m_bindings);
-#endif 
 
 #ifndef _CUDA_POSTPROCESS
 	cudaMemcpyAsync(m_output_host, m_output_device, sizeof(float) * m_output_numdet, cudaMemcpyDeviceToHost, m_stream);
-	cudaStreamSynchronize(m_stream);
 #endif // !_CUDA_POSTPROCESS
 }
 
 void YOLO_TensorRT_Segment::process()
 {
-#if NV_TENSORRT_MAJOR < 10
-	m_execution_context->enqueueV2((void**)m_bindings, m_stream, nullptr);
-#else
-	m_execution_context->executeV2((void**)m_bindings);
-#endif 
+m_execution_context->executeV2((void**)m_bindings);
 
+#ifndef _CUDA_POSTPROCESS
 	cudaMemcpyAsync(m_output0_host, m_output0_device, sizeof(float) * m_output_numdet, cudaMemcpyDeviceToHost, m_stream);
 	cudaMemcpyAsync(m_output1_host, m_output1_device, sizeof(float) * m_output_numseg, cudaMemcpyDeviceToHost, m_stream);
-	cudaStreamSynchronize(m_stream);
+#endif // !_CUDA_POSTPROCESS
 }
 
 void YOLO_TensorRT_Classify::post_process()
