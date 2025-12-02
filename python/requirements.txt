@@ -1,4 +1,4 @@
-cuda-python == 12.8.0
+cupy-cuda12x
 opencv-python == 4.11.0 # built with cuda from local
 onnxruntime-gpu == 1.22.0
 openvino == 2025.2.0

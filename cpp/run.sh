@@ -464,27 +464,3 @@
 ./yolo TensorRT Detect YOLOv13 GPU FP32 ../../weights/yolov13n_fp32.engine
 ./yolo TensorRT Detect YOLOv13 GPU FP16 ../../weights/yolov13n_fp16.engine
 ./yolo TensorRT Detect YOLOv13 GPU INT8 ../../weights/yolov13n_int8.engine
-
-
-./yolo Libtorch Detect YOLOv3 CPU FP32 ../../weights/yolov3u_fp32_cpu.torchscript    
-./yolo Libtorch Detect YOLOv3 GPU FP32 ../../weights/yolov3u_fp32_gpu.torchscript
-./yolo Libtorch Detect YOLOv3 GPU FP16 ../../weights/yolov3u_fp16_gpu.torchscript
-./yolo ONNXRuntime Detect YOLOv3 CPU FP32 ../../weights/yolov3u_fp32.onnx
-./yolo ONNXRuntime Detect YOLOv3 GPU FP32 ../../weights/yolov3u_fp32.onnx
-./yolo ONNXRuntime Detect YOLOv3 CPU FP16 ../../weights/yolov3u_fp16.onnx
-./yolo ONNXRuntime Detect YOLOv3 GPU FP16 ../../weights/yolov3u_fp16.onnx
-./yolo ONNXRuntime Detect YOLOv3 CPU INT8 ../../weights/yolov3u_int8.onnx
-./yolo ONNXRuntime Detect YOLOv3 GPU INT8 ../../weights/yolov3u_int8.onnx
-./yolo OpenCV Detect YOLOv3 CPU FP32 ../../weights/yolov3u_fp32.onnx
-./yolo OpenCV Detect YOLOv3 GPU FP32 ../../weights/yolov3u_fp32.onnx
-./yolo OpenCV Detect YOLOv3 CPU FP16 ../../weights/yolov3u_fp16.onnx
-./yolo OpenCV Detect YOLOv3 GPU FP16 ../../weights/yolov3u_fp16.onnx
-./yolo OpenVINO Detect YOLOv3 CPU FP32 ../../weights/yolov3u_fp32.xml
-./yolo OpenVINO Detect YOLOv3 GPU FP32 ../../weights/yolov3u_fp32.xml
-./yolo OpenVINO Detect YOLOv3 CPU FP16 ../../weights/yolov3u_fp16.xml
-./yolo OpenVINO Detect YOLOv3 GPU FP16 ../../weights/yolov3u_fp16.xml
-./yolo OpenVINO Detect YOLOv3 CPU INT8 ../../weights/yolov3u_int8.xml
-./yolo OpenVINO Detect YOLOv3 GPU INT8 ../../weights/yolov3u_int8.xml
-./yolo TensorRT Detect YOLOv3 GPU FP32 ../../weights/yolov3u_fp32.engine
-./yolo TensorRT Detect YOLOv3 GPU FP16 ../../weights/yolov3u_fp16.engine
-./yolo TensorRT Detect YOLOv3 GPU INT8 ../../weights/yolov3u_int8.engine

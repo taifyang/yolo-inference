@@ -9,6 +9,8 @@ Description: utilities functions
 
 import cv2
 import numpy as np
+import cupy
+from cupyx.scipy import ndimage
 from backends.yolo import *
 
 
@@ -85,6 +87,27 @@ def letterbox(im, new_shape=(416, 416), color=(114, 114, 114)):
     return im
 
 
+def letterbox_cupy(im, new_shape=(416, 416), color=(114, 114, 114)):
+    # Resize and pad image while meeting stride-multiple constraints
+    shape = im.shape[:2]  # current shape [height, width]
+
+    # Scale ratio (new / old)
+    r = min(new_shape[0] / shape[0], new_shape[1] / shape[1])
+    
+    # Compute padding
+    new_unpad = int(round(shape[1] * r)), int(round(shape[0] * r))    
+    dw, dh = (new_shape[1] - new_unpad[0])/2, (new_shape[0] - new_unpad[1])/2  # wh padding 
+    top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
+    left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
+    
+    if shape[::-1] != new_unpad:  # resize
+        im_cupy = cupy.asarray(im)
+        zoom_factors = (new_unpad[1]/im.shape[0], new_unpad[0]/im.shape[1], 1) 
+        im_cupy = ndimage.zoom(im_cupy, zoom_factors, order=0)
+    im_cupy = cupy.pad(array=im_cupy, pad_width=((top, bottom), (left, right), (0, 0)), mode='constant', constant_values=(color, color))
+    return im_cupy
+
+
 '''
 description:            scale boxes
 param {*} boxes         bounding boxes
@@ -153,8 +176,8 @@ def draw_result(image, preds, masks=[]):
         image_copy[mask] = [np.random.randint(0,256), np.random.randint(0,256), np.random.randint(0,256)]
     result = (image*0.5 + image_copy*0.5).astype(np.uint8)
     
-    for box, score, cls in zip(boxes, scores, classes):
+    for box, score, cl in zip(boxes, scores, classes):
         top, left, right, bottom = box
         cv2.rectangle(result, (top, left), (right, bottom), (255, 0, 0), 1)
-        cv2.putText(result, 'class:{0} score:{1:.2f}'.format(cls, score), (top, left), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 1)
+        cv2.putText(result, 'class:{0} score:{1:.2f}'.format(cl, score), (top, left), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 1)
     return result

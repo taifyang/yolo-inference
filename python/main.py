@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument('--model_path', default='./weights/yolov8n_cls_fp32.onnx', type=str, help='the path of model')
     parser.add_argument('--input_path', default='bus.jpg', type=str, help='the input path of input image or video')
     parser.add_argument('--output_path', default='', type=str, help='the output path of input image or video')
-    parser.add_argument('--save_result', default=True, type=bool, help='save result')
+    parser.add_argument('--save_result', default=False, type=bool, help='save result')
     parser.add_argument('--show_result', default=False, type=bool, help='show result')
     return parser.parse_args()
 

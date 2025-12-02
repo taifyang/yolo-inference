@@ -11,6 +11,9 @@
 
 #include "yolo.h"
 #include "utils.h"
+// #include <opencv2/cudawarping.hpp>
+// #include <opencv2/cudaarithm.hpp>
+// #include <opencv2/cudaimgproc.hpp>
 
 /**
  * @description: detection network output related parameters
@@ -46,10 +49,15 @@ protected:
 		auto dw = (float)(shape.width - new_un_pad[0]) / 2;
 		auto dh = (float)(shape.height - new_un_pad[1]) / 2;
 
+		// cv::cuda::GpuMat gpu_image;
+		// gpu_image.upload(input_image);
 		if (input_image.cols != new_un_pad[0] && input_image.rows != new_un_pad[1])
 			cv::resize(input_image, output_image, cv::Size(new_un_pad[0], new_un_pad[1]));
 		else
 			output_image = input_image.clone();
+
+		// if (input_image.cols != new_un_pad[0] && input_image.rows != new_un_pad[1])
+		// 	cv::cuda::resize(gpu_image, gpu_image, cv::Size(new_un_pad[0], new_un_pad[1]));
 
 		int top = int(std::round(dh - 0.1f));
 		int bottom = int(std::round(dh + 0.1f));
@@ -62,6 +70,9 @@ protected:
 		params[3] = top;
 
 		cv::copyMakeBorder(output_image, output_image, top, bottom, left, right, cv::BORDER_CONSTANT, color);
+		
+		// cv::cuda::copyMakeBorder(gpu_image, gpu_image, top, bottom, left, right, cv::BORDER_CONSTANT, color);
+		// gpu_image.download(output_image);
 	}
 
 	/**
@@ -188,7 +199,7 @@ protected:
 	float m_confidence_threshold = 0.2;
 
 	/**
-	 * @description: LetterBox related parameters
+	 * @description: letterbox related parameters
 	 */
 	cv::Vec4d m_params;
 

@@ -10,7 +10,7 @@ option(WITH_CUDA_PREPROCESS "build _CUDA_PREPROCESS" ON)
 option(WITH_CUDA_POSTPROCESS "build _CUDA_POSTPROCESS" ON)
 
 if(WITH_CUDA)
-    set(CMAKE_CUDA_COMPILER "/usr/local/cuda-12.8/bin/nvcc")
+    set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
     project(yolo LANGUAGES C CXX CUDA)
 else()
     project(yolo LANGUAGES C CXX)

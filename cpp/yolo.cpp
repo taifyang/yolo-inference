@@ -61,9 +61,9 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 		auto start = std::chrono::steady_clock::now();
 		for(int i=0; i<1000; ++i)
 		{
-			pre_process();
-			process();
-			post_process();
+		 	pre_process();
+		 	process();
+		 	post_process();
 		}		
 		auto end = std::chrono::steady_clock::now();	
 		std::chrono::duration<double> duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);		

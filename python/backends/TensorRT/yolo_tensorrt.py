@@ -8,10 +8,6 @@ Description: tensorrt inference class for YOLO algorithm
 '''
 
 import tensorrt as trt
-if int(trt.__version__.split(".")[0]) < 10:
-    from .common_trt import *
-else:
-    from .common_trt10 import *
 from backends.yolo import *
 from backends.utils import *
 
@@ -42,25 +38,17 @@ class YOLO_TensorRT(YOLO):
         assert self.engine, 'engine create failed!'
         self.context = self.engine.create_execution_context()
         assert self.context, 'context create failed!'
-        self.inputs, self.outputs, self.bindings, self.stream = allocate_buffers(self.engine)    
-        self.outputs_shape = []  #[(1,25200,85)]
-        if int(trt.__version__.split(".")[0]) >= 10:
-            for i in range(self.engine.num_io_tensors):
-                name = self.engine.get_tensor_name(i)
-                if self.engine.get_tensor_mode(name) == trt.TensorIOMode.OUTPUT:
-                    shape = self.engine.get_tensor_shape(name)
-                    self.outputs_shape.append(shape)
 
-    '''
-    description:    model inference
-    param {*} self  instance of class
-    return {*}
-    '''       
-    def process(self) -> None:
-        if int(trt.__version__.split(".")[0]) < 10:
-            do_inference(self.context, self.bindings, self.inputs, self.outputs, self.stream)
-        else:
-            do_inference(self.context, self.engine, self.bindings, self.inputs, self.outputs, self.stream)
+        self.input_shapes = [] 
+        self.outputs_shape = [] 
+        for i in range(self.engine.num_io_tensors):
+            name = self.engine.get_tensor_name(i)
+            if self.engine.get_tensor_mode(name) == trt.TensorIOMode.INPUT:
+                shape = self.engine.get_tensor_shape(name)
+                self.input_shapes.append(shape)
+            if self.engine.get_tensor_mode(name) == trt.TensorIOMode.OUTPUT:
+                shape = self.engine.get_tensor_shape(name)
+                self.outputs_shape.append(shape)
 
 
 '''
@@ -79,8 +67,8 @@ class YOLO_TensorRT_Classify(YOLO_TensorRT):
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__(algo_type, device_type, model_type, model_path)
         assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv11', 'YOLOv12'], 'algo type not supported!'
-        if int(trt.__version__.split(".")[0]) < 10:
-            self.outputs_shape.append(self.context.get_binding_shape(1))
+        self.output0_device = cupy.empty(self.outputs_shape[0], dtype=np.float32)
+        self.output_ptr = self.output0_device.data.ptr
     
     '''
     description:    model pre-process
@@ -92,33 +80,45 @@ class YOLO_TensorRT_Classify(YOLO_TensorRT):
             crop_size = min(self.image.shape[0], self.image.shape[1])
             left = (self.image.shape[1] - crop_size) // 2
             top = (self.image.shape[0] - crop_size) // 2
-            crop_image = self.image[top:(top+crop_size), left:(left+crop_size), ...]
-            input = cv2.resize(crop_image, self.inputs_shape)
-            input = input / 255.0
-            input = input - np.array([0.406, 0.456, 0.485])
-            input = input / np.array([0.225, 0.224, 0.229])
+            crop_image = cupy.asarray(self.image)[top:(top+crop_size), left:(left+crop_size), ...]
+            zoom_factors = (self.inputs_shape[0]/crop_image.shape[0], self.inputs_shape[1]/crop_image.shape[1], 1) 
+            input = ndimage.zoom(crop_image, zoom_factors, order=0)
+            input = input.astype(cupy.float32) / 255.0
+            input = input - cupy.asarray([0.406, 0.456, 0.485], dtype=cupy.float32).reshape(1, 1, -1)
+            input = input / cupy.asarray([0.225, 0.224, 0.229], dtype=cupy.float32).reshape(1, 1, -1)
         elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']:
             self.inputs_shape = (224, 224)
             if self.image.shape[1] > self.image.shape[0]:
-                self.image = cv2.resize(self.image, (self.inputs_shape[0]*self.image.shape[1]//self.image.shape[0], self.inputs_shape[0]))
+                zoom_factors = (self.inputs_shape[0]/self.image.shape[0], self.inputs_shape[0]/self.image.shape[0], 1) 
             else:
-                self.image = cv2.resize(self.image, (self.inputs_shape[1], self.inputs_shape[1]*self.image.shape[0]//self.image.shape[1]))
-            crop_size = min(self.image.shape[0], self.image.shape[1])
-            left = (self.image.shape[1] - crop_size) // 2
-            top = (self.image.shape[0] - crop_size) // 2
-            crop_image = self.image[top:(top+crop_size), left:(left+crop_size), ...]
-            input = cv2.resize(crop_image, self.inputs_shape)
-            input = input / 255.0
-        input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW 
-        np.copyto(self.inputs[0].host, input.ravel())
-    
+                zoom_factors = (self.inputs_shape[1]/self.image.shape[1], self.inputs_shape[1]/self.image.shape[1], 1) 
+            input = ndimage.zoom(cupy.asarray(self.image), zoom_factors, order=0)
+            crop_size = min(input.shape[0], input.shape[1])
+            left = (input.shape[1] - crop_size) // 2
+            top = (input.shape[0] - crop_size) // 2
+            input = input[top:(top+crop_size), left:(left+crop_size), ...]
+            input = input.astype(cupy.float32) / 255.0
+      
+        input = cupy.transpose(input[:, :, ::-1], (2, 0, 1))
+        input = cupy.ascontiguousarray(input) 
+        self.input_ptr = input.data.ptr
+
+    '''
+    description:    model inference
+    param {*} self  instance of class
+    return {*}
+    '''       
+    def process(self) -> None:
+        self.context.execute_v2(bindings=[self.input_ptr, self.output_ptr])
+        self.output0_host = cupy.asnumpy(self.output0_device) 
+
     '''
     description:    model post-process
     param {*} self  instance of class
     return {*}
     '''          
     def post_process(self) -> None:
-        output = np.squeeze(self.outputs[0].host.reshape(self.outputs_shape[0]))
+        output = np.squeeze(self.output0_host.reshape(self.outputs_shape[0]))
         if self.algo_type in ['YOLOv5'] and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.exp(np.max(output))/np.sum(np.exp(output)))
         elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'] and self.draw_result:
@@ -141,8 +141,8 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__(algo_type, device_type, model_type, model_path)
         assert self.algo_type in ['YOLOv3', 'YOLOv4', 'YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13'], 'algo type not supported!'
-        if int(trt.__version__.split(".")[0]) < 10:
-            self.outputs_shape.append(self.context.get_binding_shape(1))
+        self.output0_device = cupy.empty(self.outputs_shape[0], dtype=np.float32)
+        self.output0_ptr = self.output0_device.data.ptr
 
     '''
     description:    model pre-process
@@ -150,11 +150,23 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
     return {*}
     '''       
     def pre_process(self) -> None:
-        input = letterbox(self.image, self.inputs_shape)
-        input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
-        input = input / 255.0
-        np.copyto(self.inputs[0].host, input.ravel())
+        # input = letterbox(self.image, self.inputs_shape)
+        # input = np.transpose(input[:, :, ::-1], (2, 0, 1))
+        # input = cupy.asarray(input).astype(cupy.float32) / 255.0
+        input = letterbox_cupy(self.image, self.inputs_shape)
+        input = cupy.transpose(input[:, :, ::-1], (2, 0, 1))
+        input = input.astype(cupy.float32) / 255.0
+        self.input_ptr = input.data.ptr
     
+    '''
+    description:    model inference
+    param {*} self  instance of class
+    return {*}
+    '''       
+    def process(self) -> None:
+        self.context.execute_v2(bindings=[self.input_ptr, self.output0_ptr])
+        self.output0_host = cupy.asnumpy(self.output0_device) 
+
     '''
     description:    model post-process
     param {*} self  instance of class
@@ -164,28 +176,31 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
         boxes = []
         scores = []
         class_ids = []
-        output = np.squeeze(self.outputs[0].host.reshape(self.outputs_shape[0]))
+        output = np.squeeze(self.output0_host.reshape(self.outputs_shape[0]))
 
         if self.algo_type in ['YOLOv3', 'YOLOv4', 'YOLOv6', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
-            classes_scores = output[..., 4:(4+self.class_num)]          
-            for i in range(output.shape[0]):              
-                class_id = np.argmax(classes_scores[i])
-                score = classes_scores[i][class_id]
-                if score > self.score_threshold:
-                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
-                    scores.append(score)
-                    class_ids.append(class_id)  
+            classes_scores = output[..., 4:(4 + self.class_num)]  
+            class_ids = np.argmax(classes_scores, axis=-1)  
+            scores_all = np.max(classes_scores, axis=-1)        
+            mask = scores_all > self.score_threshold  
+            boxes = output[mask, :4] 
+            scores = scores_all[mask, None]  
+            class_ids = class_ids[mask, None]  
+            boxes = np.hstack([boxes, scores, class_ids])
+            scores = scores.squeeze()   
         elif self.algo_type in ['YOLOv5', 'YOLOv7']:
             output = output[output[..., 4] > self.confidence_threshold]
-            classes_scores = output[..., 5:(5+self.class_num)]     
-            for i in range(output.shape[0]):
-                class_id = np.argmax(classes_scores[i])
-                score = classes_scores[i][class_id] * output[i][4]
-                if score > self.score_threshold:
-                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
-                    scores.append(score)
-                    class_ids.append(class_id)   
-             
+            classes_scores = output[..., 5:(5 + self.class_num)]
+            class_ids = np.argmax(classes_scores, axis=-1)
+            class_scores = np.max(classes_scores, axis=-1)
+            scores_all = class_scores * output[..., 4]        
+            mask = scores_all > self.score_threshold
+            boxes = output[mask, :4] 
+            scores = scores_all[mask, None]  
+            class_ids = class_ids[mask, None]  
+            boxes = np.hstack([boxes, scores, class_ids])
+            scores = scores.squeeze() 
+          
         if len(boxes):   
             boxes = np.array(boxes)
             scores = np.array(scores)
@@ -217,21 +232,32 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__(algo_type, device_type, model_type, model_path)
         assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12'], 'algo type not supported!'
-        if int(trt.__version__.split(".")[0]) < 10:
-            self.outputs_shape.append(self.context.get_binding_shape(1))
-            self.outputs_shape.append(self.context.get_binding_shape(2))
-            
+        self.output0_device = cupy.empty(self.outputs_shape[0], dtype=np.float32)
+        self.output1_device = cupy.empty(self.outputs_shape[1], dtype=np.float32)
+        self.output0_ptr = self.output0_device.data.ptr
+        self.output1_ptr = self.output1_device.data.ptr
+               
     '''
     description:    model pre-process
     param {*} self  instance of class
     return {*}
     '''        
     def pre_process(self) -> None:
-        input = letterbox(self.image, self.inputs_shape)
-        input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
-        input = input / 255.0
-        np.copyto(self.inputs[0].host, input.ravel())
+        input = letterbox_cupy(self.image, self.inputs_shape)
+        input = cupy.transpose(input[:, :, ::-1], (2, 0, 1))
+        input = input.astype(cupy.float32) / 255.0
+        self.input_ptr = input.data.ptr
     
+    '''
+    description:    model inference
+    param {*} self  instance of class
+    return {*}
+    '''       
+    def process(self) -> None:
+        self.context.execute_v2(bindings=[self.input_ptr, self.output0_ptr, self.output1_ptr])
+        self.output0_host = cupy.asnumpy(self.output0_device) 
+        self.output1_host = cupy.asnumpy(self.output1_device) 
+
     '''
     description:    model post-process
     param {*} self  instance of class
@@ -239,9 +265,9 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
     '''            
     def post_process(self) -> None:
         if int(trt.__version__.split(".")[0]) < 10:
-            output = np.squeeze(self.outputs[1].host.astype(np.float32).reshape(self.outputs_shape[1]))
+            output = np.squeeze(self.output1_host.reshape(self.outputs_shape[1]))
         else:
-            output = np.squeeze(self.outputs[0].host.astype(np.float32).reshape(self.outputs_shape[0]))
+            output = np.squeeze(self.output0_host.reshape(self.outputs_shape[0]))
         boxes = []
         scores = []
         class_ids = []
@@ -249,25 +275,28 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
         
         if self.algo_type in ['YOLOv5']:
             output = output[output[..., 4] > self.confidence_threshold]
-            classes_scores = output[..., 5:(5+self.class_num)]     
-            for i in range(output.shape[0]):
-                class_id = np.argmax(classes_scores[i])
-                score = classes_scores[i][class_id] * output[i][4]
-                if score > self.score_threshold:
-                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
-                    scores.append(score)
-                    class_ids.append(class_id) 
-                    preds.append(output[i])                            
-        if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']: 
-            classes_scores = output[..., 4:(4+self.class_num)]   
-            for i in range(output.shape[0]):              
-                class_id = np.argmax(classes_scores[i])
-                score = classes_scores[i][class_id]
-                if score > self.score_threshold:
-                    boxes.append(np.concatenate([output[i, :4], np.array([score, class_id])]))
-                    scores.append(score)
-                    class_ids.append(class_id) 
-                    preds.append(output[i])    
+            classes_scores = output[..., 5:(5 + self.class_num)]
+            class_ids = np.argmax(classes_scores, axis=-1)
+            class_scores = np.max(classes_scores, axis=-1)
+            scores_all = class_scores * output[..., 4]        
+            mask = scores_all > self.score_threshold
+            boxes = output[mask, :4] 
+            scores = scores_all[mask, None]  
+            class_ids = class_ids[mask, None]  
+            boxes = np.hstack([boxes, scores, class_ids])
+            scores = scores.squeeze()    
+            preds = output[mask]           
+        elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']: 
+            classes_scores = output[..., 4:(4 + self.class_num)]  
+            class_ids = np.argmax(classes_scores, axis=-1)  
+            scores_all = np.max(classes_scores, axis=-1)        
+            mask = scores_all > self.score_threshold  
+            boxes = output[mask, :4] 
+            scores = scores_all[mask, None]  
+            class_ids = class_ids[mask, None]  
+            boxes = np.hstack([boxes, scores, class_ids])
+            scores = scores.squeeze()     
+            preds = output[mask]                        
                       
         if len(boxes):   
             boxes = np.array(boxes)
@@ -277,9 +306,9 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
             boxes = boxes[indices]          
             masks_in = np.array(preds)[indices][..., -32:]
             if int(trt.__version__.split(".")[0]) < 10:
-                proto = np.squeeze(self.outputs[0].host.astype(dtype=np.float32).reshape(self.outputs_shape[0]))
+                proto = np.squeeze(self.output0_host.reshape(self.outputs_shape[0]))
             else:
-                proto = np.squeeze(self.outputs[1].host.astype(dtype=np.float32).reshape(self.outputs_shape[1]))
+                proto = np.squeeze(self.output1_host.reshape(self.outputs_shape[1]))
             c, mh, mw = proto.shape 
             if self.algo_type in ['YOLOv5']:
                 masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)  
