@@ -284,14 +284,16 @@ void YOLO_OpenCV_Detect::post_process()
 			box = cv::Rect(left, top, width, height);
 		}
 
-		scale_box(box, m_image.size());
 		boxes.push_back(box);
 		scores.push_back(score);
 		class_ids.push_back(class_id);
 	}
 
+	scale_boxes(boxes, m_image.size());
+
 	std::vector<int> indices;
 	nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
+
 	m_output_det.clear();
 	m_output_det.resize(indices.size());
 	for (int i = 0; i < indices.size(); i++)
@@ -353,7 +355,6 @@ void YOLO_OpenCV_Segment::post_process()
 		height = (top + height) < m_image.rows ? height : (m_image.rows - top);
 		cv::Rect box = cv::Rect(left, top, width, height);
 
-		scale_box(box, m_image.size());
 		boxes.push_back(box);
 		scores.push_back(score);
 		class_ids.push_back(class_id);
@@ -369,6 +370,8 @@ void YOLO_OpenCV_Segment::post_process()
 			picked_proposals.push_back(temp_proto);
 		}
 	}
+
+	scale_boxes(boxes, m_image.size());
 
 	std::vector<int> indices;
 	nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);

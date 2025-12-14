@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2025-12-02 19:52:08
+ * @LastEditTime: 2025-12-14 10:56:37
  * @FilePath: \cpp\libtorch\yolo_libtorch.cpp
  * @Description: libtorch inference source file for YOLO algorithm
  */
@@ -64,8 +64,6 @@ void YOLO_Libtorch_Classify::init(const Algo_Type algo_type, const Device_Type d
 		m_input_size.height = 224;
 		m_input_numel = 1 * 3 * m_input_size.width * m_input_size.height;
 	}
-
-	m_output_host = new float[m_class_num];
 }
 
 void YOLO_Libtorch_Detect::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
@@ -89,8 +87,6 @@ void YOLO_Libtorch_Detect::init(const Algo_Type algo_type, const Device_Type dev
 	}
 
 	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
-
-	m_output_host = new float[m_output_numdet];
 }
 
 void YOLO_Libtorch_Segment::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
@@ -114,9 +110,6 @@ void YOLO_Libtorch_Segment::init(const Algo_Type algo_type, const Device_Type de
 	}
 	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
 	m_output_numseg = m_mask_params.seg_channels * m_mask_params.seg_width * m_mask_params.seg_height;
-
-	m_output0_host = new float[m_output_numdet];
-	m_output1_host = new float[m_output_numseg];
 }
 
 void YOLO_Libtorch_Classify::pre_process()
@@ -150,6 +143,7 @@ void YOLO_Libtorch_Classify::pre_process()
 		crop_image.convertTo(crop_image, CV_16FC3);
 		input = torch::from_blob(crop_image.data, { 1, crop_image.rows, crop_image.cols, crop_image.channels() }, torch::kHalf).to(m_device);
 	}
+
 	input = input.permute({ 0, 3, 1, 2 }).contiguous();
 	m_input.clear();
 	m_input.emplace_back(input);
@@ -173,6 +167,7 @@ void YOLO_Libtorch_Detect::pre_process()
 		letterbox.convertTo(letterbox, CV_16FC3, 1.0f / 255.0f);
 		input = torch::from_blob(letterbox.data, { 1, letterbox.rows, letterbox.cols, letterbox.channels() }, torch::kHalf).to(m_device);
 	}
+
 	input = input.permute({ 0, 3, 1, 2 }).contiguous();
 	m_input.clear();
 	m_input.emplace_back(input);
@@ -196,6 +191,7 @@ void YOLO_Libtorch_Segment::pre_process()
 		letterbox.convertTo(letterbox, CV_16FC3, 1.0f / 255.0f);
 		input = torch::from_blob(letterbox.data, { 1, letterbox.rows, letterbox.cols, letterbox.channels() }, torch::kHalf).to(m_device);
 	}
+
 	input = input.permute({ 0, 3, 1, 2 }).contiguous();
 	m_input.clear();
 	m_input.emplace_back(input);
@@ -203,143 +199,127 @@ void YOLO_Libtorch_Segment::pre_process()
 
 void YOLO_Libtorch_Classify::process()
 {
-	m_output = m_module.forward(m_input);
-
-	torch::Tensor pred;
-	if (m_algo_type == YOLOv5)
-	{
-		if (m_device == at::kCPU)
-		{
-			pred = m_output.toTensor().to(at::kCPU);
-		}
-		else if (m_device == at::kCUDA)
-		{
-			pred = m_output.toTensor().to(torch::kFloat).to(at::kCPU);
-		}
-	}
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
-	{
-		if (m_device == at::kCPU)
-		{
-			pred = m_output.toTensor().to(at::kCPU);
-		}
-		else if (m_device == at::kCUDA)
-		{
-			pred = m_output.toTensor().to(torch::kFloat).to(at::kCPU);
-		}
-	}
-
-	std::copy(pred.data_ptr<float>(), pred.data_ptr<float>() + m_class_num, m_output_host);
+	m_output = m_module.forward(m_input).toTensor();
 }
 
 void YOLO_Libtorch_Detect::process()
 {
-	m_output = m_module.forward(m_input);
-
-	torch::Tensor pred;
 	if (m_algo_type == YOLOv5 || m_algo_type == YOLOv7)
-		pred = m_output.toTuple()->elements()[0].toTensor().to(torch::kFloat).to(at::kCPU);
+		m_output = m_module.forward(m_input).toTuple()->elements()[0].toTensor();
 	else if (m_algo_type == YOLOv3 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11|| m_algo_type == YOLOv12|| m_algo_type == YOLOv13)
-		pred = m_output.toTensor().to(at::kCPU);
-
-	std::copy(pred.data_ptr<float>(), pred.data_ptr<float>() + m_output_numdet, m_output_host);
+		m_output = m_module.forward(m_input).toTensor();
 }
 
 void YOLO_Libtorch_Segment::process()
 {	
-	m_output = m_module.forward(m_input);
-	torch::Tensor pred0, pred1;
-	pred0 = m_output.toTuple()->elements()[0].toTensor().to(torch::kFloat).to(at::kCPU);
-	pred1 = m_output.toTuple()->elements()[1].toTensor().to(torch::kFloat).to(at::kCPU);
-	std::copy(pred0.data_ptr<float>(), pred0.data_ptr<float>() + m_output_numdet, m_output0_host);
-	std::copy(pred1.data_ptr<float>(), pred1.data_ptr<float>() + m_output_numseg, m_output1_host);
+	m_output0 = m_module.forward(m_input).toTuple()->elements()[0].toTensor();
+	m_output1 = m_module.forward(m_input).toTuple()->elements()[1].toTensor();
 }
 
 void YOLO_Libtorch_Classify::post_process()
 {
-	std::vector<float> scores(m_class_num); 
-	float sum = 0.0f;
-	for (size_t i = 0; i < m_class_num; i++)
-	{
-		scores[i] = m_output_host[i];
-		sum += exp(m_output_host[i]);
-	}
-	int id = std::distance(scores.begin(), std::max_element(scores.begin(), scores.end()));
-
-	m_output_cls.id = id;
+	m_output_cls.id = torch::argmax(m_output).item<int64_t>();
 	if (m_algo_type == YOLOv5)
-		m_output_cls.score = exp(scores[id]) / sum;
+		m_output_cls.score = torch::softmax(m_output.flatten(), 0)[m_output_cls.id].to(torch::kCPU).item<float>();
 	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
-		m_output_cls.score = scores[id];
+		m_output_cls.score = torch::max(m_output).to(torch::kCPU).item<float>();
 
 	if(m_draw_result)
 		draw_result(m_output_cls);
 }
 
+torch::Tensor xywh2xyxy(const torch::Tensor& x)
+{
+    torch::Tensor y = x.clone();  
+    y.index({torch::indexing::Ellipsis, 0}) = x.index({torch::indexing::Ellipsis, 0}) - x.index({torch::indexing::Ellipsis, 2}) / 2;  
+    y.index({torch::indexing::Ellipsis, 1}) = x.index({torch::indexing::Ellipsis, 1}) - x.index({torch::indexing::Ellipsis, 3}) / 2;  
+    y.index({torch::indexing::Ellipsis, 2}) = x.index({torch::indexing::Ellipsis, 0}) + x.index({torch::indexing::Ellipsis, 2}) / 2; 
+    y.index({torch::indexing::Ellipsis, 3}) = x.index({torch::indexing::Ellipsis, 1}) + x.index({torch::indexing::Ellipsis, 3}) / 2;  
+    return y;
+}
+
+std::vector<cv::Rect> tensor2rects(const torch::Tensor& tensor) 
+{
+    auto coords = tensor.to(torch::kCPU).to(torch::kFloat32).contiguous();
+    auto ptr = coords.data_ptr<float>(); 
+	std::vector<cv::Rect> rects(coords.size(0)); 
+    for (int i = 0; i < coords.size(0); ++i) 
+	{
+        int x1 = static_cast<int>(ptr[i*4]), y1 = static_cast<int>(ptr[i*4+1]);
+        int x2 = static_cast<int>(ptr[i*4+2]), y2 = static_cast<int>(ptr[i*4+3]);
+        rects[i] = cv::Rect(x1, y1, x2-x1, y2-y1); 
+    }
+    return rects;
+}
+
+template <typename T>
+std::vector<T> tensor2vec(const torch::Tensor& tensor) 
+{
+	torch::Dtype dtype;
+	if constexpr (std::is_same_v<T, float>) 
+        dtype = torch::kFloat32;
+	else if constexpr (std::is_same_v<T, int>) 
+        dtype = torch::kInt32;
+    auto tensor_cpu = tensor.to(torch::kCPU).to(dtype);
+    return {tensor_cpu.data_ptr<T>(), tensor_cpu.data_ptr<T>() + tensor_cpu.numel()};
+}
+
 void YOLO_Libtorch_Detect::post_process()
 {
-	std::vector<cv::Rect> boxes;
-	std::vector<float> scores;
-	std::vector<int> class_ids;
-
-	for (int i = 0; i < m_output_numbox; ++i)
+	torch::Tensor output = torch::squeeze(m_output);
+	torch::Tensor cls_scores;
+	if (m_algo_type == YOLOv3 || m_algo_type == YOLOv4 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 	{
-		float* ptr = m_output_host + i * m_output_numprob;
-		int class_id;
-		float score;
-		if (m_algo_type == YOLOv5 || m_algo_type == YOLOv7)
-		{
-			float objness = ptr[4];
-			if (objness < m_confidence_threshold)
-				continue;
-			float* classes_scores = ptr + 5;
-			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
-			score = classes_scores[class_id] * objness;
-		}
-		else if (m_algo_type == YOLOv3 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
-		{
-			float* classes_scores = ptr + 4;
-			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
-			score = classes_scores[class_id];
-		}
-		if (score < m_score_threshold)
-			continue;
+		cls_scores = output.index({torch::indexing::Ellipsis, torch::indexing::Slice(4, 4 + m_class_num)});
 
-		cv::Rect box;
-		if(m_algo_type == YOLOv3 || m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
-		{
-			float x = ptr[0];
-			float y = ptr[1];
-			float w = ptr[2];
-			float h = ptr[3];
+	}	
+	else if (m_algo_type == YOLOv5 || m_algo_type == YOLOv7)
+	{
+		torch::Tensor obj_conf = output.index({torch::indexing::Ellipsis, 4});
+        torch::Tensor conf_mask = obj_conf > m_confidence_threshold;
+		output = output.index({conf_mask});
+		cls_scores = output.index({torch::indexing::Ellipsis, torch::indexing::Slice(5, 5 + m_class_num)});
+	}  
 
-			int left = int(x - 0.5 * w) > 0 ? int(x - 0.5 * w) : 0;
-			int top = int(y - 0.5 * h) > 0 ? int(y - 0.5 * h) : 0;
-			int width = int(w) > 0 ? int(w) : 0;
-			int height = int(h)> 0 ? int(h) : 0;
-			width = (left + width) < m_image.cols ? width : (m_image.cols - left);
-			height = (top + height) < m_image.rows ? height : (m_image.rows - top);
-			box = cv::Rect(left, top, width, height);
-		}
-		else if (m_algo_type == YOLOv10)
-		{
-			int left = int(ptr[0]) > 0 ? int(ptr[0]) : 0;
-			int top = int(ptr[1]) > 0 ? int(ptr[1]) : 0;
-			int width = int(ptr[2] - ptr[0]) > 0 ? int(ptr[2] - ptr[0]) : 0;
-			int height = int(ptr[3] - ptr[1])> 0 ? int(ptr[3] - ptr[1]) : 0;
-			width = (left + width) < m_image.cols ? width : (m_image.cols - left);
-			height = (top + height) < m_image.rows ? height : (m_image.rows - top);
-			box = cv::Rect(left, top, width, height);
-		}
+	if (m_algo_type == YOLOv3 || m_algo_type == YOLOv4 || m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
+	{
+		output.index({torch::indexing::Ellipsis, torch::indexing::Slice(0, 4)}) = xywh2xyxy(output.index({torch::indexing::Ellipsis, torch::indexing::Slice(0, 4)}));
+	}	
 
-		scale_box(box, m_image.size());
-		boxes.push_back(box);
-		scores.push_back(score);
-		class_ids.push_back(class_id);
+	torch::Tensor xc = torch::amax(cls_scores, 1) > m_score_threshold;
+	torch::Tensor output_filtered = output.index({xc});
+
+	torch::Tensor box, obj, cls;
+	if (m_algo_type == YOLOv3 || m_algo_type == YOLOv4 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
+	{
+		std::vector<torch::Tensor> split_result = torch::split(output_filtered, {4, m_class_num}, 1);
+		box = split_result[0];
+		cls = split_result[1]; 
 	}
+	else if (m_algo_type == YOLOv5 || m_algo_type == YOLOv7)
+	{
+		std::vector<torch::Tensor> split_result = torch::split(output_filtered, {4, 1, m_class_num}, 1);
+		box = split_result[0];
+		obj = split_result[1];
+		cls = split_result[2]; 
+	}
+
+  	auto [scores_tensor, j] = torch::max(cls, 1, true);
+
+	std::vector<cv::Rect> boxes = tensor2rects(box);
+	scale_boxes(boxes, m_image.size());
+
+	std::vector<float> scores;
+	if(obj.defined())
+		scores = tensor2vec<float>(scores_tensor * obj);
+	else
+		scores = tensor2vec<float>(scores_tensor);
+		
+	std::vector<int> class_ids = tensor2vec<int>(j.to(torch::kInt32));
 
 	std::vector<int> indices;
 	nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
+
 	m_output_det.clear();
 	m_output_det.resize(indices.size());
 	for (int i = 0; i < indices.size(); i++)
@@ -356,73 +336,120 @@ void YOLO_Libtorch_Detect::post_process()
 		draw_result(m_output_det);
 }
 
+torch::Tensor crop_mask(torch::Tensor masks, torch::Tensor boxes) 
+{
+    int64_t n = masks.size(0);
+    int64_t h = masks.size(1);
+    int64_t w = masks.size(2);
+    torch::Tensor boxes_xyxy = boxes.index({torch::indexing::Ellipsis, torch::indexing::Slice(0, 4)}).unsqueeze(2);
+    std::vector<torch::Tensor> xyxy_chunks = torch::chunk(boxes_xyxy, 4, 1);
+    torch::Tensor x1 = xyxy_chunks[0];
+    torch::Tensor y1 = xyxy_chunks[1];
+    torch::Tensor x2 = xyxy_chunks[2];
+    torch::Tensor y2 = xyxy_chunks[3];
+    torch::Tensor r = torch::arange(w, torch::TensorOptions().device(masks.device()).dtype(x1.dtype())).unsqueeze(0).unsqueeze(0);
+    torch::Tensor c = torch::arange(h, torch::TensorOptions().device(masks.device()).dtype(x1.dtype())).unsqueeze(0).unsqueeze(2); 
+    return masks * ((r >= x1) & (r < x2) & (c >= y1) & (c < y2));
+}
+
+cv::Mat tensor2mat(const torch::Tensor& tensor)
+ {
+	torch::Tensor tensor_float = tensor.to(torch::kCPU).squeeze().to(torch::kFloat32); 
+    cv::Mat mat(tensor.size(0), tensor.size(1), CV_32FC1, tensor_float.data_ptr<float>());
+    return mat;
+}
+
+cv::Mat scale_mask(const cv::Mat& mask, const cv::Size& input_shape, const cv::Size& output_shape)
+{
+	float gain = std::min(float(input_shape.width) / output_shape.width, float(input_shape.height) / output_shape.height); 
+	float pad[2] = {(input_shape.width - output_shape.width * gain) / 2, (input_shape.height - output_shape.height * gain) / 2};
+	cv::Mat mask_scaled = mask(cv::Rect(int(pad[0]), int(pad[1]), mask.cols - 2 * int(pad[0]), mask.rows - 2 * int(pad[1])));
+	cv::Mat mask_resized;
+	cv::resize(mask_scaled, mask_resized, cv::Size(output_shape.width, output_shape.height), cv::INTER_LINEAR);
+	return mask_resized;
+}
+
 void YOLO_Libtorch_Segment::post_process()
 {
-	std::vector<cv::Rect> boxes;
-	std::vector<float> scores;
-	std::vector<int> class_ids;
-	std::vector<std::vector<float>> picked_proposals;
-
-	for (int i = 0; i < m_output_numbox; ++i)
+	torch::Tensor output = torch::squeeze(m_output0);
+	torch::Tensor cls_scores;
+	if (m_algo_type == YOLOv5)
 	{
-		float* ptr = m_output0_host + i * m_output_numprob;
-		int class_id;
-		float score;
-		if (m_algo_type == YOLOv5)
-		{
-			float objness = ptr[4];
-			if (objness < m_confidence_threshold)
-				continue;
-			float* classes_scores = ptr + 5;
-			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
-			score = classes_scores[class_id] * objness;
-		}
-		else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
-		{
-			float* classes_scores = ptr + 4;
-			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
-			score = classes_scores[class_id];
-		}
+		torch::Tensor obj_conf = output.index({torch::indexing::Ellipsis, 4});
+        torch::Tensor conf_mask = obj_conf > m_confidence_threshold;
+		output = output.index({conf_mask});
+		cls_scores = output.index({torch::indexing::Ellipsis, torch::indexing::Slice(5, 5 + m_class_num)});
+	}  
+	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+	{
+		cls_scores = output.index({torch::indexing::Ellipsis, torch::indexing::Slice(4, 4 + m_class_num)});
+	}	
 
-		if (score < m_score_threshold)
-			continue;
+	output.index({torch::indexing::Ellipsis, torch::indexing::Slice(0, 4)}) = xywh2xyxy(output.index({torch::indexing::Ellipsis, torch::indexing::Slice(0, 4)}));
+	torch::Tensor xc = torch::amax(cls_scores, 1) > m_score_threshold;
+	torch::Tensor output_filtered = output.index({xc});
 
-		float x = ptr[0];
-		float y = ptr[1];
-		float w = ptr[2];
-		float h = ptr[3];
-
-		int left = int(x - 0.5 * w) > 0 ? int(x - 0.5 * w) : 0;
-		int top = int(y - 0.5 * h) > 0 ? int(y - 0.5 * h) : 0;
-		int width = int(w) > 0 ? int(w) : 0;
-		int height = int(h)> 0 ? int(h) : 0;
-		width = (left + width) < m_image.cols ? width : (m_image.cols - left);
-		height = (top + height) < m_image.rows ? height : (m_image.rows - top);
-		cv::Rect box = cv::Rect(left, top, width, height);
-
-		scale_box(box, m_image.size());
-		boxes.push_back(box);
-		scores.push_back(score);
-		class_ids.push_back(class_id);
-		
-		if (m_algo_type == YOLOv5)
-		{
-			std::vector<float> temp_proto(ptr + m_class_num + 5, ptr + m_class_num + 37);
-			picked_proposals.push_back(temp_proto);
-		}
-		else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
-		{
-			std::vector<float> temp_proto(ptr + m_class_num + 4, ptr + m_class_num + 36);
-			picked_proposals.push_back(temp_proto);
-		}
+	torch::Tensor box, obj, cls, mask;
+	if (m_algo_type == YOLOv5)
+	{
+		std::vector<torch::Tensor> split_result = torch::split(output_filtered, {4, 1, m_class_num, 32}, 1);
+		box = split_result[0];
+		obj = split_result[1];
+		cls = split_result[2]; 
+		mask = split_result[3]; 
 	}
+	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+	{
+		std::vector<torch::Tensor> split_result = torch::split(output_filtered, {4, m_class_num, 32}, 1);
+		box = split_result[0];
+		cls = split_result[1]; 
+		mask = split_result[2]; 
+	}		
+	
+  	auto [scores_tensor, j] = torch::max(cls, 1, true);
+
+	std::vector<cv::Rect> boxes = tensor2rects(box);
+	scale_boxes(boxes, m_image.size());
+
+	std::vector<float> scores;
+	if(obj.defined())
+		scores = tensor2vec<float>(scores_tensor * obj);
+	else
+		scores = tensor2vec<float>(scores_tensor);
+		
+	std::vector<int> class_ids = tensor2vec<int>(j.to(torch::kInt32));
 
 	std::vector<int> indices;
 	nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
 
+	box = box.index_select(0, torch::tensor(indices, torch::kLong).to(m_device)).to(torch::kFloat32).contiguous();
+	torch::Tensor masks_in = mask.index_select(0, torch::tensor(indices, torch::kLong).to(m_device)).to(torch::kFloat32).contiguous();
+	
+	torch::Tensor proto = torch::squeeze(m_output1).to(torch::kFloat32).contiguous();
+    int64_t c = proto.size(0), mh = proto.size(1), mw = proto.size(2);
+
+	torch::Tensor masks;
+	auto proto_reshaped = proto.reshape({c, -1});  
+	if (m_algo_type == YOLOv5) 
+		masks = torch::sigmoid(masks_in.matmul(proto_reshaped)).reshape({-1, mh, mw});
+	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12) 
+		masks = masks_in.matmul(proto_reshaped).reshape({-1, mh, mw});
+
+	torch::Tensor downsampled_bboxes = box.clone();
+	float scale_w = static_cast<float>(mw) / m_input_size.width;   
+	float scale_h = static_cast<float>(mh) / m_input_size.height;  
+	downsampled_bboxes.index({torch::indexing::Ellipsis, 0}) *= scale_w;  
+	downsampled_bboxes.index({torch::indexing::Ellipsis, 2}) *= scale_w; 
+	downsampled_bboxes.index({torch::indexing::Ellipsis, 1}) *= scale_h;  
+	downsampled_bboxes.index({torch::indexing::Ellipsis, 3}) *= scale_h;  
+
+	masks = crop_mask(masks, downsampled_bboxes);
+
+	std::vector<int64_t> inputs_shape = {m_input_size.height, m_input_size.width}; 
+    masks = torch::nn::functional::interpolate(masks.unsqueeze(0), torch::nn::functional::InterpolateFuncOptions().size(inputs_shape).mode(torch::kBilinear).align_corners(false)).index({0}); 
+
 	m_output_seg.clear();
 	m_output_seg.resize(indices.size());
-	std::vector<std::vector<float>> temp_mask_proposals;
 	cv::Rect holeImgRect(0, 0, m_image.cols, m_image.rows);
 	for (int i = 0; i < indices.size(); ++i)
 	{
@@ -431,20 +458,33 @@ void YOLO_Libtorch_Segment::post_process()
 		output.id = class_ids[idx];
 		output.score = scores[idx];
 		output.box = boxes[idx] & holeImgRect;
-		temp_mask_proposals.push_back(picked_proposals[idx]);
+		cv::Mat mask_mat = tensor2mat(masks[i]);
+		cv::Mat resized_mask = scale_mask(mask_mat, m_input_size, m_image.size());
+		if (m_algo_type == YOLOv5) 
+			output.mask= (resized_mask > 0.5f);
+		else if(m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+			output.mask =(resized_mask > 0.0f);
 		m_output_seg[i] = output;
 	}
 
-	m_mask_params.params = m_params;
-	m_mask_params.input_shape = m_image.size();
-	int shape[4] = { 1, m_mask_params.seg_channels, m_mask_params.seg_width, m_mask_params.seg_height, };
-	cv::Mat output_mat1 = cv::Mat::zeros(4, shape, CV_32FC1);
-	std::copy(m_output1_host, m_output1_host + m_output_numseg, (float*)output_mat1.data);
-	for (int i = 0; i < temp_mask_proposals.size(); ++i)
-	{
-		GetMask(cv::Mat(temp_mask_proposals[i]).t(), output_mat1, m_output_seg[i], m_mask_params, m_algo_type);
-	}
-
 	if(m_draw_result)
-		draw_result(m_output_seg);
+	{
+		cv::Mat image_copy = m_image.clone();
+		srand(time(0));
+		for (int i = 0; i < m_output_seg.size(); ++i)
+		{
+			cv::Scalar random_color(rand() % 256, rand() % 256, rand() % 256);
+			image_copy.setTo(random_color, m_output_seg[i].mask);
+		}
+
+		cv::addWeighted(m_image, 0.5, image_copy, 0.5, 0.0, m_result);
+
+		for (int i = 0; i < m_output_seg.size(); ++i)
+		{
+			cv::Rect bbox = m_output_seg[i].box & cv::Rect(0, 0, m_image.cols, m_image.rows);
+			cv::rectangle(m_result, bbox, cv::Scalar(255, 0, 0), 1);
+			std::string label = "class" + std::to_string(m_output_seg[i].id) + ":" + cv::format("%.2f", m_output_seg[i].score);
+			cv::putText(m_result, label, cv::Point(bbox.x, bbox.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 1);
+		}
+	}
 }

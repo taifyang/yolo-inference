@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2025-10-16 20:53:46
+ * @LastEditTime: 2025-12-13 22:29:12
  * @FilePath: \cpp\yolo_detect.h
  * @Description: detection algorithm class
  */
@@ -84,7 +84,7 @@ protected:
 	 * @param {vector<int>} & indices		detect indices
 	 * @return {*}
 	 */
-	void nms(std::vector<cv::Rect> & boxes, std::vector<float> & scores, float score_threshold, float nms_threshold, std::vector<int> & indices)
+	void nms(std::vector<cv::Rect>& boxes, std::vector<float>& scores, float score_threshold, float nms_threshold, std::vector<int> & indices)
 	{
 		assert(boxes.size() == scores.size());
 
@@ -140,22 +140,25 @@ protected:
 	}
 
 	/**
-	 * @description: 		scale box
-	 * @param {Rect&} box	detect box
-	 * @param {Size} size	output image shape
+	 * @description: 						scale box
+	 * @param {std::vector<cv::Rect>&} box	detect box
+	 * @param {Size} size					output image shape
 	 * @return {*}
 	 */
-	void scale_box(cv::Rect& box, cv::Size size)
+	void scale_boxes(std::vector<cv::Rect>& boxes, cv::Size size)
 	{
 		float gain = std::min(m_input_size.width * 1.0 / size.width, m_input_size.height * 1.0 / size.height);
 		int pad_w = (m_input_size.width - size.width * gain) / 2;
 		int pad_h = (m_input_size.height - size.height * gain) / 2;
-		box.x -= pad_w;
-		box.y -= pad_h;
-		box.x /= gain;
-		box.y /= gain;
-		box.width /= gain;
-		box.height /= gain;
+		for (auto& box : boxes)
+		{
+			box.x -= pad_w;
+			box.y -= pad_h;
+			box.x /= gain;
+			box.y /= gain;
+			box.width /= gain;
+			box.height /= gain;
+		}
 	}
 
 	/**

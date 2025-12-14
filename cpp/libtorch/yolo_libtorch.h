@@ -47,11 +47,6 @@ protected:
 	 * @description: model input
 	 */
 	std::vector<torch::jit::IValue> m_input;
-
-	/**
-	 * @description: model output
-	 */
-	torch::jit::IValue m_output;
 };
 
 /**
@@ -88,6 +83,11 @@ private:
 	 * @return {*}
 	 */
 	void post_process();
+
+	/**
+	 * @description: model output
+	 */
+	torch::Tensor m_output;
 };
 
 /**
@@ -124,6 +124,11 @@ private:
 	 * @return {*}
 	 */
 	void post_process();
+
+	/**
+	 * @description: model output
+	 */
+	torch::Tensor m_output;
 };
 
 /**
@@ -160,4 +165,14 @@ private:
 	 * @return {*}
 	 */
 	void post_process();
+	
+	/**
+	 * @description: model output0
+	 */
+	torch::Tensor m_output0;
+
+	/**
+	 * @description: model output1
+	 */
+	torch::Tensor m_output1;
 };

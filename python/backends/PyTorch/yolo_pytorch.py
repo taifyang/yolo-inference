@@ -2,12 +2,14 @@
 Author: taifyang  
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2025-10-13 21:53:58
+LastEditTime: 2025-12-13 21:04:20
 FilePath: \python\backends\PyTorch_\yolo_pytorch.py
 Description: pytorch inference class for YOLO algorithm
 '''
 
 import torch
+import torchvision
+import torch.nn.functional as F
 from backends.yolo import *
 from backends.utils import *
 
@@ -92,11 +94,12 @@ class YOLO_PyTorch_Classify(YOLO_PyTorch):
     return {*}
     '''    
     def post_process(self) -> None:
-        output = np.squeeze(self.outputs.cpu().detach().numpy()).astype(dtype=np.float32)
+        output = torch.squeeze(self.outputs).to(dtype=torch.float32)
         if self.algo_type in ['YOLOv5'] and self.draw_result:
-            print('class:', np.argmax(output), ' scores:', np.exp(np.max(output))/np.sum(np.exp(output)))
+            print('class:', torch.argmax(output).cpu().item(), \
+                  ' scores:', (torch.exp(torch.max(output))/torch.sum(torch.exp(output))).cpu().item())
         elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'] and self.draw_result:
-            print('class:', np.argmax(output), ' scores:', np.max(output))
+            print('class:', torch.argmax(output).cpu().item(), ' scores:', torch.max(output).cpu().item())
     
 
 '''
@@ -109,7 +112,7 @@ class YOLO_PyTorch_Detect(YOLO_PyTorch):
     return {*}
     '''    
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv3', 'YOLOv4', 'YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv3', 'YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13'], 'algo type not supported!'
         input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
@@ -128,51 +131,27 @@ class YOLO_PyTorch_Detect(YOLO_PyTorch):
     def post_process(self) -> None:       
         boxes = []
         scores = []
-        class_ids = []
 
         if self.algo_type in ['YOLOv3', 'YOLOv6', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
-            output = np.squeeze(self.outputs[0].cpu().detach().numpy()).astype(dtype=np.float32)
-            classes_scores = output[..., 4:(4 + self.class_num)]  
-            class_ids = np.argmax(classes_scores, axis=-1)  
-            scores_all = np.max(classes_scores, axis=-1)        
-            mask = scores_all > self.score_threshold  
-            boxes = output[mask, :4] 
-            scores = scores_all[mask, None]  
-            class_ids = class_ids[mask, None]  
-            boxes = np.hstack([boxes, scores, class_ids])
-            scores = scores.squeeze()
-        elif self.algo_type in ['YOLOv4']:
-            output = np.concatenate([self.outputs[0].squeeze(), self.outputs[1].squeeze()], axis=-1)
-            classes_scores = output[..., 4:(4+self.class_num)]  
-            class_ids = np.argmax(classes_scores, axis=1) 
-            scores = np.max(classes_scores, axis=1)
-            mask = scores > self.score_threshold
-            boxes = output[mask, :4] 
-            scores = scores[mask][:, None] 
-            class_ids = class_ids[mask][:, None] 
-            boxes = np.hstack([boxes, scores, class_ids])
-            class_ids = class_ids.squeeze()
-        elif self.algo_type in ['YOLOv5', 'YOLOv7']:
-            output = np.squeeze(self.outputs[0].cpu().detach().numpy()).astype(dtype=np.float32)
-            output = output[output[..., 4] > self.confidence_threshold]
-            classes_scores = output[..., 5:(5 + self.class_num)]
-            class_ids = np.argmax(classes_scores, axis=-1)
-            class_scores = np.max(classes_scores, axis=-1)
-            scores_all = class_scores * output[..., 4]        
-            mask = scores_all > self.score_threshold
-            boxes = output[mask, :4] 
-            scores = scores_all[mask, None]  
-            class_ids = class_ids[mask, None]  
-            boxes = np.hstack([boxes, scores, class_ids])
-            scores = scores.squeeze()    
+            output = torch.squeeze(self.outputs[0]).to(torch.float32)
+            xc = output[..., 4:(4+self.class_num)].amax(1) > self.score_threshold
+            if self.algo_type in ['YOLOv3', 'YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLOv13']:
+                output[..., :4] = xywh2xyxy(output[..., :4])  
+            box, cls = output[xc].split((4, self.class_num), 1)
+            scores, j = cls.max(1, keepdim=True)
+            boxes = torch.cat((box, scores, j.float()), 1)
+        elif self.algo_type in ['YOLOv5', 'YOLOv7']:   
+            output = torch.squeeze(self.outputs[0]).to(torch.float32)
+            output = output[output[..., 4] > self.confidence_threshold] 
+            xc = output[..., 5:(5+self.class_num)].amax(1) > self.score_threshold
+            output[..., :4] = xywh2xyxy(output[..., :4])  
+            box, obj, cls = output[xc].split((4, 1, self.class_num), 1)
+            scores, j = cls.max(1, keepdim=True)
+            boxes = torch.cat((box, scores*obj, j.float()), 1)
              
         if len(boxes):   
-            boxes = np.array(boxes)
-            scores = np.array(scores)
-            if self.algo_type in ['YOLOv3', 'YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLOv13']:
-                boxes = xywh2xyxy(boxes)
-            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
-            boxes = boxes[indices]
+            indices = torchvision.ops.nms(box, scores.squeeze(), self.iou_threshold)
+            boxes = boxes[indices].cpu().numpy()
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
             if self.draw_result:
                 self.result = draw_result(self.image, boxes)
@@ -205,66 +184,53 @@ class YOLO_PyTorch_Segment(YOLO_PyTorch):
     return {*}
     '''           
     def post_process(self) -> None:
-        output = np.squeeze(self.outputs[0].cpu().detach().numpy()).astype(dtype=np.float32)
+        output = np.squeeze(self.outputs[0]).to(dtype=torch.float32)
         boxes = []
         scores = []
-        class_ids = []
-        preds = []
-        
+
         if self.algo_type in ['YOLOv5']:
-            output = output[output[..., 4] > self.confidence_threshold]
-            classes_scores = output[..., 5:(5 + self.class_num)]
-            class_ids = np.argmax(classes_scores, axis=-1)
-            class_scores = np.max(classes_scores, axis=-1)
-            scores_all = class_scores * output[..., 4]        
-            mask = scores_all > self.score_threshold
-            boxes = output[mask, :4] 
-            scores = scores_all[mask, None]  
-            class_ids = class_ids[mask, None]  
-            boxes = np.hstack([boxes, scores, class_ids])
-            scores = scores.squeeze()    
-            preds = output[mask]           
+            output = torch.squeeze(self.outputs[0]).to(torch.float32)
+            output = output[output[..., 4] > self.confidence_threshold] 
+            xc = output[..., 5:(5+self.class_num)].amax(1) > self.score_threshold
+            output[..., :4] = xywh2xyxy(output[..., :4])  
+            box, obj, cls, mask = output[xc].split((4, 1, self.class_num, 32), 1)
+            scores, j = cls.max(1, keepdim=True)
+            boxes = torch.cat((box, scores*obj, j.float()), 1)          
         elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']: 
-            classes_scores = output[..., 4:(4 + self.class_num)]  
-            class_ids = np.argmax(classes_scores, axis=-1)  
-            scores_all = np.max(classes_scores, axis=-1)        
-            mask = scores_all > self.score_threshold  
-            boxes = output[mask, :4] 
-            scores = scores_all[mask, None]  
-            class_ids = class_ids[mask, None]  
-            boxes = np.hstack([boxes, scores, class_ids])
-            scores = scores.squeeze()     
-            preds = output[mask]    
+            output = torch.squeeze(self.outputs[0]).to(torch.float32)
+            xc = output[..., 4:(4+self.class_num)].amax(1) > self.score_threshold
+            output[..., :4] = xywh2xyxy(output[..., :4])  
+            box, cls, mask = output[xc].split((4, self.class_num, 32), 1)
+            scores, j = cls.max(1, keepdim=True)
+            boxes = torch.cat((box, scores, j.float()), 1)    
                           
         if len(boxes):   
-            boxes = np.array(boxes)
-            boxes = xywh2xyxy(boxes)
-            scores = np.array(scores)
-            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold)
-            boxes = boxes[indices]          
-            masks_in = np.array(preds)[indices][..., -32:]
-            proto = np.squeeze(self.outputs[1].cpu().detach().numpy()).astype(dtype=np.float32)
+            indices = torchvision.ops.nms(box, scores.squeeze(), self.iou_threshold)
+            boxes = boxes[indices]       
+            masks_in = mask[indices]
+            proto = torch.squeeze(self.outputs[1]).to(dtype=torch.float32)
             c, mh, mw = proto.shape 
             if self.algo_type in ['YOLOv5']:
-                masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)  
+                masks = (1/ (1 + torch.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)  
             elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
                 masks = (masks_in @ proto.reshape(c, -1)).reshape(-1, mh, mw)    
-            downsampled_bboxes = boxes.copy()
+            downsampled_bboxes = boxes.clone()
             downsampled_bboxes[:, 0] *= mw / self.inputs_shape[0]
             downsampled_bboxes[:, 2] *= mw / self.inputs_shape[0]
+            downsampled_bboxes[:, 1] *= mh / self.inputs_shape[1] 
             downsampled_bboxes[:, 3] *= mh / self.inputs_shape[1]
-            downsampled_bboxes[:, 1] *= mh / self.inputs_shape[1]       
+          
             masks = crop_mask(masks, downsampled_bboxes)
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
+            masks = F.interpolate(masks[None], self.inputs_shape, mode="bilinear", align_corners=False)[0]
             resized_masks = []
             for mask in masks:
-                mask = cv2.resize(mask, self.inputs_shape, cv2.INTER_LINEAR)
-                mask = scale_mask(mask, self.inputs_shape, self.image.shape)
-                resized_masks.append(mask)
+                resized_mask = scale_mask(mask.cpu().numpy(), self.inputs_shape, self.image.shape)
+                resized_masks.append(resized_mask)
             resized_masks = np.array(resized_masks)
             if self.algo_type in ['YOLOv5']:
                 resized_masks = resized_masks > 0.5
             elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
-                resized_masks = resized_masks > 0       
+                resized_masks = resized_masks > 0    
             if self.draw_result:
-                self.result = draw_result(self.image, boxes, resized_masks)
+                self.result = draw_result(self.image, boxes.cpu().numpy(), resized_masks.astype(np.bool_))

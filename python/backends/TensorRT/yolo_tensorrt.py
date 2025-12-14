@@ -2,7 +2,7 @@
 Author: taifyang  
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2025-10-13 21:54:16
+LastEditTime: 2025-12-13 17:57:18
 FilePath: \python\backends\TensorRT\yolo_tensorrt.py
 Description: tensorrt inference class for YOLO algorithm
 '''
@@ -150,9 +150,6 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
     return {*}
     '''       
     def pre_process(self) -> None:
-        # input = letterbox(self.image, self.inputs_shape)
-        # input = np.transpose(input[:, :, ::-1], (2, 0, 1))
-        # input = cupy.asarray(input).astype(cupy.float32) / 255.0
         input = letterbox_cupy(self.image, self.inputs_shape)
         input = cupy.transpose(input[:, :, ::-1], (2, 0, 1))
         input = input.astype(cupy.float32) / 255.0
@@ -175,41 +172,36 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
     def post_process(self) -> None:       
         boxes = []
         scores = []
-        class_ids = []
+
         output = np.squeeze(self.output0_host.reshape(self.outputs_shape[0]))
 
-        if self.algo_type in ['YOLOv3', 'YOLOv4', 'YOLOv6', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']: 
-            classes_scores = output[..., 4:(4 + self.class_num)]  
-            class_ids = np.argmax(classes_scores, axis=-1)  
-            scores_all = np.max(classes_scores, axis=-1)        
-            mask = scores_all > self.score_threshold  
-            boxes = output[mask, :4] 
-            scores = scores_all[mask, None]  
-            class_ids = class_ids[mask, None]  
-            boxes = np.hstack([boxes, scores, class_ids])
-            scores = scores.squeeze()   
+        if self.algo_type in ['YOLOv3', 'YOLOv4', 'YOLOv6', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']:  
+            output = np.squeeze(output).astype(np.float32)
+            cls_scores = output[..., 4:(4 + self.class_num)]
+            xc = np.amax(cls_scores, axis=1) > self.score_threshold 
+            if self.algo_type in ['YOLOv4']:
+                box = output[xc][:, :4] 
+                box[..., [0, 2]] *= self.inputs_shape[0]
+                box[..., [1, 3]] *= self.inputs_shape[1]
+            else:
+                output[..., :4] = xywh2xyxy(output[..., :4])
+                box = output[xc][:, :4]
+            cls = output[xc][:, 4:(4+self.class_num)]
+            scores = np.max(cls, axis=1, keepdims=True) 
+            j = np.argmax(cls, axis=1, keepdims=True) 
+            boxes = np.concatenate([box, scores, j.astype(np.float32)], axis=1)
         elif self.algo_type in ['YOLOv5', 'YOLOv7']:
             output = output[output[..., 4] > self.confidence_threshold]
-            classes_scores = output[..., 5:(5 + self.class_num)]
-            class_ids = np.argmax(classes_scores, axis=-1)
-            class_scores = np.max(classes_scores, axis=-1)
-            scores_all = class_scores * output[..., 4]        
-            mask = scores_all > self.score_threshold
-            boxes = output[mask, :4] 
-            scores = scores_all[mask, None]  
-            class_ids = class_ids[mask, None]  
-            boxes = np.hstack([boxes, scores, class_ids])
-            scores = scores.squeeze() 
-          
+            xc = np.max(output[...,5:(5+self.class_num)], axis=1) > self.score_threshold
+            output[...,:4] = xywh2xyxy(output[...,:4])
+            box = output[xc][:, :4]
+            cls = output[xc][:, 5:(5+self.class_num)] 
+            scores = np.max(cls, axis=1, keepdims=True) * output[..., 4:5]
+            j = np.argmax(cls, axis=1, keepdims=True) 
+            boxes = np.concatenate([box, scores, j.astype(np.float32)], axis=1) 	
+             
         if len(boxes):   
-            boxes = np.array(boxes)
-            scores = np.array(scores)
-            if self.algo_type in ['YOLOv3', 'YOLOv5', 'YOLOv6', 'YOLOv7', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLOv13']:
-                boxes = xywh2xyxy(boxes)
-            elif self.algo_type in ['YOLOv4']:
-                boxes[..., [0, 2]] *= self.inputs_shape[0]
-                boxes[..., [1, 3]] *= self.inputs_shape[1]
-            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold) 
+            indices = nms(boxes, scores, self.iou_threshold) 
             boxes = boxes[indices]
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
             if self.draw_result:
@@ -268,52 +260,42 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
             output = np.squeeze(self.output1_host.reshape(self.outputs_shape[1]))
         else:
             output = np.squeeze(self.output0_host.reshape(self.outputs_shape[0]))
+            
         boxes = []
         scores = []
-        class_ids = []
-        preds = []
         
         if self.algo_type in ['YOLOv5']:
             output = output[output[..., 4] > self.confidence_threshold]
-            classes_scores = output[..., 5:(5 + self.class_num)]
-            class_ids = np.argmax(classes_scores, axis=-1)
-            class_scores = np.max(classes_scores, axis=-1)
-            scores_all = class_scores * output[..., 4]        
-            mask = scores_all > self.score_threshold
-            boxes = output[mask, :4] 
-            scores = scores_all[mask, None]  
-            class_ids = class_ids[mask, None]  
-            boxes = np.hstack([boxes, scores, class_ids])
-            scores = scores.squeeze()    
-            preds = output[mask]           
+            xc = np.max(output[...,5:(5+self.class_num)], axis=1) > self.score_threshold
+            output[...,:4] = xywh2xyxy(output[...,:4])
+            box = output[xc][:, :4]
+            cls = output[xc][:, 5:(5+self.class_num)] 
+            mask = output[xc][:, (5+self.class_num):]
+            scores = np.max(cls, axis=1, keepdims=True) * output[..., 4:5]
+            j = np.argmax(cls, axis=1, keepdims=True) 
+            boxes = np.concatenate([box, scores, j.astype(np.float32)], axis=1)         
         elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']: 
-            classes_scores = output[..., 4:(4 + self.class_num)]  
-            class_ids = np.argmax(classes_scores, axis=-1)  
-            scores_all = np.max(classes_scores, axis=-1)        
-            mask = scores_all > self.score_threshold  
-            boxes = output[mask, :4] 
-            scores = scores_all[mask, None]  
-            class_ids = class_ids[mask, None]  
-            boxes = np.hstack([boxes, scores, class_ids])
-            scores = scores.squeeze()     
-            preds = output[mask]                        
-                      
+            output = np.squeeze(output).astype(np.float32)
+            cls_scores = output[..., 4:(4 + self.class_num)]
+            xc = np.amax(cls_scores, axis=1) > self.score_threshold 
+            output[..., :4] = xywh2xyxy(output[..., :4])
+            box = output[xc][:, :4]
+            cls = output[xc][:, 4:(4+self.class_num)]
+            mask = output[xc][:, (4+self.class_num):]
+            scores = np.max(cls, axis=1, keepdims=True) 
+            j = np.argmax(cls, axis=1, keepdims=True) 
+            boxes = np.concatenate([box, scores, j.astype(np.float32)], axis=1)   
+                          
         if len(boxes):   
-            boxes = np.array(boxes)
-            boxes = xywh2xyxy(boxes)
-            scores = np.array(scores)
-            indices = nms(boxes, scores, self.score_threshold, self.nms_threshold)
+            indices = nms(boxes, scores, self.iou_threshold) 
             boxes = boxes[indices]          
-            masks_in = np.array(preds)[indices][..., -32:]
-            if int(trt.__version__.split(".")[0]) < 10:
-                proto = np.squeeze(self.output0_host.reshape(self.outputs_shape[0]))
-            else:
-                proto = np.squeeze(self.output1_host.reshape(self.outputs_shape[1]))
+            masks_in = mask[indices]
+            proto = np.squeeze(self.outputs[1]).astype(dtype=np.float32)
             c, mh, mw = proto.shape 
             if self.algo_type in ['YOLOv5']:
                 masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)  
-            elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
-                masks = (masks_in @ proto.reshape(c, -1)).reshape(-1, mh, mw)    
+            if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
+                masks = (masks_in @ proto.reshape(c, -1)).reshape(-1, mh, mw)      
             downsampled_bboxes = boxes.copy()
             downsampled_bboxes[:, 0] *= mw / self.inputs_shape[0]
             downsampled_bboxes[:, 2] *= mw / self.inputs_shape[0]
@@ -333,4 +315,3 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
                 resized_masks = resized_masks > 0       
             if self.draw_result:
                 self.result = draw_result(self.image, boxes, resized_masks)
-                
