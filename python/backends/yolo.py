@@ -107,13 +107,13 @@ class YOLO:
                 self.process()
                 self.post_process()
             
-            # start = time.perf_counter()
-            # for i in range(1000):
-            #     self.pre_process()
-            #     self.process()
-            #     self.post_process()
-            # end = time.perf_counter()
-            # print('avg cost run on 1000 times:', end-start, 'ms')  
+            start = time.perf_counter()
+            for i in range(1000):
+                self.pre_process()
+                self.process()
+                self.post_process()
+            end = time.perf_counter()
+            print('avg cost run on 1000 times:', end-start, 'ms')  
             
             if save_result and output_path!='':
                 cv2.imwrite(output_path, self.result)

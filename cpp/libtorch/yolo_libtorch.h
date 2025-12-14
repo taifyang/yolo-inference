@@ -1,6 +1,4 @@
-/*
- * @Author: taifyang 
- * @Date: 2024-06-12 09:26:41
+ /* @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang
  * @LastEditTime: 2024-10-30 21:17:38
  * @FilePath: \cpp\libtorch\yolo_libtorch.h
@@ -47,6 +45,11 @@ protected:
 	 * @description: model input
 	 */
 	std::vector<torch::jit::IValue> m_input;
+
+	/**
+	 * @description: model output
+	 */
+	torch::jit::IValue m_output;
 };
 
 /**
@@ -83,11 +86,6 @@ private:
 	 * @return {*}
 	 */
 	void post_process();
-
-	/**
-	 * @description: model output
-	 */
-	torch::Tensor m_output;
 };
 
 /**
@@ -124,11 +122,6 @@ private:
 	 * @return {*}
 	 */
 	void post_process();
-
-	/**
-	 * @description: model output
-	 */
-	torch::Tensor m_output;
 };
 
 /**
@@ -165,14 +158,4 @@ private:
 	 * @return {*}
 	 */
 	void post_process();
-	
-	/**
-	 * @description: model output0
-	 */
-	torch::Tensor m_output0;
-
-	/**
-	 * @description: model output1
-	 */
-	torch::Tensor m_output1;
 };
