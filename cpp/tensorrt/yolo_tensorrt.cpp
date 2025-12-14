@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2025-10-16 21:09:23
+ * @LastEditTime: 2025-12-14 11:24:00
  * @FilePath: \cpp\tensorrt\yolo_tensorrt.cpp
  * @Description: tensorrt inference source file for YOLO algorithm
  */
@@ -435,11 +435,12 @@ void YOLO_TensorRT_Detect::post_process()
 			box = cv::Rect(left, top, width, height);
 		}
 
-		scale_box(box, m_image.size());
 		boxes.push_back(box);
 		scores.push_back(score);
 		class_ids.push_back(class_id);
 	}
+
+	scale_boxes(boxes, m_image.size());
 
 	std::vector<int> indices;
 	nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
@@ -489,7 +490,9 @@ void YOLO_TensorRT_Segment::post_process()
 			int height = int(y2 - y1)> 0 ? int(y2 - y1) : 0;
 			width = (left + width) < m_image.cols ? width : (m_image.cols - left);
 			height = (top + height) < m_image.rows ? height : (m_image.rows - top);
-			boxes.push_back(cv::Rect(left, top, width, height));
+			cv::Rect box(left, top, width, height);
+
+			boxes.push_back(box);
 			scores.push_back(m_output_box_host[8 * i + 5]);
 			class_ids.push_back(m_output_box_host[8 * i + 6]);
 
@@ -583,7 +586,6 @@ void YOLO_TensorRT_Segment::post_process()
 		height = (top + height) < m_image.rows ? height : (m_image.rows - top);
 		cv::Rect box = cv::Rect(left, top, width, height);
 
-		scale_box(box, m_image.size());
 		boxes.push_back(box);
 		scores.push_back(score);
 		class_ids.push_back(class_id);
@@ -599,6 +601,8 @@ void YOLO_TensorRT_Segment::post_process()
 			picked_proposals.push_back(temp_proto);
 		}
 	}
+
+	scale_boxes(boxes, m_image.size());
 
 	std::vector<int> indices;
 	nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);

@@ -2,7 +2,7 @@
 Author: taifyang 
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2024-11-30 11:20:18
+LastEditTime: 2025-12-14 08:53:39
 FilePath: \python\backends\yolo.py
 Description: YOLO algorithm interface class
 '''
@@ -26,9 +26,9 @@ class YOLO:
     def __init__(self) -> None:
         super().__init__()
         self.class_num = 80		            
-        self.score_threshold = 0.2      	
-        self.nms_threshold = 0.5        	
-        self.confidence_threshold = 0.2 	
+        self.score_threshold = 0.25      	
+        self.iou_threshold = 0.45        	
+        self.confidence_threshold = 0.25	
         self.inputs_shape = (640, 640)   	
 
     '''
@@ -107,13 +107,13 @@ class YOLO:
                 self.process()
                 self.post_process()
             
-            start = time.perf_counter()
-            for i in range(1000):
-                self.pre_process()
-                self.process()
-                self.post_process()
-            end = time.perf_counter()
-            print('avg cost run on 1000 times:', end-start, 'ms')  
+            # start = time.perf_counter()
+            # for i in range(1000):
+            #     self.pre_process()
+            #     self.process()
+            #     self.post_process()
+            # end = time.perf_counter()
+            # print('avg cost run on 1000 times:', end-start, 'ms')  
             
             if save_result and output_path!='':
                 cv2.imwrite(output_path, self.result)

@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2025-10-15 23:07:52
+ * @LastEditTime: 2025-12-13 23:56:14
  * @FilePath: \cpp\tensorrt\yolo_tensorrt.h
  * @Description: tensorrt inference header file for YOLO algorithm
  */
@@ -349,3 +349,18 @@ private:
 	 */
 	const int m_num_box_element = 8;
 };
+
+/**
+ * @description: 			compute affine transformation
+ * @param {float*} matrix	input matrix
+ * @param {float} x			input x
+ * @param {float} y			input y
+ * @param {float*} ox		output x
+ * @param {float*} oy		output y
+ * @return {*}
+ */	
+static void affine_project(float* matrix, float x, float y, float* ox, float* oy)
+{
+    *ox = matrix[0] * x + matrix[1] * y + matrix[2];
+    *oy = matrix[3] * x + matrix[4] * y + matrix[5];
+}

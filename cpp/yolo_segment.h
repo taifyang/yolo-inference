@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2025-06-30 20:22:52
+ * @LastEditTime: 2025-12-14 11:17:46
  * @FilePath: \cpp\yolo_segment.h
  * @Description: segmentation algorithm class
  */
@@ -63,7 +63,6 @@ protected:
 		cv::Vec4f params = mask_params.params;
 		cv::Rect temp_rect = output.box;
 
-		//crop from mask_protos
 		int rang_x = floor((temp_rect.x * params[0] + params[2]) / net_width * seg_width);
 		int rang_y = floor((temp_rect.y * params[1] + params[3]) / net_height * seg_height);
 		int rang_w = ceil(((temp_rect.x + temp_rect.width) * params[0] + params[2]) / net_width * seg_width) - rang_x;
@@ -92,14 +91,12 @@ protected:
 		roi_rangs.push_back(cv::Range(rang_y, rang_h + rang_y));
 		roi_rangs.push_back(cv::Range(rang_x, rang_w + rang_x));
 
-		//crop
 		cv::Mat temp_mask_protos = mask_protos(roi_rangs).clone();
 		cv::Mat protos = temp_mask_protos.reshape(0, { seg_channels,rang_w * rang_h });
 		cv::Mat matmul_res = (mask_proposals * protos).t();
 		cv::Mat masks_feature = matmul_res.reshape(1, { rang_h,rang_w });
 		cv::Mat dest, mask;
 
-		//sigmoid
 		if(algo_type == YOLOv5)
 		{
 			cv::exp(-masks_feature, dest);
@@ -170,18 +167,3 @@ protected:
 	 */
 	std::vector<OutputSeg> m_output_seg;
 };
-
-/**
- * @description: 			compute affine transformation
- * @param {float*} matrix	input matrix
- * @param {float} x			input x
- * @param {float} y			input y
- * @param {float*} ox		output x
- * @param {float*} oy		output y
- * @return {*}
- */	
-static void affine_project(float* matrix, float x, float y, float* ox, float* oy)
-{
-    *ox = matrix[0] * x + matrix[1] * y + matrix[2];
-    *oy = matrix[3] * x + matrix[4] * y + matrix[5];
-}
