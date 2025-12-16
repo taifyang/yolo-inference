@@ -3,4 +3,5 @@ opencv-python == 4.11.0 # built with cuda from local
 onnxruntime-gpu == 1.22.0
 openvino == 2025.2.0
 torch == 2.7.0+cu128
+torchvision == 0.22.0+cu128
 tensorrt # from local

@@ -2,16 +2,15 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2024-11-15 10:26:20
+ * @LastEditTime: 2025-12-16 21:03:12
  * @FilePath: \cpp\main.cpp
  * @Description: demo
  */
 #include "yolo.h"
 
-
 int main(int argc, char* argv[])
 {
-	if (argc != 7)
+	if (argc != 8)
 	{
 		std::cerr << "argc input error" << std::endl;
 		return -1;
@@ -23,6 +22,7 @@ int main(int argc, char* argv[])
 	Device_Type device;
 	Model_Type model;
 	std::string model_path = argv[6];
+	std::string images_path = argv[7];
 
 	try
 	{
@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
 
 	std::unique_ptr<YOLO> yolo = CreateFactory::instance().create(backend, task);
 	yolo->init(algo, device, model, model_path);
-	yolo->infer("bus.jpg", false, false, argv);
+	yolo->infer(images_path, true, false, argv);
 	yolo->release();
 	return 0;
 }

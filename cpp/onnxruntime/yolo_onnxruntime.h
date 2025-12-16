@@ -114,6 +114,12 @@ private:
 	 * @return {*}
 	 */
 	void post_process();
+
+	/**
+	 * @description: resource release
+	 * @return {*}
+	 */
+	void release();
 };
 
 /**
@@ -150,6 +156,12 @@ private:
 	 * @return {*}
 	 */
 	void post_process();
+
+	/**
+	 * @description: resource release
+	 * @return {*}
+	 */
+	void release();
 };
 
 /**
@@ -186,6 +198,12 @@ private:
 	 * @return {*}
 	 */
 	void post_process();
+
+	/**
+	 * @description: resource release
+	 * @return {*}
+	 */
+	void release();
 
 	/**
 	 * @description: output0 fp16 data 

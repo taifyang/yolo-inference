@@ -2,7 +2,7 @@
 Author: taifyang  
 Date: 2024-06-12 22:23:07
 LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2025-12-13 21:04:20
+LastEditTime: 2025-12-16 20:20:53
 FilePath: \python\backends\PyTorch_\yolo_pytorch.py
 Description: pytorch inference class for YOLO algorithm
 '''
@@ -184,7 +184,6 @@ class YOLO_PyTorch_Segment(YOLO_PyTorch):
     return {*}
     '''           
     def post_process(self) -> None:
-        output = np.squeeze(self.outputs[0]).to(dtype=torch.float32)
         boxes = []
         scores = []
 

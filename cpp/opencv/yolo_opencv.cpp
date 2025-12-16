@@ -130,7 +130,7 @@ void YOLO_OpenCV_Classify::pre_process()
 		Normalize(crop_image, crop_image, m_algo_type);
 #else
 		cv::cuda::GpuMat gpu_image, gpu_crop_image, gpu_cvt_image;
-    	                gpu_image.upload(m_image);
+    	gpu_image.upload(m_image);
 		int crop_size = std::min(m_image.cols, m_image.rows);
 		int left = (m_image.cols - crop_size) / 2, top = (m_image.rows - crop_size) / 2;
 		gpu_crop_image = gpu_image(cv::Rect(left, top, crop_size, crop_size));

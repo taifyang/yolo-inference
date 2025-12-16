@@ -448,3 +448,19 @@ void YOLO_Libtorch_Segment::post_process()
 	if(m_draw_result)
 		draw_result(m_output_seg);
 }
+
+void YOLO_Libtorch_Classify::release()
+{
+	delete[] m_output_host;
+}
+
+void YOLO_Libtorch_Detect::release()
+{
+	delete[] m_output_host;
+}
+
+void YOLO_Libtorch_Segment::release()
+{
+	delete[] m_output0_host;
+	delete[] m_output1_host;
+}

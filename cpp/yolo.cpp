@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2025-10-15 21:59:51
+ * @LastEditTime: 2025-12-15 23:35:10
  * @FilePath: \cpp\yolo.cpp
  * @Description: source file for YOLO algorithm
  */
@@ -11,25 +11,27 @@
 #include "yolo.h"
 #include "utils.h"
 
+
 #ifdef _YOLO_LIBTORCH
-	#include "yolo_libtorch.h"
+	#include "libtorch/yolo_libtorch.h"
 #endif // _YOLO_Libtorch
 
 #ifdef _YOLO_ONNXRUNTIME
-	#include "yolo_onnxruntime.h"
+	#include "onnxruntime/yolo_onnxruntime.h"
 #endif // _YOLO_ONNXRuntime
 
 #ifdef _YOLO_OPENCV
-	#include "yolo_opencv.h"
+	#include "opencv/yolo_opencv.h"
 #endif // _YOLO_OpenCV
 
 #ifdef _YOLO_OPENVINO
-	#include "yolo_openvino.h"
+	#include "openvino/yolo_openvino.h"
 #endif // _YOLO_OpenVINO
 
 #ifdef _YOLO_TENSORRT
-	#include "yolo_tensorrt.h"
+	#include "tensorrt/yolo_tensorrt.h"
 #endif // _YOLO_TensorRT
+
 
 void YOLO::infer(const std::string file_path, bool save_result, bool show_result, char* argv[])
 {
@@ -71,7 +73,7 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 
 		if (save_result)
 		{
-			std::string result_name = "./result/" + std::string(argv[1]) + "_" + std::string(argv[2]) + "_" +std::string(argv[3]) + "_"  + std::string(argv[4]) + "_"  + std::string(argv[5]) + ".jpg";
+			std::string result_name = std::string(argv[1]) + "_" + std::string(argv[2]) + "_" +std::string(argv[3]) + "_"  + std::string(argv[4]) + "_"  + std::string(argv[5]) + ".jpg";
 			cv::imwrite(result_name, m_result);
 		}
 		if (show_result)
