@@ -2,7 +2,7 @@
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
  * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2025-10-15 23:06:31
+ * @LastEditTime: 2025-12-16 20:58:31
  * @FilePath: \cpp\onnxruntime\yolo_onnxruntime.cpp
  * @Description: onnxruntime inference source file for YOLO algorithm
  */
@@ -75,7 +75,8 @@ void YOLO_ONNXRuntime_Classify::init(const Algo_Type algo_type, const Device_Typ
 		m_input_fp16.resize(m_input_numel);
 		m_output_fp16.resize(m_class_num);
 	}
-	m_output_host = (float*)malloc(sizeof(float) * m_class_num);
+	
+	m_output_host = new float[m_class_num];
 }
 
 void YOLO_ONNXRuntime_Detect::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
@@ -110,7 +111,8 @@ void YOLO_ONNXRuntime_Detect::init(const Algo_Type algo_type, const Device_Type 
 		m_input_fp16.resize(m_input_numel);
 		m_output_fp16.resize(m_output_numdet);
 	}
-	m_output_host = (float*)malloc(sizeof(float) * m_output_numdet);
+
+	m_output_host = new float[m_output_numdet];
 }
 
 void YOLO_ONNXRuntime_Segment::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
@@ -146,8 +148,8 @@ void YOLO_ONNXRuntime_Segment::init(const Algo_Type algo_type, const Device_Type
 		m_output1_fp16.resize(m_output_numseg);
 	}
 
-	m_output0_host = (float*)malloc(sizeof(float) * m_output_numdet);
-	m_output1_host = (float*)malloc(sizeof(float) * m_output_numseg);
+	m_output0_host = new float[m_output_numdet];
+	m_output1_host = new float[m_output_numseg];
 }
 
 void YOLO_ONNXRuntime_Classify::pre_process()
@@ -541,4 +543,20 @@ void YOLO_ONNXRuntime::release()
 {
 	m_session->release();
 	m_env.release();
+}
+
+void YOLO_ONNXRuntime_Classify::release()
+{
+	delete[] m_output_host;
+}
+
+void YOLO_ONNXRuntime_Detect::release()
+{
+	delete[] m_output_host;
+}
+
+void YOLO_ONNXRuntime_Segment::release()
+{
+	delete[] m_output0_host;
+	delete[] m_output1_host;
 }
