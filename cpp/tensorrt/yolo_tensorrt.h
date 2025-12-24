@@ -1,9 +1,7 @@
-/*
- * @Author: taifyang 
+/* 
+ * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2025-12-13 23:56:14
- * @FilePath: \cpp\tensorrt\yolo_tensorrt.h
+ * @LastEditTime: 2025-12-21 22:42:23
  * @Description: tensorrt inference header file for YOLO algorithm
  */
 

@@ -1,9 +1,7 @@
-/*
- * @Author: taifyang 
+/* 
+ * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang
- * @LastEditTime: 2024-10-30 21:19:37
- * @FilePath: \cpp\openvino\yolo_openvino.h
+ * @LastEditTime: 2025-12-23 08:41:27
  * @Description: openvino inference header file for YOLO algorithm
  */
 

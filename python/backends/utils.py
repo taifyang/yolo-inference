@@ -1,14 +1,12 @@
 '''
-Author: taifyang 
+Author: taifyang
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2025-12-14 00:05:32
+LastEditTime: 2025-12-23 00:04:24
 Description: utilities functions
 '''
 
 
 import cv2
-import math
 import numpy as np
 try:
     import cupy
@@ -189,176 +187,6 @@ def draw_result(image, preds, masks=[]):
     
     for box, score, cls in zip(boxes, scores, classes):
         top, left, right, bottom = box
-        cv2.rectangle(result, (top, left), (right, bottom), (255, 0, 0), 1)
-        cv2.putText(result, 'class:{0} score:{1:.2f}'.format(cls, score), (top, left), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 1)
+        cv2.rectangle(result, (top, left), (right, bottom), (0, 255, 0), 2)
+        cv2.putText(result, 'class:{0} score:{1:.2f}'.format(cls, score), (top, left), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
     return result
-
-# def draw_result(image, preds, masks=[]):
-#     image_copy = image.copy()   
-#     boxes = preds[...,:4].astype(np.int32) 
-    
-#     for mask in masks:
-#         image_copy[mask] = [np.random.randint(0,256), np.random.randint(0,256), np.random.randint(0,256)]
-#     result = (image*0.5 + image_copy*0.5).astype(np.uint8)
-    
-#     for box in boxes:
-#         top, left, right, bottom = box
-#         cv2.rectangle(result, (top, left), (right, bottom), (255, 0, 0), 1)
-#     return result
-
-
-# import torch
-# def nms_rotated(boxes, scores, threshold=0.45):
-#     """
-#     NMS for oriented bounding boxes using probiou and fast-nms.
-
-#     Args:
-#         boxes (torch.Tensor): Rotated bounding boxes, shape (N, 5), format xywhr.
-#         scores (torch.Tensor): Confidence scores, shape (N,).
-#         threshold (float, optional): IoU threshold. Defaults to 0.45.
-
-#     Returns:
-#         (torch.Tensor): Indices of boxes to keep after NMS.
-#     """
-#     if len(boxes) == 0:
-#         return np.empty((0,), dtype=np.int8)
-#     #sorted_idx = torch.argsort(scores, descending=True)
-#     sorted_idx = np.argsort(-scores)#[::-1]
-#     boxes = boxes[sorted_idx]
-#     #ious = batch_probiou(boxes, boxes).triu_(diagonal=1).numpy()
-#     ious = np.triu(batch_probiou_np(boxes, boxes), k=1)
-#     #pick = torch.nonzero(ious.max(dim=0)[0] < threshold).squeeze_(-1)
-#     pick = np.nonzero(np.max(ious, axis=0) < threshold)[0]
-#     return sorted_idx[pick]
-
-
-# def batch_probiou(obb1, obb2, eps=1e-7):
-#     """
-#     Calculate the prob IoU between oriented bounding boxes, https://arxiv.org/pdf/2106.06072v1.pdf.
-
-#     Args:
-#         obb1 (torch.Tensor | np.ndarray): A tensor of shape (N, 5) representing ground truth obbs, with xywhr format.
-#         obb2 (torch.Tensor | np.ndarray): A tensor of shape (M, 5) representing predicted obbs, with xywhr format.
-#         eps (float, optional): A small value to avoid division by zero. Defaults to 1e-7.
-
-#     Returns:
-#         (torch.Tensor): A tensor of shape (N, M) representing obb similarities.
-#     """
-#     obb1 = torch.from_numpy(obb1) if isinstance(obb1, np.ndarray) else obb1 
-#     obb2 = torch.from_numpy(obb2) if isinstance(obb2, np.ndarray) else obb2
-
-#     x1, y1 = obb1[..., :2].split(1, dim=-1)                                
-#     x2, y2 = (x.squeeze(-1)[None] for x in obb2[..., :2].split(1, dim=-1))  
-#     a1, b1, c1 = _get_covariance_matrix(obb1)                              
-#     a2, b2, c2 = (x.squeeze(-1)[None] for x in _get_covariance_matrix(obb2))
-
-#     t1 = (((a1 + a2) * (y1 - y2).pow(2) + (b1 + b2) * (x1 - x2).pow(2)) / ((a1 + a2) * (b1 + b2) - (c1 + c2).pow(2) + eps)) * 0.25
-#     t2 = (((c1 + c2) * (x2 - x1) * (y1 - y2)) / ((a1 + a2) * (b1 + b2) - (c1 + c2).pow(2) + eps)) * 0.5
-#     t3 = (((a1 + a2) * (b1 + b2) - (c1 + c2).pow(2)) / (4 * ((a1 * b1 - c1.pow(2)).clamp_(0) * (a2 * b2 - c2.pow(2)).clamp_(0)).sqrt() + eps) + eps).log() * 0.5
-#     bd = (t1 + t2 + t3).clamp(eps, 100.0)   
-#     hd = (1.0 - (-bd).exp() + eps).sqrt()
-#     return 1 - hd
-
-# def batch_probiou_np(obb1, obb2, eps=1e-7):
-#     x1, y1 = obb1[..., 0:1], obb1[..., 1:2]
-#     x2, y2 = obb2[..., 0][None, ...], obb2[..., 1][None, ...]
-    
-#     a1, b1, c1 = _get_covariance_matrix_np(obb1)  
-#     a2_raw, b2_raw, c2_raw = _get_covariance_matrix_np(obb2)
-#     a2 = np.squeeze(a2_raw, axis=-1)[None, ...]
-#     b2 = np.squeeze(b2_raw, axis=-1)[None, ...]
-#     c2 = np.squeeze(c2_raw, axis=-1)[None, ...]
-
-#     t1 = (((a1 + a2) * (y1 - y2)**2 + (b1 + b2) * (x1 - x2)**2 ) / ((a1 + a2) * (b1 + b2) - (c1 + c2)**2 + eps)) * 0.25
-#     t2 = (((c1 + c2) * (x2 - x1) * (y1 - y2)) / ((a1 + a2) * (b1 + b2) - (c1 + c2)**2 + eps)) * 0.5  
-#     term1 = np.clip(a1 * b1 - c1**2, 0, None) 
-#     term2 = np.clip(a2 * b2 - c2**2, 0, None)
-#     t3 = np.log(((a1 + a2) * (b1 + b2) - (c1 + c2)**2) / (4 * np.sqrt(term1 * term2) + eps) + eps) * 0.5
-#     bd = np.clip(t1 + t2 + t3, eps, 100.0)
-#     hd = np.sqrt(1.0 - np.exp(-bd) + eps)    
-#     return 1 - hd
-
-
-# def _get_covariance_matrix(boxes):
-#     """
-#     Generating covariance matrix from obbs.
-
-#     Args:
-#         boxes (torch.Tensor): A tensor of shape (N, 5) representing rotated bounding boxes, with xywhr format.
-
-#     Returns:
-#         (torch.Tensor): Covariance matrices corresponding to original rotated bounding boxes.
-#     """
-#     # Gaussian bounding boxes, ignore the center points (the first two columns) because they are not needed here.
-#     gbbs = torch.cat((boxes[:, 2:4].pow(2) / 12, boxes[:, 4:]), dim=-1)
-#     a, b, c = gbbs.split(1, dim=-1)
-#     cos = c.cos()
-#     sin = c.sin()
-#     cos2 = cos.pow(2)
-#     sin2 = sin.pow(2)
-#     return a * cos2 + b * sin2, a * sin2 + b * cos2, (a - b) * cos * sin
-
-# def _get_covariance_matrix_np(boxes):
-#     gbbs = np.concatenate([boxes[:, 2:4]**2 / 12.0,  boxes[:, 4:]], axis=-1)
-#     a, b, c = np.split(gbbs, 3, axis=-1)
-#     cos = np.cos(c)
-#     sin = np.sin(c)
-#     cos2 = cos **2
-#     sin2 = sin** 2
-#     return  a * cos2 + b * sin2, a * sin2 + b * cos2, (a - b) * cos * sin
-
-
-# def regularize_rboxes(rboxes):
-#     """
-#     Regularize rotated boxes in range [0, pi/2].
-
-#     Args:
-#         rboxes (torch.Tensor): Input boxes of shape(N, 5) in xywhr format.
-
-#     Returns:
-#         (torch.Tensor): The regularized boxes.
-#     """
-#     x, y, w, h, t = rboxes.unbind(dim=-1)
-#     # Swap edge and angle if h >= w
-#     w_ = torch.where(w > h, w, h)
-#     h_ = torch.where(w > h, h, w)
-#     t = torch.where(w > h, t, t + math.pi / 2) % math.pi
-#     return torch.stack([x, y, w_, h_, t], dim=-1)  # regularized boxes
-
-# def regularize_rboxes_np(rboxes_np):
-#     x, y, w, h, t = rboxes_np[..., 0], rboxes_np[..., 1], rboxes_np[..., 2], rboxes_np[..., 3], rboxes_np[..., 4]
-#     w_ = np.where(w > h, w, h) 
-#     h_ = np.where(w > h, h, w) 
-#     t = np.where(w > h, t, t + np.pi / 2) % np.pi
-#     return np.stack([x, y, w_, h_, t], axis=-1)
-
-
-# def xywhr2xyxyxyxy(x):
-#     """
-#     Convert batched Oriented Bounding Boxes (OBB) from [xywh, rotation] to [xy1, xy2, xy3, xy4]. Rotation values should
-#     be in radians from 0 to pi/2.
-
-#     Args:
-#         x (numpy.ndarray | torch.Tensor): Boxes in [cx, cy, w, h, rotation] format of shape (n, 5) or (b, n, 5).
-
-#     Returns:
-#         (numpy.ndarray | torch.Tensor): Converted corner points of shape (n, 4, 2) or (b, n, 4, 2).
-#     """
-#     cos, sin, cat, stack = (
-#         (torch.cos, torch.sin, torch.cat, torch.stack)
-#         if isinstance(x, torch.Tensor)
-#         else (np.cos, np.sin, np.concatenate, np.stack)
-#     )
-
-#     ctr = x[..., :2]
-#     w, h, angle = (x[..., i : i + 1] for i in range(2, 5))
-#     cos_value, sin_value = cos(angle), sin(angle)
-#     vec1 = [w / 2 * cos_value, w / 2 * sin_value]
-#     vec2 = [-h / 2 * sin_value, h / 2 * cos_value]
-#     vec1 = cat(vec1, -1)
-#     vec2 = cat(vec2, -1)
-#     pt1 = ctr + vec1 + vec2
-#     pt2 = ctr + vec1 - vec2
-#     pt3 = ctr - vec1 - vec2
-#     pt4 = ctr - vec1 + vec2
-#     return stack([pt1, pt2, pt3, pt4], -2)

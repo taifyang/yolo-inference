@@ -1,9 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
  * @LastEditTime: 2025-06-30 20:05:54
- * @FilePath: \cpp\tensorrt\preprocess.cuh
  * @Description: cuda pre-processing decoding head file for YOLO algorithm
  * refer to https://github.com/wang-xinyu/tensorrtx/blob/master/yolov5/src/preprocess.h
  */

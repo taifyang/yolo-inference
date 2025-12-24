@@ -1,7 +1,6 @@
 '''
 Author: taifyang 
 Date: 2024-07-11 23:48:57
-LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
 LastEditTime: 2024-08-20 23:29:53
 FilePath: \yolo-inference\python\backends\TensorRT\__init__.py
 '''

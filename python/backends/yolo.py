@@ -1,9 +1,7 @@
 '''
 Author: taifyang 
 Date: 2024-06-12 22:23:07
-LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
-LastEditTime: 2025-12-14 08:53:39
-FilePath: \python\backends\yolo.py
+LastEditTime: 2025-12-21 19:39:13
 Description: YOLO algorithm interface class
 '''
 
@@ -107,13 +105,13 @@ class YOLO:
                 self.process()
                 self.post_process()
             
-            start = time.perf_counter()
-            for i in range(1000):
-                self.pre_process()
-                self.process()
-                self.post_process()
-            end = time.perf_counter()
-            print('avg cost run on 1000 times:', end-start, 'ms')  
+            # start = time.perf_counter()
+            # for i in range(1000):
+            #     self.pre_process()
+            #     self.process()
+            #     self.post_process()
+            # end = time.perf_counter()
+            # print('avg cost run on 1000 times:', end-start, 'ms')  
             
             if save_result and output_path!='':
                 cv2.imwrite(output_path, self.result)
@@ -124,7 +122,7 @@ class YOLO:
             cap = cv2.VideoCapture(input_path)
             start = time.perf_counter()
             if save_result and output_path!='':
-                fourcc = cv2.VideoWriter_fourcc(*'XVID')
+                fourcc = cv2.VideoWriter_fourcc('MP4V')
                 fps = cap.get(cv2.CAP_PROP_FPS)
                 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
                 height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))

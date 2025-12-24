@@ -1,9 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang
  * @LastEditTime: 2024-10-30 22:30:23
- * @FilePath: \cpp\yolo_classify.h
  * @Description: classification algorithm class
  */
 

@@ -1,9 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2025-12-15 23:35:10
- * @FilePath: \cpp\yolo.cpp
+ * @LastEditTime: 2025-12-21 19:38:08
  * @Description: source file for YOLO algorithm
  */
 
@@ -98,7 +96,8 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 			std::string result_name = "./result/" + std::string(argv[1]) + "_" + std::string(argv[2]) + "_" +std::string(argv[3]) + "_"  + std::string(argv[4]) + "_"  + std::string(argv[5]) + ".avi";
 			int width = int(cap.get(cv::CAP_PROP_FRAME_WIDTH));
     		int height = int(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
-			wri.open(result_name, cv::VideoWriter::fourcc('M', 'P', '4', '2'), 30, cv::Size(width, height));
+			int fps = int(cap.get(cv::CAP_PROP_FPS));
+			wri.open(result_name, cv::VideoWriter::fourcc('M', 'P', '4', 'V'), fps, cv::Size(width, height));
 		}
 
 		auto start = std::chrono::steady_clock::now();

@@ -1,7 +1,8 @@
- /* @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang
+/*
+ * @Author: taifyang 
+ * @Date: 2024-06-12 09:26:41
+ * @LastEditors: Please set LastEditors
  * @LastEditTime: 2024-10-30 21:17:38
- * @FilePath: \cpp\libtorch\yolo_libtorch.h
  * @Description: libtorch inference header file for YOLO algorithm
  */
 

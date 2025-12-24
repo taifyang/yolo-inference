@@ -1,9 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
  * @LastEditTime: 2025-12-13 22:29:12
- * @FilePath: \cpp\yolo_detect.h
  * @Description: detection algorithm class
  */
 
@@ -176,8 +174,8 @@ protected:
 			float score = output.score;
 			cv::Rect box = output.box;
 			std::string label = "class" + std::to_string(idx) + ":" + cv::format("%.2f", score);
-			cv::rectangle(m_result, box, cv::Scalar(255, 0, 0), 1);
-			cv::putText(m_result, label, cv::Point(box.x, box.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 1);
+			cv::rectangle(m_result, box, cv::Scalar(0, 255, 0), 2);
+			cv::putText(m_result, label, cv::Point(box.x, box.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
 		}
 	}
 

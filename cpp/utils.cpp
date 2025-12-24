@@ -1,9 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang
  * @LastEditTime: 2024-10-30 20:53:28
- * @FilePath: \cpp\utils.cpp
  * @Description: utilities source file
  */
 

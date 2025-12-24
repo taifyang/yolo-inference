@@ -1,11 +1,10 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
  * @LastEditTime: 2025-12-16 21:03:12
- * @FilePath: \cpp\main.cpp
  * @Description: demo
  */
+ 
 #include "yolo.h"
 
 int main(int argc, char* argv[])

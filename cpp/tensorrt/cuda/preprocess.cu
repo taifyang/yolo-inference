@@ -1,9 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
  * @LastEditTime: 2025-06-30 20:12:54
- * @FilePath: \cpp\tensorrt\preprocess.cu
  * @Description: cuda pre-processing decoding source file for YOLO algorithm
  */
 

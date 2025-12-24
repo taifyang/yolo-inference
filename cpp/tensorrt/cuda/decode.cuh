@@ -1,9 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2025-06-30 20:08:12
- * @FilePath: \cpp\tensorrt\decode.cuh
+ * @LastEditTime: 2025-12-24 22:19:10
  * @Description: cuda post-processing decoding head file for YOLO algorithm
  */
 
@@ -61,3 +59,14 @@ void nms_kernel_invoker(float* parray, float nms_threshold, int max_objects, int
 void decode_single_mask(float left, float top, float* mask_weights, float* mask_predict,
 						int mask_width, int mask_height, unsigned char* mask_out,
                         int mask_dim, int out_width, int out_height, cudaStream_t stream);
+
+/**
+ * @description: 				resize image with cuda
+ * @param {uchar*} src			src image
+ * @param {uchar*} dst			dst image
+ * @param {cv::Size} src_size	size of src image
+ * @param {cv::Size} dst_size	size of dst image
+ * @param {cudaStream_t} stream	cuda stream
+ * @return {*}
+ */					
+void resize_cuda(uchar* src, uchar* dst, cv::Size src_size, cv::Size dst_size, cudaStream_t stream);

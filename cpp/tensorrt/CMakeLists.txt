@@ -1,11 +1,11 @@
+file(GLOB TENSORRT_SRCS *.h *.cpp)
 if(WITH_CUDA_PREPROCESS)
-    list(APPEND TENSORRT_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/preprocess.cuh ${CMAKE_CURRENT_SOURCE_DIR}/preprocess.cu)
+    list(APPEND TENSORRT_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/cuda/preprocess.cuh ${CMAKE_CURRENT_SOURCE_DIR}/cuda/preprocess.cu)
     if(WITH_CUDA_POSTPROCESS)  
-        list(APPEND TENSORRT_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/decode.cuh ${CMAKE_CURRENT_SOURCE_DIR}/decode.cu)
+        list(APPEND TENSORRT_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/cuda/decode.cuh ${CMAKE_CURRENT_SOURCE_DIR}/cuda/decode.cu)
     endif()
 endif()
 
-list(APPEND TENSORRT_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/yolo_tensorrt.h ${CMAKE_CURRENT_SOURCE_DIR}/yolo_tensorrt.cpp)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 find_package(CUDA REQUIRED)

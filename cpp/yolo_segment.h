@@ -1,9 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
  * @LastEditTime: 2025-12-14 11:17:46
- * @FilePath: \cpp\yolo_segment.h
  * @Description: segmentation algorithm class
  */
 
@@ -131,10 +129,10 @@ protected:
 		for (int i = 0; i < output_seg.size(); i++)
 		{
 			cv::Rect bbox = output_seg[i].box & cv::Rect(0, 0, m_image.cols, m_image.rows);
-			cv::rectangle(m_result, bbox, cv::Scalar(255, 0, 0), 1);
+			cv::rectangle(m_result, bbox, cv::Scalar(0, 255, 0), 2);
 			mask(bbox).setTo(cv::Scalar(rand() % 256, rand() % 256, rand() % 256), output_seg[i].mask);
 			std::string label = "class" + std::to_string(output_seg[i].id) + ":" + cv::format("%.2f", output_seg[i].score);
-			cv::putText(m_result, label, cv::Point(bbox.x, bbox.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 1);
+			cv::putText(m_result, label, cv::Point(bbox.x, bbox.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
 		}
 		
 		addWeighted(m_result, 0.5, mask, 0.5, 0, m_result);

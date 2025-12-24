@@ -1,9 +1,7 @@
-/*
- * @Author: taifyang 
+/* 
+ * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang
- * @LastEditTime: 2024-10-30 20:49:01
- * @FilePath: \cpp\opencv\yolo_opencv.h
+ * @LastEditTime: 2025-12-23 08:41:10
  * @Description: opencv inference header file for YOLO algorithm
  */
 

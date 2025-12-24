@@ -1,9 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditors: taifyang 58515915+taifyang@users.noreply.github.com
- * @LastEditTime: 2025-10-15 23:35:35
- * @FilePath: \cpp\tensorrt\decode.cu
+ * @LastEditTime: 2025-12-24 08:09:30
  * @Description: cuda post-processing decoding source file for YOLO algorithm
  */
 
@@ -222,4 +220,41 @@ void decode_single_mask(float left, float top, float* mask_weights, float* mask_
 	dim3 grid((out_width + 31) / 32, (out_height + 31) / 32);
 	dim3 block(32, 32);
 	decode_single_mask_kernel<<<grid, block, 0, stream>>>(left, top, mask_weights, mask_predict, mask_width, mask_height, mask_out, mask_dim, out_width, out_height);
+}
+
+__global__ void resize_linear_kernel(const uchar* src, uchar* dst,
+                                     int src_step, int dst_step,
+                                     int src_h, int src_w,
+                                     int dst_h, int dst_w,
+                                     float scale_h, float scale_w) 
+{
+    int dst_y = blockIdx.x * blockDim.x + threadIdx.x;
+    int dst_x = blockIdx.y * blockDim.y + threadIdx.y;
+    if (dst_y >= dst_h || dst_x >= dst_w) 
+        return;
+    int src_y = static_cast<int>(dst_y / scale_h);
+    int src_x = static_cast<int>(dst_x / scale_w);
+    src_y = min(max(src_y, 0), src_h - 1);
+    src_x = min(max(src_x, 0), src_w - 1);
+    dst[dst_y * dst_step + dst_x] = src[src_y * src_step + src_x];
+}
+
+void resize_cuda(uchar* src, uchar* dst, cv::Size src_size, cv::Size dst_size, cudaStream_t stream) 
+{
+    float scale_h = static_cast<float>(dst_size.height) / src_size.height;
+    float scale_w = static_cast<float>(dst_size.width) / src_size.width;
+
+    int src_step = src_size.width;  
+    int dst_step = dst_size.width;
+
+    const dim3 block_size(32, 32);  
+    const dim3 grid_size((dst_size.height + block_size.x - 1) / block_size.x,(dst_size.width + block_size.y - 1) / block_size.y);
+
+    resize_linear_kernel<<<grid_size, block_size, 0, stream>>>(
+        src, dst,
+        src_step, dst_step,
+        src_size.height, src_size.width,
+        dst_size.height, dst_size.width,
+        scale_h, scale_w
+    );
 }
