@@ -14,7 +14,10 @@ int main(int argc, char* argv[])
 		std::cerr << "argc input error" << std::endl;
 		return -1;
 	}
-	std::cout << argv[1] << " " << argv[2] << " " << argv[3] << " " << argv[4] << " " << argv[5] << " " << argv[6] << std::endl;
+	for(int i=1; i<argc; i++)
+		std::cout << argv[i] << " "; 
+	std::cout<< std::endl;
+
 	Backend_Type backend;
 	Task_Type task;
 	Algo_Type algo;
@@ -39,7 +42,7 @@ int main(int argc, char* argv[])
 
 	std::unique_ptr<YOLO> yolo = CreateFactory::instance().create(backend, task);
 	yolo->init(algo, device, model, model_path);
-	yolo->infer(images_path, true, false, argv);
+	yolo->infer(images_path, false, false, argv);
 	yolo->release();
 	return 0;
 }

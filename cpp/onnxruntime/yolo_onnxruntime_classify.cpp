@@ -39,7 +39,6 @@ void YOLO_ONNXRuntime_Classify::pre_process()
 	{
 		CenterCrop(m_image, crop_image);
 		Normalize(crop_image, crop_image, m_algo_type);
-		cv::cvtColor(crop_image, crop_image, cv::COLOR_BGR2RGB);
 	}
 	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 	{
@@ -50,8 +49,9 @@ void YOLO_ONNXRuntime_Classify::pre_process()
 
 		CenterCrop(m_image, crop_image);
 		Normalize(crop_image, crop_image, m_algo_type);
-		cv::cvtColor(crop_image, crop_image, cv::COLOR_BGR2RGB);
 	}
+
+	cv::cvtColor(crop_image, crop_image, cv::COLOR_BGR2RGB);
 
 	std::vector<cv::Mat> split_images;
 	cv::split(crop_image, split_images);

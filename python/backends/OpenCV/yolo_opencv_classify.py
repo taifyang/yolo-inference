@@ -1,7 +1,7 @@
 '''
 Author: taifyang
 Date: 2024-06-12 22:23:07
-LastEditTime: 2025-12-23 08:38:28
+LastEditTime: 2025-12-26 22:06:06
 Description: opencv inference class for the YOLO classifaction algorithm
 '''
 
@@ -22,25 +22,16 @@ class YOLO_OpenCV_Classify(YOLO_OpenCV):
     def pre_process(self) -> None:
         assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv11', 'YOLOv12'], 'algo type not supported!'
         if self.algo_type in ['YOLOv5']:
-            crop_size = min(self.image.shape[0], self.image.shape[1])
-            left = (self.image.shape[1] - crop_size) // 2
-            top = (self.image.shape[0] - crop_size) // 2
-            crop_image = self.image[top:(top+crop_size), left:(left+crop_size), ...]
-            input = cv2.resize(crop_image, self.inputs_shape)
-            input = input / 255.0
-            input = input - np.array([0.406, 0.456, 0.485])
-            input = input / np.array([0.225, 0.224, 0.229])
+            input = centercrop(self.image, self.inputs_shape)
+            input = normalize(input, self.algo_type)
         elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']:
             self.inputs_shape = (224, 224)
             if self.image.shape[1] > self.image.shape[0]:
                 self.image = cv2.resize(self.image, (self.inputs_shape[0]*self.image.shape[1]//self.image.shape[0], self.inputs_shape[0]))
             else:
                 self.image = cv2.resize(self.image, (self.inputs_shape[1], self.inputs_shape[1]*self.image.shape[0]//self.image.shape[1]))
-            crop_size = min(self.image.shape[0], self.image.shape[1])
-            left = (self.image.shape[1] - crop_size) // 2
-            top = (self.image.shape[0] - crop_size) // 2
-            crop_image = self.image[top:(top+crop_size), left:(left+crop_size), ...]
-            input = crop_image / 255.0
+            input = centercrop(self.image, self.inputs_shape)
+            input = normalize(input, self.algo_type)
             
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW
         self.inputs = np.expand_dims(input, axis=0).astype(dtype=np.float32)

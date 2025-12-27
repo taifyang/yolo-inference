@@ -1,7 +1,7 @@
 '''
 Author: taifyang
 Date: 2024-06-12 22:23:07
-LastEditTime: 2025-12-23 00:04:24
+LastEditTime: 2025-12-26 21:58:18
 Description: utilities functions
 '''
 
@@ -14,6 +14,49 @@ try:
 except:
     print('cupy import failed!')
 from backends.yolo import *
+
+
+'''
+description:            image centercrop process
+param {*} image         input image
+param {*} inputs_shape  input shape
+param {*} use_cupy      use cupy
+return {*}              processed image
+'''
+def centercrop(image, inputs_shape, use_cupy=False):
+    crop_size = min(image.shape[0], image.shape[1])
+    left = (image.shape[1] - crop_size) // 2
+    top = (image.shape[0] - crop_size) // 2
+    if use_cupy:
+        crop_image = cupy.asarray(image)[top:(top+crop_size), left:(left+crop_size), ...]
+        zoom_factors = (inputs_shape[0]/crop_image.shape[0], inputs_shape[1]/crop_image.shape[1], 1) 
+        return ndimage.zoom(crop_image, zoom_factors, order=0)
+    else:
+        crop_image = image[top:(top+crop_size), left:(left+crop_size), ...]
+        return cv2.resize(crop_image, inputs_shape)
+
+
+'''
+description:            image normalize process
+param {*} image         input image
+param {*} algo_type     algorithm type
+param {*} use_cupy      use cupy
+return {*}              processed image
+'''
+def normalize(image, algo_type, use_cupy=False):
+    if use_cupy:
+        image = image.astype(cupy.float32) / 255.0
+    else:
+        image = image / 255.0
+        
+    if algo_type in ['YOLOv5']:
+        if use_cupy:
+            image = image - cupy.asarray([0.406, 0.456, 0.485], dtype=cupy.float32).reshape(1, 1, -1)
+            image = image / cupy.asarray([0.225, 0.224, 0.229], dtype=cupy.float32).reshape(1, 1, -1)
+        else:
+            image = image - np.array([0.406, 0.456, 0.485])
+            image = image / np.array([0.225, 0.224, 0.229])
+    return image
 
 
 '''
@@ -67,9 +110,10 @@ description:        letterbox image process
 param {*} im        input image
 param {*} new_shape output shape
 param {*} color     filled color
+param {*} use_cupy      use cupy
 return {*}          output image
 '''
-def letterbox(im, new_shape=(416, 416), color=(114, 114, 114)):
+def letterbox(im, new_shape=(416, 416), color=(114, 114, 114), use_cupy=False):
     # Resize and pad image while meeting stride-multiple constraints
     shape = im.shape[:2]  # current shape [height, width]
 
@@ -82,31 +126,20 @@ def letterbox(im, new_shape=(416, 416), color=(114, 114, 114)):
     top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
     left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
     
-    if shape[::-1] != new_unpad:  # resize
-        im = cv2.resize(im, new_unpad, interpolation=cv2.INTER_LINEAR)
-    im = cv2.copyMakeBorder(im, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
-    return im
+    # resize
+    if shape[::-1] != new_unpad:  
+        if use_cupy:
+            im_cupy = cupy.asarray(im)
+            zoom_factors = (new_unpad[1]/im.shape[0], new_unpad[0]/im.shape[1], 1) 
+            im_cupy = ndimage.zoom(im_cupy, zoom_factors, order=0)
+        else:
+            im = cv2.resize(im, new_unpad, interpolation=cv2.INTER_LINEAR)
 
-
-def letterbox_cupy(im, new_shape=(416, 416), color=(114, 114, 114)):
-    # Resize and pad image while meeting stride-multiple constraints
-    shape = im.shape[:2]  # current shape [height, width]
-
-    # Scale ratio (new / old)
-    r = min(new_shape[0] / shape[0], new_shape[1] / shape[1])
-    
-    # Compute padding
-    new_unpad = int(round(shape[1] * r)), int(round(shape[0] * r))    
-    dw, dh = (new_shape[1] - new_unpad[0])/2, (new_shape[0] - new_unpad[1])/2  # wh padding 
-    top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
-    left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
-    
-    if shape[::-1] != new_unpad:  # resize
-        im_cupy = cupy.asarray(im)
-        zoom_factors = (new_unpad[1]/im.shape[0], new_unpad[0]/im.shape[1], 1) 
-        im_cupy = ndimage.zoom(im_cupy, zoom_factors, order=0)
-    im_cupy = cupy.pad(array=im_cupy, pad_width=((top, bottom), (left, right), (0, 0)), mode='constant', constant_values=(color, color))
-    return im_cupy
+     # add border
+    if use_cupy:
+        return cupy.pad(array=im_cupy, pad_width=((top, bottom), (left, right), (0, 0)), mode='constant', constant_values=(color, color))
+    else:
+        return cv2.copyMakeBorder(im, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color) 
 
 
 '''
