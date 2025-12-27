@@ -47,8 +47,10 @@ void YOLO_ONNXRuntime_Detect::pre_process()
 {
 	cv::Mat letterbox;
 	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
+
 	cv::cvtColor(letterbox, letterbox, cv::COLOR_BGR2RGB);
 	letterbox.convertTo(letterbox, CV_32FC3, 1.0f / 255.0f);
+	
 	std::vector<cv::Mat> split_images;
 	cv::split(letterbox, split_images);
 	m_input.clear();

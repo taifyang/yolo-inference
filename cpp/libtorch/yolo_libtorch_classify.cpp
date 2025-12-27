@@ -33,7 +33,6 @@ void YOLO_Libtorch_Classify::pre_process()
 	{
 		CenterCrop(m_image, crop_image);
 		Normalize(crop_image, crop_image, m_algo_type);
-		cv::cvtColor(crop_image, crop_image, cv::COLOR_BGR2RGB);
 	}
 	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 	{
@@ -43,9 +42,10 @@ void YOLO_Libtorch_Classify::pre_process()
 			cv::resize(m_image, crop_image, cv::Size(m_input_size.width, m_input_size.width * m_image.rows / m_image.cols));
 
 		CenterCrop(m_image, crop_image);
-		Normalize(crop_image, crop_image, m_algo_type);
-		cv::cvtColor(crop_image, crop_image, cv::COLOR_BGR2RGB);
+		Normalize(crop_image, crop_image, m_algo_type);		
 	}
+
+	cv::cvtColor(crop_image, crop_image, cv::COLOR_BGR2RGB);
 
 	torch::Tensor input;
 	if (m_model_type == FP32)

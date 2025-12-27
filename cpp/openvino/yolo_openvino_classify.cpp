@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2025-12-21 23:26:32
+ * @LastEditTime: 2025-12-26 22:40:36
  * @Description: openvino classify source file for YOLO algorithm
  */
 
@@ -31,7 +31,6 @@ void YOLO_OpenVINO_Classify::pre_process()
 	{
 		CenterCrop(m_image, crop_image);
 		Normalize(crop_image, crop_image, m_algo_type);
-		cv::cvtColor(crop_image, crop_image, cv::COLOR_BGR2RGB);
 	}
 	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 	{
@@ -42,10 +41,14 @@ void YOLO_OpenVINO_Classify::pre_process()
 
 		CenterCrop(m_image, crop_image);
 		Normalize(crop_image, crop_image, m_algo_type);
-		cv::cvtColor(crop_image, crop_image, cv::COLOR_BGR2RGB);
 	}
+	cv::cvtColor(crop_image, crop_image, cv::COLOR_BGR2RGB);
 
-	cv::dnn::blobFromImage(crop_image, m_input, 1, cv::Size(crop_image.cols, crop_image.rows), cv::Scalar(), true, false);
+	std::vector<cv::Mat> split_images;
+	cv::split(crop_image, split_images);
+	for(auto& split_image : split_images)
+		split_image = split_image.reshape(1, 1);
+	cv::hconcat(split_images, m_input);
 }
 
 void YOLO_OpenVINO_Classify::process()

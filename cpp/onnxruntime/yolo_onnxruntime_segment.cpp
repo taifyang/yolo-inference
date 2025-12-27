@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2025-12-21 22:22:59
- * @LastEditTime: 2025-12-21 22:23:24
+ * @LastEditTime: 2025-12-26 22:27:02
  * @Description: onnxruntime segment source file for YOLO algorithm
  */
 
@@ -48,8 +48,10 @@ void YOLO_ONNXRuntime_Segment::pre_process()
 {
 	cv::Mat letterbox;
 	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
+
 	cv::cvtColor(letterbox, letterbox, cv::COLOR_BGR2RGB);
 	letterbox.convertTo(letterbox, CV_32FC3, 1.0f / 255.0f);
+	
 	std::vector<cv::Mat> split_images;
 	cv::split(letterbox, split_images);
 	m_input.clear();
