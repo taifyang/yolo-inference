@@ -47,14 +47,14 @@ class YOLO_PyTorch_Segment(YOLO_PyTorch):
             output[..., :4] = xywh2xyxy(output[..., :4])  
             box, obj, cls, mask = output[xc].split((4, 1, self.class_num, 32), 1)
             scores, j = cls.max(1, keepdim=True)
-            boxes = torch.cat((box, scores*obj, j.float()), 1)          
+            boxes = torch.cat((box, scores*obj, j.float()), dim=1)          
         elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']: 
             output = torch.squeeze(self.outputs[0]).to(torch.float32)
             xc = output[..., 4:(4+self.class_num)].amax(1) > self.score_threshold
             output[..., :4] = xywh2xyxy(output[..., :4])  
             box, cls, mask = output[xc].split((4, self.class_num, 32), 1)
             scores, j = cls.max(1, keepdim=True)
-            boxes = torch.cat((box, scores, j.float()), 1)    
+            boxes = torch.cat((box, scores, j.float()), dim=1)    
                           
         if len(boxes):   
             indices = torchvision.ops.nms(box, scores.squeeze(), self.iou_threshold)

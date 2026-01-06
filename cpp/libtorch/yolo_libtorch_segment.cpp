@@ -1,8 +1,8 @@
 /* 
  * @Author: taifyang
  * @Date: 2025-12-21 21:51:23
- * @LastEditTime: 2025-12-21 22:01:18
- * @Description: libtorch inference source file for YOLO algorithm
+ * @LastEditTime: 2026-01-06 11:12:15
+ * @Description: source file for YOLO libtorch segmentation
  */
 
 #include "yolo_libtorch.h"
@@ -15,45 +15,12 @@ void YOLO_Libtorch_Segment::init(const Algo_Type algo_type, const Device_Type de
 		std::exit(-1);
 	}
 	YOLO_Libtorch::init(algo_type, device_type, model_type, model_path);
-
-	if (m_algo_type == YOLOv5)
-	{
-		m_output_numprob = 37 + m_class_num;
-		m_output_numbox = 3 * (m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32);
-	}
-	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
-	{
-		m_output_numprob = 36 + m_class_num;
-		m_output_numbox = m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32;
-	}
-	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
-	m_output_numseg = m_mask_params.seg_channels * m_mask_params.seg_width * m_mask_params.seg_height;
-
-	m_output0_host = new float[m_output_numdet];
-	m_output1_host = new float[m_output_numseg];
+	YOLO_Segment::init(algo_type, device_type, model_type, model_path);
 }
 
 void YOLO_Libtorch_Segment::pre_process()
 {
-	cv::Mat letterbox;
-	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
-
-	cv::cvtColor(letterbox, letterbox, cv::COLOR_BGR2RGB);
-
-	torch::Tensor input;
-	if (m_model_type == FP32)
-	{
-		letterbox.convertTo(letterbox, CV_32FC3, 1.0f / 255.0f);
-		input = torch::from_blob(letterbox.data, { 1, letterbox.rows, letterbox.cols, letterbox.channels() }, torch::kFloat).to(m_device);
-	}
-	else if (m_model_type == FP16)
-	{
-		letterbox.convertTo(letterbox, CV_16FC3, 1.0f / 255.0f);
-		input = torch::from_blob(letterbox.data, { 1, letterbox.rows, letterbox.cols, letterbox.channels() }, torch::kHalf).to(m_device);
-	}
-	input = input.permute({ 0, 3, 1, 2 }).contiguous();
-	m_input.clear();
-	m_input.emplace_back(input);
+	YOLO_Libtorch_Detect::pre_process();
 }
 
 void YOLO_Libtorch_Segment::process()
@@ -62,8 +29,8 @@ void YOLO_Libtorch_Segment::process()
 	torch::Tensor pred0, pred1;
 	pred0 = m_output.toTuple()->elements()[0].toTensor().to(torch::kFloat).to(at::kCPU);
 	pred1 = m_output.toTuple()->elements()[1].toTensor().to(torch::kFloat).to(at::kCPU);
-	std::copy(pred0.data_ptr<float>(), pred0.data_ptr<float>() + m_output_numdet, m_output0_host);
-	std::copy(pred1.data_ptr<float>(), pred1.data_ptr<float>() + m_output_numseg, m_output1_host);
+	m_output0.assign(pred0.data_ptr<float>(), pred0.data_ptr<float>() + m_output_numdet);
+	m_output1.assign(pred1.data_ptr<float>(), pred1.data_ptr<float>() + m_output_numseg);
 }
 
 void YOLO_Libtorch_Segment::post_process()
@@ -75,7 +42,7 @@ void YOLO_Libtorch_Segment::post_process()
 
 	for (int i = 0; i < m_output_numbox; ++i)
 	{
-		float* ptr = m_output0_host + i * m_output_numprob;
+		float* ptr = m_output0.data() + i * m_output_numprob;
 		int class_id;
 		float score;
 		if (m_algo_type == YOLOv5)
@@ -150,7 +117,7 @@ void YOLO_Libtorch_Segment::post_process()
 	m_mask_params.input_shape = m_image.size();
 	int shape[4] = { 1, m_mask_params.seg_channels, m_mask_params.seg_width, m_mask_params.seg_height, };
 	cv::Mat output_mat1 = cv::Mat::zeros(4, shape, CV_32FC1);
-	std::copy(m_output1_host, m_output1_host + m_output_numseg, (float*)output_mat1.data);
+	std::copy(m_output1.begin(), m_output1.end(), (float*)output_mat1.data);
 	for (int i = 0; i < temp_mask_proposals.size(); ++i)
 	{
 		GetMask(cv::Mat(temp_mask_proposals[i]).t(), output_mat1, m_output_seg[i], m_mask_params, m_algo_type);
@@ -158,10 +125,4 @@ void YOLO_Libtorch_Segment::post_process()
 
 	if(m_draw_result)
 		draw_result(m_output_seg);
-}
-
-void YOLO_Libtorch_Segment::release()
-{
-	delete[] m_output0_host;
-	delete[] m_output1_host;
 }

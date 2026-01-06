@@ -1,8 +1,8 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2025-12-26 23:45:50
- * @Description: openvino detect source file for YOLO algorithm
+ * @LastEditTime: 2026-01-06 12:24:26
+ * @Description: source file for YOLO openvino detection
  */
 
 #include "yolo_openvino.h"
@@ -15,24 +15,7 @@ void YOLO_OpenVINO_Detect::init(const Algo_Type algo_type, const Device_Type dev
 		std::exit(-1);
 	}
 	YOLO_OpenVINO::init(algo_type, device_type, model_type, model_path);
-
-	if (m_algo_type == YOLOv3 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
-	{
-		m_output_numprob = 4 + m_class_num;
-		m_output_numbox = m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32;
-	}
-	else if (m_algo_type == YOLOv4)
-	{
-		m_output_numprob = 4 + m_class_num;
-		m_output_numbox = 3 * (m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32);
-	}
-	else if (m_algo_type == YOLOv5 || m_algo_type == YOLOv7)
-	{
-		m_output_numprob = 5 + m_class_num;
-		m_output_numbox = 3 * (m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32);
-	}
-
-	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
+	YOLO_Detect::init(algo_type, device_type, model_type, model_path);
 }
 
 void YOLO_OpenVINO_Detect::pre_process()
@@ -55,7 +38,7 @@ void YOLO_OpenVINO_Detect::process()
 	ov::Tensor input_tensor(m_input_port.get_element_type(), m_input_port.get_shape(), m_input.ptr(0)); 
 	m_infer_request.set_input_tensor(input_tensor); 
 	m_infer_request.infer(); 
-	m_output_host = (float*)m_infer_request.get_output_tensor(0).data(); 
+	m_output0_host = (float*)m_infer_request.get_output_tensor(0).data(); 
 }
 
 void YOLO_OpenVINO_Detect::post_process()
@@ -66,7 +49,7 @@ void YOLO_OpenVINO_Detect::post_process()
 
 	for (int i = 0; i < m_output_numbox; ++i)
 	{
-		float* ptr = m_output_host + i * m_output_numprob;
+		float* ptr = m_output0_host + i * m_output_numprob;
 		int class_id;
 		float score;
 		if (m_algo_type == YOLOv3 || m_algo_type == YOLOv4 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)

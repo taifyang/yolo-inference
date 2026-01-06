@@ -1,8 +1,8 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2025-12-26 22:40:36
- * @Description: openvino classify source file for YOLO algorithm
+ * @LastEditTime: 2026-01-03 20:38:11
+ * @Description: source file for YOLO openvino classification
  */
 
 #include "yolo_openvino.h"
@@ -15,13 +15,7 @@ void YOLO_OpenVINO_Classify::init(const Algo_Type algo_type, const Device_Type d
 		std::exit(-1);
 	}
 	YOLO_OpenVINO::init(algo_type, device_type, model_type, model_path);
-
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11)
-	{
-		m_input_size.width = 224;
-		m_input_size.height = 224;
-		m_input_numel = 1 * 3 * m_input_size.width * m_input_size.height;
-	}
+	YOLO_Classify::init(algo_type, device_type, model_type, model_path);
 }
 
 void YOLO_OpenVINO_Classify::pre_process()
@@ -56,7 +50,7 @@ void YOLO_OpenVINO_Classify::process()
 	ov::Tensor input_tensor(m_input_port.get_element_type(), m_input_port.get_shape(), m_input.ptr(0)); 
 	m_infer_request.set_input_tensor(input_tensor); 
 	m_infer_request.infer(); 
-	m_output_host = (float*)m_infer_request.get_output_tensor(0).data();
+	m_output0_host = (float*)m_infer_request.get_output_tensor(0).data();
 }
 
 void YOLO_OpenVINO_Classify::post_process()
@@ -65,8 +59,8 @@ void YOLO_OpenVINO_Classify::post_process()
 	float sum = 0.0f;
 	for (size_t i = 0; i < m_class_num; i++)
 	{
-		scores[i] = m_output_host[i];
-		sum += exp(m_output_host[i]);
+		scores[i] = m_output0_host[i];
+		sum += exp(m_output0_host[i]);
 	}
 	int id = std::distance(scores.begin(), std::max_element(scores.begin(), scores.end()));
 

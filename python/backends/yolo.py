@@ -1,7 +1,7 @@
 '''
 Author: taifyang 
 Date: 2024-06-12 22:23:07
-LastEditTime: 2025-12-21 19:39:13
+LastEditTime: 2026-01-05 11:13:29
 Description: YOLO algorithm interface class
 '''
 
@@ -41,6 +41,7 @@ class YOLO:
                 'Classify':backends.ONNXRuntime.YOLO_ONNXRuntime_Classify,
                 'Detect':backends.ONNXRuntime.YOLO_ONNXRuntime_Detect,
                 'Segment':backends.ONNXRuntime.YOLO_ONNXRuntime_Segment,
+                'Pose':backends.ONNXRuntime.YOLO_ONNXRuntime_Pose,
             }
         except:
                pass
@@ -50,6 +51,7 @@ class YOLO:
                 'Classify':backends.OpenCV.YOLO_OpenCV_Classify,
                 'Detect':backends.OpenCV.YOLO_OpenCV_Detect,
                 'Segment':backends.OpenCV.YOLO_OpenCV_Segment,
+                'Pose':backends.OpenCV.YOLO_OpenCV_Pose,
             }
         except:
             pass
@@ -59,15 +61,17 @@ class YOLO:
                 'Classify':backends.OpenVINO.YOLO_OpenVINO_Classify,
                 'Detect':backends.OpenVINO.YOLO_OpenVINO_Detect,
                 'Segment':backends.OpenVINO.YOLO_OpenVINO_Segment,
+                'Pose':backends.OpenVINO.YOLO_OpenVINO_Pose,
             }
         except:
             pass
         
         try:
-            map['PyTorch'] =  {
+            map['PyTorch'] = {
                 'Classify':backends.PyTorch.YOLO_PyTorch_Classify,
                 'Detect':backends.PyTorch.YOLO_PyTorch_Detect,
                 'Segment':backends.PyTorch.YOLO_PyTorch_Segment,
+                'Pose':backends.PyTorch.YOLO_PyTorch_Pose,
             }
         except:
             pass
@@ -77,6 +81,7 @@ class YOLO:
                 'Classify':backends.TensorRT.YOLO_TensorRT_Classify,
                 'Detect':backends.TensorRT.YOLO_TensorRT_Detect,
                 'Segment':backends.TensorRT.YOLO_TensorRT_Segment,
+                'Pose':backends.TensorRT.YOLO_TensorRT_Pose,
             }
         except:
             pass
@@ -105,13 +110,13 @@ class YOLO:
                 self.process()
                 self.post_process()
             
-            # start = time.perf_counter()
-            # for i in range(1000):
-            #     self.pre_process()
-            #     self.process()
-            #     self.post_process()
-            # end = time.perf_counter()
-            # print('avg cost run on 1000 times:', end-start, 'ms')  
+            start = time.perf_counter()
+            for i in range(1000):
+                self.pre_process()
+                self.process()
+                self.post_process()
+            end = time.perf_counter()
+            print('avg cost run on 1000 times:', end-start, 'ms')  
             
             if save_result and output_path!='':
                 cv2.imwrite(output_path, self.result)

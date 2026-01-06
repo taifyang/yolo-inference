@@ -1,8 +1,8 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2025-12-21 22:34:09
- * @Description: onnxruntime inference source file for YOLO algorithm
+ * @LastEditTime: 2026-01-05 09:29:19
+ * @Description: source file for YOLO onnxruntime inference
  */
 
 #include <thread>
@@ -57,4 +57,3 @@ void YOLO_ONNXRuntime::release()
 	m_session->release();
 	m_env.release();
 }
-

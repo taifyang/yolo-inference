@@ -35,6 +35,7 @@ enum Task_Type
 	Classify,
 	Detect,
 	Segment,
+	Pose,
 };
 
 /**

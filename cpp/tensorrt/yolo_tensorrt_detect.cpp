@@ -1,8 +1,8 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2025-12-21 23:24:51
- * @Description: tensorrt detect source file for YOLO algorithm
+ * @LastEditTime: 2026-01-04 23:48:17
+ * @Description: source file for YOLO tensorrt detection
  */
 
 #include "yolo_tensorrt.h"
@@ -17,29 +17,12 @@ void YOLO_TensorRT_Detect::init(const Algo_Type algo_type, const Device_Type dev
 		std::exit(-1);
 	}
 	YOLO_TensorRT::init(algo_type, device_type, model_type, model_path);
-
-	if (m_algo_type == YOLOv3 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
-	{
-		m_output_numprob = 4 + m_class_num;
-		m_output_numbox = m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32;
-	}
-	else if (m_algo_type == YOLOv4)
-	{
-		m_output_numprob = 4 + m_class_num;
-		m_output_numbox = 3 * (m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32);
-	}
-	else if (m_algo_type == YOLOv5 || m_algo_type == YOLOv7)
-	{
-		m_output_numprob = 5 + m_class_num;
-		m_output_numbox = 3 * (m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32);
-	}
-
-	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
+	YOLO_Detect::init(algo_type, device_type, model_type, model_path);
 
 	m_task_type = Detect;
 
 	cudaMallocHost(&m_input_host, m_max_input_size);
-	cudaMallocHost(&m_output_host, sizeof(float) * m_output_numdet);
+	cudaMallocHost(&m_output0_host, sizeof(float) * m_output_numdet);
 
 	cudaMalloc(&m_input_device, m_max_input_size);
 	cudaMalloc(&m_output_device, sizeof(float) * m_output_numdet);
@@ -90,7 +73,7 @@ void YOLO_TensorRT_Detect::process()
 	m_execution_context->executeV2((void**)m_bindings);
 
 #ifndef _CUDA_POSTPROCESS
-	cudaMemcpyAsync(m_output_host, m_output_device, sizeof(float) * m_output_numdet, cudaMemcpyDeviceToHost, m_stream);
+	cudaMemcpyAsync(m_output0_host, m_output_device, sizeof(float) * m_output_numdet, cudaMemcpyDeviceToHost, m_stream);
 #endif // !_CUDA_POSTPROCESS
 }
 
@@ -102,7 +85,8 @@ void YOLO_TensorRT_Detect::post_process()
 
 #ifdef _CUDA_POSTPROCESS
 	cudaMemset(m_output_box_device, 0, sizeof(float) * (m_num_box_element * m_max_box + 1));	
-	decode_kernel_invoker(m_output_device, m_output_numbox, m_class_num, m_confidence_threshold, m_d2s_device, m_output_box_device, m_max_box, m_num_box_element, m_input_size, m_stream, m_algo_type, m_task_type);
+	decode_kernel_invoker(m_output_device, m_output_numbox, m_class_num, m_confidence_threshold, m_score_threshold, m_d2s_device,
+		 m_output_box_device, m_max_box, m_num_box_element, m_input_size, m_stream, m_algo_type, m_task_type);
 	nms_kernel_invoker(m_output_box_device, m_nms_threshold, m_max_box, m_num_box_element, m_stream);
 	cudaMemcpyAsync(m_output_box_host, m_output_box_device, sizeof(float) * (m_num_box_element * m_max_box + 1), cudaMemcpyDeviceToHost, m_stream);
 	cudaStreamSynchronize(m_stream);
@@ -138,13 +122,10 @@ void YOLO_TensorRT_Detect::post_process()
 		m_output_det[i] = output;
 	}
 
-	if(m_draw_result)
-		draw_result(m_output_det);
-
 #else
 	for (int i = 0; i < m_output_numbox; ++i)
 	{
-		float* ptr = m_output_host + i * m_output_numprob;
+		float* ptr = m_output0_host + i * m_output_numprob;
 		int class_id;
 		float score;
 		if (m_algo_type == YOLOv3 || m_algo_type == YOLOv4 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
@@ -225,9 +206,10 @@ void YOLO_TensorRT_Detect::post_process()
 		m_output_det[i] = output;
 	}
 
+#endif // _CUDA_POSTPROCESS
+
 	if(m_draw_result)
 		draw_result(m_output_det);
-#endif // _CUDA_POSTPROCESS
 }
 
 void YOLO_TensorRT_Detect::release()

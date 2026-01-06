@@ -1,7 +1,7 @@
 '''
 Author: taifyang 
 Date: 2024-06-12 22:23:07
-LastEditTime: 2025-12-23 08:32:34
+LastEditTime: 2026-01-05 11:25:39
 Description: demo
 '''
 
@@ -14,7 +14,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--algo_type', default='YOLOv8', type=str, help='YOLOv3, YOLOv4, YOLOv5, YOLOv6, YOLOv7, YOLOv8, YOLOv9, YOLOv10, YOLOv11, YOLOv12, YOLOv13')
     parser.add_argument('--backend_type', default='PyTorch', type=str, help='PyTorch, ONNXRuntime, OpenCV, OpenVINO, TensorRT')
-    parser.add_argument('--task_type', default='Segment', type=str, help='Classify, Detect, Segment, OBB')
+    parser.add_argument('--task_type', default='Pose', type=str, help='Classify, Detect, Segment, Pose')
     parser.add_argument('--device_type',  default='GPU', type=str, help='CPU, GPU')
     parser.add_argument('--model_type',  default='FP16', type=str, help='FP32, FP16, INT8')
     parser.add_argument('--model_path', default='./weights/yolov8n_seg_fp16_gpu.torchscript', type=str, help='the path of model')

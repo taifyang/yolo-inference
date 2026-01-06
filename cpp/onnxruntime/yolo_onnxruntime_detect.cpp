@@ -1,8 +1,8 @@
 /* 
  * @Author: taifyang
  * @Date: 2025-12-21 22:21:42
- * @LastEditTime: 2025-12-21 22:21:57
- * @Description: onnxruntime detect source file for YOLO algorithm
+ * @LastEditTime: 2026-01-06 12:52:59
+ * @Description: source file for YOLO onnxruntime detection
  */
 
 #include "yolo_onnxruntime.h"
@@ -15,32 +15,13 @@ void YOLO_ONNXRuntime_Detect::init(const Algo_Type algo_type, const Device_Type 
 		std::exit(-1);
 	}
 	YOLO_ONNXRuntime::init(algo_type, device_type, model_type, model_path);
-
-	if (m_algo_type == YOLOv3 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
-	{
-		m_output_numprob = 4 + m_class_num;
-		m_output_numbox = m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32;
-	}
-	else if (m_algo_type == YOLOv4)
-	{
-		m_output_numprob = 4 + m_class_num;
-		m_output_numbox = 3 * (m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32);
-	}
-	else if (m_algo_type == YOLOv5 || m_algo_type == YOLOv7)
-	{
-		m_output_numprob = 5 + m_class_num;
-		m_output_numbox = 3 * (m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32);
-	}
-
-	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
+	YOLO_Detect::init(algo_type, device_type, model_type, model_path);
 
 	if (m_model_type == FP16)
 	{
 		m_input_fp16.resize(m_input_numel);
-		m_output_fp16.resize(m_output_numdet);
+		m_output0.resize(m_output_numdet);
 	}
-
-	m_output_host = new float[m_output_numdet];
 }
 
 void YOLO_ONNXRuntime_Detect::pre_process()
@@ -86,14 +67,16 @@ void YOLO_ONNXRuntime_Detect::process()
 
 	if (m_model_type == FP32 || m_model_type == INT8)
 	{
-		m_output_host = const_cast<float*> (outputs[0].GetTensorData<float>());
+		m_output0_host = const_cast<float*>(outputs[0].GetTensorData<float>());
+		m_output0.assign(m_output0_host, m_output0_host + m_output_numdet);
 	}
 	else if (m_model_type == FP16)
 	{
-		std::copy(const_cast<uint16_t*> (outputs[0].GetTensorData<uint16_t>()), const_cast<uint16_t*> (outputs[0].GetTensorData<uint16_t>()) + m_output_numdet, m_output_fp16.begin());
+		uint16_t* output0_fp16 = const_cast<uint16_t*>(outputs[0].GetTensorData<uint16_t>());
+		m_output0_fp16.assign(output0_fp16, output0_fp16 + m_output_numdet);
 		for (size_t i = 0; i < m_output_numdet; i++)
 		{
-			m_output_host[i] = float16_to_float32(m_output_fp16[i]);
+			m_output0[i] = float16_to_float32(m_output0_fp16[i]);
 		}
 	}
 }
@@ -106,7 +89,7 @@ void YOLO_ONNXRuntime_Detect::post_process()
 
 	for (int i = 0; i < m_output_numbox; ++i)
 	{
-		float* ptr = m_output_host + i * m_output_numprob;
+		float* ptr = m_output0.data() + i * m_output_numprob;
 		int class_id;
 		float score;
 		if (m_algo_type == YOLOv3 || m_algo_type == YOLOv4 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
@@ -189,9 +172,4 @@ void YOLO_ONNXRuntime_Detect::post_process()
 
 	if(m_draw_result)
 		draw_result(m_output_det);
-}
-
-void YOLO_ONNXRuntime_Detect::release()
-{
-	delete[] m_output_host;
 }

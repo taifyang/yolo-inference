@@ -1,8 +1,8 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2025-12-21 23:34:16
- * @Description: tensorrt inference source file for YOLO algorithm
+ * @LastEditTime: 2026-01-03 20:41:05
+ * @Description: source file for YOLO tensorrt inference
  */
 
 #include "yolo_tensorrt.h"

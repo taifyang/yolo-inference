@@ -1,8 +1,8 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2025-12-21 23:05:17
- * @Description: opencv detect source file for YOLO algorithm
+ * @LastEditTime: 2026-01-05 22:00:30
+ * @Description: source file for YOLO opencv detection
  */
 
 #include "yolo_opencv.h"
@@ -15,24 +15,7 @@ void YOLO_OpenCV_Detect::init(const Algo_Type algo_type, const Device_Type devic
 		std::exit(-1);
 	}
 	YOLO_OpenCV::init(algo_type, device_type, model_type, model_path);
-
-	if (m_algo_type == YOLOv3 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
-	{
-		m_output_numprob = 4 + m_class_num;
-		m_output_numbox = m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32;
-	}
-	else if (m_algo_type == YOLOv4)
-	{
-		m_output_numprob = 4 + m_class_num;
-		m_output_numbox = 3 * (m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32);
-	}
-	else if (m_algo_type == YOLOv5 || m_algo_type == YOLOv7)
-	{
-		m_output_numprob = 5 + m_class_num;
-		m_output_numbox = 3 * (m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32);
-	}
-
-	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
+	YOLO_Detect::init(algo_type, device_type, model_type, model_path);
 }
 
 void YOLO_OpenCV_Detect::pre_process()
@@ -45,7 +28,7 @@ void YOLO_OpenCV_Detect::pre_process()
 
 void YOLO_OpenCV_Detect::post_process()
 {
-	m_output_host = (float*)m_output[0].data;
+	m_output0_host = (float*)m_output[0].data;
 
 	std::vector<cv::Rect> boxes;
 	std::vector<float> scores;
@@ -53,7 +36,7 @@ void YOLO_OpenCV_Detect::post_process()
 
 	for (int i = 0; i < m_output_numbox; ++i)
 	{
-		float* ptr = m_output_host + i * m_output_numprob;
+		float* ptr = m_output0_host + i * m_output_numprob;
 		int class_id;
 		float score;
 		if (m_algo_type == YOLOv3 || m_algo_type == YOLOv4 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
@@ -121,7 +104,7 @@ void YOLO_OpenCV_Detect::post_process()
 	scale_boxes(boxes, m_image.size());
 
 	std::vector<int> indices;
-	nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
+	cv::dnn::NMSBoxes(boxes, scores, m_score_threshold, m_nms_threshold, indices);
 
 	m_output_det.clear();
 	m_output_det.resize(indices.size());

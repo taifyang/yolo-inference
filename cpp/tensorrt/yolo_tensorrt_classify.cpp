@@ -1,8 +1,8 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2025-12-21 23:24:57
- * @Description: tensorrt _classify source file for YOLO algorithm
+ * @LastEditTime: 2026-01-05 10:41:59
+ * @Description: source file for YOLO tensorrt classification
  */
 
 #include "yolo_tensorrt.h"
@@ -17,18 +17,12 @@ void YOLO_TensorRT_Classify::init(const Algo_Type algo_type, const Device_Type d
 		std::exit(-1);
 	}
 	YOLO_TensorRT::init(algo_type, device_type, model_type, model_path);
-
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
-	{
-		m_input_size.width = 224;
-		m_input_size.height = 224;
-		m_input_numel = 1 * 3 * m_input_size.width * m_input_size.height;
-	}
+	YOLO_Classify::init(algo_type, device_type, model_type, model_path);
 
 	m_task_type = Classify;
 
 	cudaMallocHost(&m_input_host, m_max_input_size);
-	cudaMallocHost(&m_output_host, sizeof(float) * m_class_num);
+	cudaMallocHost(&m_output0_host, sizeof(float) * m_class_num);
 
 	cudaMalloc(&m_input_device, m_max_input_size);
 	cudaMalloc(&m_output_device, sizeof(float) * m_class_num);
@@ -74,7 +68,7 @@ void YOLO_TensorRT_Classify::pre_process()
 void YOLO_TensorRT_Classify::process()
 {
 	m_execution_context->executeV2((void**)m_bindings);
-	cudaMemcpyAsync(m_output_host, m_output_device, sizeof(float) * m_class_num, cudaMemcpyDeviceToHost, m_stream);
+	cudaMemcpyAsync(m_output0_host, m_output_device, sizeof(float) * m_class_num, cudaMemcpyDeviceToHost, m_stream);
 }
 
 void YOLO_TensorRT_Classify::post_process()
@@ -83,8 +77,8 @@ void YOLO_TensorRT_Classify::post_process()
 	float sum = 0.0f;
 	for (size_t i = 0; i < m_class_num; i++)
 	{
-		scores[i] = m_output_host[i];
-		sum += exp(m_output_host[i]);
+		scores[i] = m_output0_host[i];
+		sum += exp(m_output0_host[i]);
 	}
 	int id = std::distance(scores.begin(), std::max_element(scores.begin(), scores.end()));
 

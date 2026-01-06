@@ -1,8 +1,8 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2025-12-24 08:10:42
- * @Description: tensorrt segment source file for YOLO algorithm
+ * @LastEditTime: 2026-01-05 00:18:42
+ * @Description: source file for YOLO tensorrt segmentation
  */
 
 #include "yolo_tensorrt.h"
@@ -17,19 +17,7 @@ void YOLO_TensorRT_Segment::init(const Algo_Type algo_type, const Device_Type de
 		std::exit(-1);
 	}
 	YOLO_TensorRT::init(algo_type, device_type, model_type, model_path);
-
-	if (m_algo_type == YOLOv5)
-	{
-		m_output_numprob = 37 + m_class_num;
-		m_output_numbox = 3 * (m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32);
-	}
-	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
-	{
-		m_output_numprob = 36 + m_class_num;
-		m_output_numbox = m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32;
-	}
-	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
-	m_output_numseg = m_mask_params.seg_channels * m_mask_params.seg_width * m_mask_params.seg_height;
+	YOLO_Segment::init(algo_type, device_type, model_type, model_path);
 
 	m_task_type = Segment;
 
@@ -65,33 +53,13 @@ void YOLO_TensorRT_Segment::init(const Algo_Type algo_type, const Device_Type de
 }
 
 void YOLO_TensorRT_Segment::pre_process()
-{
-#ifdef _CUDA_PREPROCESS
-	cudaMemcpyAsync(m_input_host, m_image.data, sizeof(uint8_t) * 3 * m_image.cols * m_image.rows, cudaMemcpyHostToDevice, m_stream);
-	preprocess_kernel_img(m_input_host, m_image.cols, m_image.rows, m_input_device, m_input_size.width, m_input_size.height, m_d2s_host, m_s2d_host, m_stream);
-	cudaMemcpyAsync(m_d2s_device, m_d2s_host, sizeof(float) * 6, cudaMemcpyHostToDevice, m_stream);
-	cudaMemcpyAsync(m_s2d_device, m_s2d_host, sizeof(float) * 6, cudaMemcpyHostToDevice, m_stream);
-#else
-	cv::Mat letterbox;
-	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
-	int image_area = letterbox.cols * letterbox.rows;
-	uchar* pimage = letterbox.data;
-	float* phost_r = m_input_host + image_area * 0;
-	float* phost_g = m_input_host + image_area * 1;
-	float* phost_b = m_input_host + image_area * 2;
-	for (int i = 0; i < letterbox.cols * letterbox.rows; ++i, pimage += 3)
-	{
-		*phost_r++ = pimage[2] / 255.0f;
-		*phost_g++ = pimage[1] / 255.0f;
-		*phost_b++ = pimage[0] / 255.0f;
-	}
-	cudaMemcpyAsync(m_input_device, m_input_host, sizeof(float) * m_input_numel, cudaMemcpyHostToDevice, m_stream);
-#endif // _CUDA_PREPROCESS
+{	
+	YOLO_TensorRT_Detect::pre_process();
 }
 
 void YOLO_TensorRT_Segment::process()
 {
-m_execution_context->executeV2((void**)m_bindings);
+	m_execution_context->executeV2((void**)m_bindings);
 
 #ifndef _CUDA_POSTPROCESS
 	cudaMemcpyAsync(m_output0_host, m_output0_device, sizeof(float) * m_output_numdet, cudaMemcpyDeviceToHost, m_stream);
@@ -109,7 +77,8 @@ void YOLO_TensorRT_Segment::post_process()
 
 #ifdef _CUDA_POSTPROCESS
 	cudaMemset(m_output_box_device, 0, sizeof(float) * (m_num_box_element * m_max_box + 1));	
-	decode_kernel_invoker(m_output0_device, m_output_numbox, m_class_num, m_confidence_threshold, m_d2s_device, m_output_box_device, m_max_box, m_num_box_element, m_input_size, m_stream, m_algo_type, m_task_type);
+	decode_kernel_invoker(m_output0_device, m_output_numbox, m_class_num, m_confidence_threshold, m_score_threshold, m_d2s_device, 
+		m_output_box_device, m_max_box, m_num_box_element, m_input_size, m_stream, m_algo_type, m_task_type);
 	nms_kernel_invoker(m_output_box_device, m_nms_threshold, m_max_box, m_num_box_element, m_stream);
 	cudaMemcpyAsync(m_output_box_host, m_output_box_device, sizeof(float) * (m_num_box_element * m_max_box + 1), cudaMemcpyDeviceToHost, m_stream);
 	cudaStreamSynchronize(m_stream);
@@ -172,7 +141,6 @@ void YOLO_TensorRT_Segment::post_process()
 				cudaFree(mask_device);
 				cudaFreeHost(mask_host);
 			}
-
 		}
 	}
 
@@ -267,7 +235,7 @@ void YOLO_TensorRT_Segment::post_process()
 #ifdef _CUDA_PREPROCESS
 	m_mask_params.params = cv::Vec4d(1 / m_d2s_host[0], 1 / m_d2s_host[4], -m_d2s_host[2] / m_d2s_host[0]);
 #else
-	m_mask_params.params = m_params;
+	m_mask_params.params = YOLO_TensorRT_Detect::m_params;
 #endif // _CUDA_PREPROCESS
 
 	m_mask_params.input_shape = m_image.size();

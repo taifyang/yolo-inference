@@ -28,6 +28,36 @@ struct OutputDet
  */
 class YOLO_Detect : virtual public YOLO
 {
+public:
+	/**
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
+	 * @return {*}
+	 */
+	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
+	{
+		if (m_algo_type == YOLOv3 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
+		{
+			m_output_numprob = 4 + m_class_num;
+			m_output_numbox = m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32;
+		}
+		else if (m_algo_type == YOLOv4)
+		{
+			m_output_numprob = 4 + m_class_num;
+			m_output_numbox = 3 * (m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32);
+		}
+		else if (m_algo_type == YOLOv5 || m_algo_type == YOLOv7)
+		{
+			m_output_numprob = 5 + m_class_num;
+			m_output_numbox = 3 * (m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32);
+		}
+
+		m_output_numdet = 1 * m_output_numprob * m_output_numbox;		
+	}
+
 protected:
 	/**
 	 * @description: 				LetterBox image process
@@ -138,9 +168,9 @@ protected:
 	}
 
 	/**
-	 * @description: 						scale box
-	 * @param {std::vector<cv::Rect>&} box	detect box
-	 * @param {Size} size					output image shape
+	 * @description: 							scale boxes
+	 * @param {std::vector<cv::Rect>&} boxes	detect boxes
+	 * @param {Size} size						output image shape
 	 * @return {*}
 	 */
 	void scale_boxes(std::vector<cv::Rect>& boxes, cv::Size size)
@@ -222,7 +252,7 @@ protected:
 	/**
 	 * @description: model output on host
 	 */
-	float* m_output_host;
+	float* m_output0_host;
 
 	/**
 	 * @description: detection model output

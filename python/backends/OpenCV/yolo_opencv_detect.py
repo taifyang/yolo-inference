@@ -33,7 +33,6 @@ class YOLO_OpenCV_Detect(YOLO_OpenCV):
     def post_process(self) -> None:       
         boxes = []
         scores = []
-        class_ids = []
         output = np.squeeze(self.outputs[0]).astype(dtype=np.float32)
 
         if self.algo_type in ['YOLOv3', 'YOLOv4', 'YOLOv6', 'YOLOv8', 'YOLOv9', 'YOLOv10', 'YOLOv11', 'YOLOv12', 'YOLOv13']:  
