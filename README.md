@@ -3,7 +3,7 @@ C++ and Python implementations of YOLOv3, YOLOv4, YOLOv5, YOLOv6, YOLOv7, YOLOv8
 
 Supported inference backends include Libtorch/PyTorch, ONNXRuntime, OpenCV, OpenVINO, TensorRT. 
 
-Supported task types include Classify, Detect, Segment.
+Supported task types include Classify, Detect, Segment, Pose.
 
 Supported model types include FP32, FP16, INT8.
 
@@ -16,20 +16,13 @@ Dependencies(tested):
 * [Torch](https://pytorch.org) version 2.0.0+cu118/2.5.0+cu124/2.7.0+cu128
 
 You can test C++ code with:
-```powershell
-# Windows
-mkdir build ; cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-cmake --build . --config Release
-./run.bat
-```
-or
 ```bash
 # Linux
 mkdir build ; cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-make
-./run.sh
+make -j
+cp ../run.sh .
+bash ./run.sh
 ```
 
 C++ test in Docker with 25 vCPU Intel(R) Xeon(R) Platinum 8470Q , RTX 5090(32GB):
@@ -158,12 +151,6 @@ C++ test in Docker with 25 vCPU Intel(R) Xeon(R) Platinum 8470Q , RTX 5090(32GB)
 
 
 You can test Python code with:
-```powershell
-# Windows 
-pip install -r requirements.txt
-./run.bat
-```
-or
 ```bash
 # Linux
 pip install -r requirements.txt
