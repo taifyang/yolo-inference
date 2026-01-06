@@ -1,8 +1,8 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2025-12-24 22:19:10
- * @Description: cuda post-processing decoding head file for YOLO algorithm
+ * @LastEditTime: 2026-01-03 22:09:43
+ * @Description: head file for cuda post-processing decoding
  */
 
 #pragma once
@@ -18,6 +18,7 @@
  * @param {int} num_bboxes					number of bboxes
  * @param {int} num_classes					number of classes
  * @param {float} confidence_threshold		confidence threshold
+ * @param {float} score_threshold			score threshold
  * @param {float* } inverse_affine_matrix	inverse of affine_matrix
  * @param {float* } parray					output array
  * @param {int} max_objects					max number of objects
@@ -27,9 +28,9 @@
  * @param {Task_Type} task_type				task type
  * @return {*}
  */
-void decode_kernel_invoker(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float* inverse_affine_matrix, float* parray, 
-	int max_objects, int num_box_element, cv::Size input_size, cudaStream_t stream, Algo_Type algo_type, Task_Type task_type);
-
+void decode_kernel_invoker(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float score_threshold, float* inverse_affine_matrix,
+	 float* parray, int max_objects, int num_box_element, cv::Size input_size, cudaStream_t stream, Algo_Type algo_type, Task_Type task_type);
+	 
 /**
  * @description: 					cuda NMS kernel
  * @param {float* } 				input predict array

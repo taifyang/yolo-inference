@@ -1,8 +1,8 @@
 /* 
  * @Author: taifyang
  * @Date: 2025-12-21 22:19:47
- * @LastEditTime: 2025-12-21 22:21:33
- * @Description: onnxruntime classify source file for YOLO algorithm
+ * @LastEditTime: 2026-01-06 12:58:31
+ * @Description: source file for YOLO onnxruntime classification
  */
 
 #include "yolo_onnxruntime.h"
@@ -15,21 +15,13 @@ void YOLO_ONNXRuntime_Classify::init(const Algo_Type algo_type, const Device_Typ
 		std::exit(-1);
 	}
 	YOLO_ONNXRuntime::init(algo_type, device_type, model_type, model_path);
-
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
-	{
-		m_input_size.width = 224;
-		m_input_size.height = 224;
-		m_input_numel = 1 * 3 * m_input_size.width * m_input_size.height;
-	}
-
+	YOLO_Classify::init(algo_type, device_type, model_type, model_path);
+	
 	if (m_model_type == FP16)
 	{
 		m_input_fp16.resize(m_input_numel);
-		m_output_fp16.resize(m_class_num);
+		m_output0.resize(m_class_num);
 	}
-	
-	m_output_host = new float[m_class_num];
 }
 
 void YOLO_ONNXRuntime_Classify::pre_process()
@@ -88,14 +80,16 @@ void YOLO_ONNXRuntime_Classify::process()
 
 	if (m_model_type == FP32 || m_model_type == INT8)
 	{
-		m_output_host = const_cast<float*> (outputs[0].GetTensorData<float>());
+		m_output0_host = const_cast<float*>(outputs[0].GetTensorData<float>());
+		m_output0.assign(m_output0_host, m_output0_host + m_class_num);
 	}
 	else if (m_model_type == FP16)
 	{
-		std::copy(const_cast<uint16_t*> (outputs[0].GetTensorData<uint16_t>()), const_cast<uint16_t*> (outputs[0].GetTensorData<uint16_t>()) + m_class_num, m_output_fp16.begin());
+		uint16_t* output0_fp16 = const_cast<uint16_t*>(outputs[0].GetTensorData<uint16_t>());
+		m_output0_fp16.assign(output0_fp16, output0_fp16 + m_class_num);
 		for (size_t i = 0; i < m_class_num; i++)
 		{
-			m_output_host[i] = float16_to_float32(m_output_fp16[i]);
+			m_output0[i] = float16_to_float32(m_output0_fp16[i]);
 		}
 	}
 }
@@ -106,8 +100,8 @@ void YOLO_ONNXRuntime_Classify::post_process()
 	float sum = 0.0f;
 	for (size_t i = 0; i < m_class_num; i++)
 	{
-		scores[i] = m_output_host[i];
-		sum += exp(m_output_host[i]);
+		scores[i] = m_output0[i];
+		sum += exp(m_output0[i]);
 	}
 	int id = std::distance(scores.begin(), std::max_element(scores.begin(), scores.end()));
 
@@ -119,9 +113,4 @@ void YOLO_ONNXRuntime_Classify::post_process()
 
 	if(m_draw_result)
 		draw_result(m_output_cls);
-}
-
-void YOLO_ONNXRuntime_Classify::release()
-{
-	delete[] m_output_host;
 }

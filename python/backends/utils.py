@@ -1,7 +1,7 @@
 '''
 Author: taifyang
 Date: 2024-06-12 22:23:07
-LastEditTime: 2025-12-26 21:58:18
+LastEditTime: 2026-01-06 21:04:30
 Description: utilities functions
 '''
 
@@ -110,7 +110,7 @@ description:        letterbox image process
 param {*} im        input image
 param {*} new_shape output shape
 param {*} color     filled color
-param {*} use_cupy      use cupy
+param {*} use_cupy  use cupy
 return {*}          output image
 '''
 def letterbox(im, new_shape=(416, 416), color=(114, 114, 114), use_cupy=False):
@@ -147,6 +147,7 @@ description:            scale boxes
 param {*} boxes         bounding boxes
 param {*} input_shape   input image shape
 param {*} output_shape  output image shape
+param {*} xywh          if xywh
 return {*}              scaled boxes
 '''
 def scale_boxes(boxes, input_shape, output_shape, xywh=False):
@@ -161,6 +162,10 @@ def scale_boxes(boxes, input_shape, output_shape, xywh=False):
     boxes[..., :4] /= gain
     boxes[..., [0, 2]] = boxes[..., [0, 2]].clip(0, output_shape[1])  # x1, x2
     boxes[..., [1, 3]] = boxes[..., [1, 3]].clip(0, output_shape[0])  # y1, y2
+    if boxes.shape[1] == 57:
+        for kid in range(2, 19):
+            boxes[:, kid * 3] = (boxes[:, kid * 3] - pad[0]) / gain
+            boxes[:, kid * 3 + 1]  = (boxes[:, kid * 3 + 1] -  pad[1]) / gain
     return boxes
 
 
@@ -199,6 +204,32 @@ def scale_mask(mask, input_shape, output_shape):
     mask = cv2.resize(mask, (output_shape[1], output_shape[0]), cv2.INTER_LINEAR)
     return mask
 
+'''
+description:            	plot skeleton keypoints
+param {*} im          		input image
+param {*} kpt   			keypoints
+param {*} score_threshold  	score threshold
+return {*}              
+'''
+def plot_skeleton_kpts(im, kpt, score_threshold=0.5):
+    num_kpts = len(kpt) // 3 
+    for kid in range(num_kpts):
+        x_coord, y_coord, conf = kpt[3 * kid], kpt[3 * kid + 1], kpt[3 * kid + 2]
+        if conf > score_threshold:  
+            cv2.circle(im, (int(x_coord), int(y_coord)), 5, (255, 0, 0), -1)
+
+    skeleton = [[16, 14], [14, 12], [17, 15], [15, 13], [12, 13], [6, 12],
+                [7, 13], [6, 7], [6, 8], [7, 9], [8, 10], [9, 11], [2, 3],
+                [1, 2], [1, 3], [2, 4], [3, 5], [4, 6], [5, 7]]
+    
+    for sk_id, sk in enumerate(skeleton):
+        pos1 = (int(kpt[(sk[0]-1)*3]), int(kpt[(sk[0]-1)*3+1]))
+        pos2 = (int(kpt[(sk[1]-1)*3]), int(kpt[(sk[1]-1)*3+1]))
+        conf1 = kpt[(sk[0]-1)*3+2]
+        conf2 = kpt[(sk[1]-1)*3+2]
+        if conf1 > score_threshold and conf2 > score_threshold:  
+            cv2.line(im, pos1, pos2, (255, 0, 0), thickness=2)
+
 
 '''
 description:            draw result
@@ -208,18 +239,26 @@ param {*} masks         masks
 param {*} input_shape   input image shape
 return {*}              output image
 '''
-def draw_result(image, preds, masks=[]):
+def draw_result(image, preds, masks=[], kpts=None):
     image_copy = image.copy()   
-    boxes = preds[...,:4].astype(np.int32) 
-    scores = preds[...,4]
-    classes = preds[...,5].astype(np.int32)
+    boxes = preds[..., :4] 
+    scores = preds[..., 4]
+    classes = preds[..., 5].astype(np.int32)
     
     for mask in masks:
-        image_copy[mask] = [np.random.randint(0,256), np.random.randint(0,256), np.random.randint(0,256)]
+        image_copy[mask] = [np.random.randint(0, 256), np.random.randint(0, 256), np.random.randint(0, 256)]
     result = (image*0.5 + image_copy*0.5).astype(np.uint8)
     
-    for box, score, cls in zip(boxes, scores, classes):
-        top, left, right, bottom = box
-        cv2.rectangle(result, (top, left), (right, bottom), (0, 255, 0), 2)
-        cv2.putText(result, 'class:{0} score:{1:.2f}'.format(cls, score), (top, left), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    if kpts is not None:
+        for box, score, cls, kpt in zip(boxes, scores, classes, kpts):
+            box = box.astype(np.int32)
+            cv2.rectangle(result, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
+            cv2.putText(result, 'class:{0} score:{1:.2f}'.format(cls, score), (box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            plot_skeleton_kpts(result, kpt)
+    else:
+        for box, score, cls in zip(boxes, scores, classes):
+            box = box.astype(np.int32)
+            cv2.rectangle(result, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
+            cv2.putText(result, 'class:{0} score:{1:.2f}'.format(cls, score), (box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        
     return result

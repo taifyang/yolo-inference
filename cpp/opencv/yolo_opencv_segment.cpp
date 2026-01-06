@@ -1,8 +1,8 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2025-12-23 08:41:04
- * @Description: opencv segment source file for YOLO algorithm
+ * @LastEditTime: 2026-01-05 22:01:25
+ * @Description: source file for YOLO opencv segmentation
  */
 
 #include "yolo_opencv.h"
@@ -15,32 +15,17 @@ void YOLO_OpenCV_Segment::init(const Algo_Type algo_type, const Device_Type devi
 		std::exit(-1);
 	}
 	YOLO_OpenCV::init(algo_type, device_type, model_type, model_path);
-
-	if (m_algo_type == YOLOv5)
-	{
-		m_output_numprob = 37 + m_class_num;
-		m_output_numbox = 3 * (m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32);
-	}
-	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
-	{
-		m_output_numprob = 36 + m_class_num;
-		m_output_numbox = m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32;
-	}
-	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
-	m_output_numseg = m_mask_params.seg_channels * m_mask_params.seg_width * m_mask_params.seg_height;
+	YOLO_Segment::init(algo_type, device_type, model_type, model_path);
 }
 
 void YOLO_OpenCV_Segment::pre_process()
 {
-	cv::Mat letterbox;
-	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
-
-	cv::dnn::blobFromImage(letterbox, m_input, 1. / 255., cv::Size(m_input_size.width, m_input_size.height), cv::Scalar(), true, false);
+	YOLO_OpenCV_Detect::pre_process();
 }	
 
 void YOLO_OpenCV_Segment::post_process()
 {
-	m_output_host = (float*)m_output[0].data;
+	m_output0_host = (float*)m_output[0].data;
 
 	std::vector<cv::Rect> boxes;
 	std::vector<float> scores;
@@ -49,7 +34,7 @@ void YOLO_OpenCV_Segment::post_process()
 
 	for (int i = 0; i < m_output_numbox; ++i)
 	{
-		float* ptr = m_output_host + i * m_output_numprob;
+		float* ptr = m_output0_host + i * m_output_numprob;
 		int class_id;
 		float score;
 		if (m_algo_type == YOLOv5)
@@ -102,7 +87,7 @@ void YOLO_OpenCV_Segment::post_process()
 	scale_boxes(boxes, m_image.size());
 
 	std::vector<int> indices;
-	nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
+	cv::dnn::NMSBoxes(boxes, scores, m_score_threshold, m_nms_threshold, indices);
 
 	m_output_seg.clear();
 	m_output_seg.resize(indices.size());
@@ -119,7 +104,7 @@ void YOLO_OpenCV_Segment::post_process()
 		m_output_seg[i] = output;
 	}
 
-	m_mask_params.params = m_params;	
+	m_mask_params.params = YOLO_OpenCV_Detect::m_params;	
 	m_mask_params.input_shape = m_image.size();
 	for (int i = 0; i < temp_mask_proposals.size(); ++i)
 	{

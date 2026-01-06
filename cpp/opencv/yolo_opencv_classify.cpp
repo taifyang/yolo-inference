@@ -1,8 +1,8 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2025-12-21 23:27:01
- * @Description: opencv classify source file for YOLO algorithm
+ * @LastEditTime: 2026-01-03 20:37:10
+ * @Description: source file for YOLO opencv classification
  */
 
 #include "yolo_opencv.h"
@@ -15,13 +15,7 @@ void YOLO_OpenCV_Classify::init(const Algo_Type algo_type, const Device_Type dev
 		std::exit(-1);
 	}
 	YOLO_OpenCV::init(algo_type, device_type, model_type, model_path);
-
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
-	{
-		m_input_size.width = 224;
-		m_input_size.height = 224;
-		m_input_numel = 1 * 3 * m_input_size.width * m_input_size.height;
-	}
+	YOLO_Classify::init(algo_type, device_type, model_type, model_path);
 }
 
 void YOLO_OpenCV_Classify::pre_process()
@@ -76,14 +70,14 @@ void YOLO_OpenCV_Classify::pre_process()
 
 void YOLO_OpenCV_Classify::post_process()
 {
-	m_output_host = (float*)m_output[0].data;
+	m_output0_host = (float*)m_output[0].data;
 
 	std::vector<float> scores(m_class_num); 
 	float sum = 0.0f;
 	for (size_t i = 0; i < m_class_num; i++)
 	{
-		scores[i] = m_output_host[i];
-		sum += exp(m_output_host[i]);
+		scores[i] = m_output0_host[i];
+		sum += exp(m_output0_host[i]);
 	}
 	int id = std::distance(scores.begin(), std::max_element(scores.begin(), scores.end()));
 

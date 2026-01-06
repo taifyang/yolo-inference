@@ -1,8 +1,8 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2025-12-21 22:41:31
- * @Description: openvino inference source file for YOLO algorithm
+ * @LastEditTime: 2026-01-03 20:38:32
+ * @Description: source file for YOLO openvino inference
  */
 
 #include "yolo_openvino.h"

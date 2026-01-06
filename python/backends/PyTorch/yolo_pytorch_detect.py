@@ -47,7 +47,7 @@ class YOLO_PyTorch_Detect(YOLO_PyTorch):
                 output[..., :4] = xywh2xyxy(output[..., :4])  
             box, cls = output[xc].split((4, self.class_num), 1)
             scores, j = cls.max(1, keepdim=True)
-            boxes = torch.cat((box, scores, j.float()), 1)
+            boxes = torch.cat((box, scores, j.float()), dim=1)
         elif self.algo_type in ['YOLOv5', 'YOLOv7']:   
             output = torch.squeeze(self.outputs[0]).to(torch.float32)
             output = output[output[..., 4] > self.confidence_threshold] 
@@ -55,7 +55,7 @@ class YOLO_PyTorch_Detect(YOLO_PyTorch):
             output[..., :4] = xywh2xyxy(output[..., :4])  
             box, obj, cls = output[xc].split((4, 1, self.class_num), 1)
             scores, j = cls.max(1, keepdim=True)
-            boxes = torch.cat((box, scores*obj, j.float()), 1)
+            boxes = torch.cat((box, scores*obj, j.float()), dim=1)
              
         if len(boxes):   
             indices = torchvision.ops.nms(box, scores.squeeze(), self.iou_threshold)

@@ -24,6 +24,25 @@ struct OutputCls
  */
 class YOLO_Classify : virtual public YOLO
 {
+public:
+	/**
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
+	 * @return {*}
+	 */
+	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
+	{
+		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+		{
+			m_input_size.width = 224;
+			m_input_size.height = 224;
+			m_input_numel = 1 * 3 * m_input_size.width * m_input_size.height;
+		}
+	}
+
 protected:
 	void CenterCrop(cv::Mat& input_image, cv::Mat& output_image)
 	{
@@ -65,7 +84,7 @@ protected:
 	/**
 	 * @description: model output on host
 	 */
-	float* m_output_host;
+	float* m_output0_host;
 
 	/**
 	 * @description: classification network output

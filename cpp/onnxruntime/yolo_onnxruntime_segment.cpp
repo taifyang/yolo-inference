@@ -1,8 +1,8 @@
 /* 
  * @Author: taifyang
  * @Date: 2025-12-21 22:22:59
- * @LastEditTime: 2025-12-26 22:27:02
- * @Description: onnxruntime segment source file for YOLO algorithm
+ * @LastEditTime: 2026-01-06 13:08:18
+ * @Description: source file for YOLO onnxruntime segmentation
  */
 
 #include "yolo_onnxruntime.h"
@@ -15,59 +15,21 @@ void YOLO_ONNXRuntime_Segment::init(const Algo_Type algo_type, const Device_Type
 		std::exit(-1);
 	}
 	YOLO_ONNXRuntime::init(algo_type, device_type, model_type, model_path);
-
-	if (m_algo_type == YOLOv5)
-	{
-		m_output_numprob = 37 + m_class_num;
-		m_output_numbox = 3 * (m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32);
-		m_output_numdet = 1 * m_output_numprob * m_output_numbox;
-		m_output_numseg = m_mask_params.seg_channels * m_mask_params.seg_width * m_mask_params.seg_height;
-	}
-	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
-	{
-		m_output_numprob = 36 + m_class_num;
-		m_output_numbox = m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32;
-		m_output_numdet = 1 * m_output_numprob * m_output_numbox;
-		m_output_numseg = m_mask_params.seg_channels * m_mask_params.seg_width * m_mask_params.seg_height;
-	}
+	YOLO_Segment::init(algo_type, device_type, model_type, model_path);
 
 	m_output_names.push_back("output1");
 
 	if (m_model_type == FP16)
 	{
 		m_input_fp16.resize(m_input_numel);
-		m_output0_fp16.resize(m_output_numdet);
-		m_output1_fp16.resize(m_output_numseg);
+		m_output0.resize(m_output_numdet);
+		m_output1.resize(m_output_numseg);
 	}
-
-	m_output0_host = new float[m_output_numdet];
-	m_output1_host = new float[m_output_numseg];
 }
 
 void YOLO_ONNXRuntime_Segment::pre_process()
 {
-	cv::Mat letterbox;
-	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
-
-	cv::cvtColor(letterbox, letterbox, cv::COLOR_BGR2RGB);
-	letterbox.convertTo(letterbox, CV_32FC3, 1.0f / 255.0f);
-	
-	std::vector<cv::Mat> split_images;
-	cv::split(letterbox, split_images);
-	m_input.clear();
-	for (size_t i = 0; i < letterbox.channels(); ++i)
-	{
-		std::vector<float> split_image_data = split_images[i].reshape(1, 1);
-		m_input.insert(m_input.end(), split_image_data.begin(), split_image_data.end());
-	}
-
-	if (m_model_type == FP16)
-	{
-		for (size_t i = 0; i < m_input_numel; i++)
-		{
-			m_input_fp16[i] = float32_to_float16(m_input[i]);
-		}
-	}
+	YOLO_ONNXRuntime_Detect::pre_process();
 }
 
 void YOLO_ONNXRuntime_Segment::process()
@@ -87,20 +49,24 @@ void YOLO_ONNXRuntime_Segment::process()
 
 	if (m_model_type == FP32 || m_model_type == INT8)
 	{
-		m_output0_host = const_cast<float*> (outputs[0].GetTensorData<float>());
-		m_output1_host = const_cast<float*> (outputs[1].GetTensorData<float>());
+		m_output0_host = const_cast<float*>(outputs[0].GetTensorData<float>());
+		m_output1_host = const_cast<float*>(outputs[1].GetTensorData<float>());
+		m_output0.assign(m_output0_host, m_output0_host + m_output_numdet);
+		m_output1.assign(m_output1_host, m_output1_host + m_output_numseg);
 	}
 	else if (m_model_type == FP16)
 	{
-		std::copy(const_cast<uint16_t*> (outputs[0].GetTensorData<uint16_t>()), const_cast<uint16_t*> (outputs[0].GetTensorData<uint16_t>()) + m_output_numdet, m_output0_fp16.begin());
-		std::copy(const_cast<uint16_t*> (outputs[1].GetTensorData<uint16_t>()), const_cast<uint16_t*> (outputs[1].GetTensorData<uint16_t>()) + m_output_numseg, m_output1_fp16.begin());
+		uint16_t* output0_fp16 = const_cast<uint16_t*>(outputs[0].GetTensorData<uint16_t>());
+		uint16_t* output1_fp16 = const_cast<uint16_t*>(outputs[1].GetTensorData<uint16_t>());
+		m_output0_fp16.assign(output0_fp16, output0_fp16 + m_output_numdet);
+		m_output1_fp16.assign(output1_fp16, output1_fp16 + m_output_numseg);
 		for (size_t i = 0; i < m_output_numdet; i++)
 		{
-			m_output0_host[i] = float16_to_float32(m_output0_fp16[i]);
+			m_output0[i] = float16_to_float32(m_output0_fp16[i]);
 		}
 		for (size_t i = 0; i < m_output_numseg; i++)
 		{
-			m_output1_host[i] = float16_to_float32(m_output1_fp16[i]);
+			m_output1[i] = float16_to_float32(m_output1_fp16[i]);
 		}
 	}
 }
@@ -114,7 +80,7 @@ void YOLO_ONNXRuntime_Segment::post_process()
 
 	for (int i = 0; i < m_output_numbox; ++i)
 	{
-		float* ptr = m_output0_host + i * m_output_numprob;
+		float* ptr = m_output0.data() + i * m_output_numprob;
 		int class_id;
 		float score;
 		if (m_algo_type == YOLOv5)
@@ -188,7 +154,7 @@ void YOLO_ONNXRuntime_Segment::post_process()
 	m_mask_params.input_shape = m_image.size();
 	int shape[4] = { 1, m_mask_params.seg_channels, m_mask_params.seg_width, m_mask_params.seg_height, };
 	cv::Mat output_mat1 = cv::Mat::zeros(4, shape, CV_32FC1);
-	std::copy(m_output1_host, m_output1_host + m_output_numseg, (float*)output_mat1.data);
+	std::copy(m_output1.begin(), m_output1.end(), (float*)output_mat1.data);
 	for (int i = 0; i < temp_mask_proposals.size(); ++i)
 	{
 		GetMask(cv::Mat(temp_mask_proposals[i]).t(), output_mat1, m_output_seg[i], m_mask_params, m_algo_type);
@@ -196,10 +162,4 @@ void YOLO_ONNXRuntime_Segment::post_process()
 
 	if(m_draw_result)
 		draw_result(m_output_seg);
-}
-
-void YOLO_ONNXRuntime_Segment::release()
-{
-	delete[] m_output0_host;
-	delete[] m_output1_host;
 }

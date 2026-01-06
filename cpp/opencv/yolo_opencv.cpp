@@ -1,8 +1,8 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2025-12-21 23:08:21
- * @Description: opencv inference source file for YOLO algorithm
+ * @LastEditTime: 2026-01-03 20:37:29
+ * @Description: source file for YOLO opencv inference 
  */
 
 #include "yolo_opencv.h"

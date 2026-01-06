@@ -9,6 +9,7 @@ Description: __init__.py
 from backends.PyTorch.yolo_pytorch_classify import YOLO_PyTorch_Classify
 from backends.PyTorch.yolo_pytorch_detect import YOLO_PyTorch_Detect
 from backends.PyTorch.yolo_pytorch_segment import YOLO_PyTorch_Segment
+from backends.PyTorch.yolo_pytorch_pose import YOLO_PyTorch_Pose
 
 
-__all__ = 'YOLO_PyTorch_Classify', 'YOLO_PyTorch_Detect', 'YOLO_PyTorch_Segment'
+__all__ = 'YOLO_PyTorch_Classify', 'YOLO_PyTorch_Detect', 'YOLO_PyTorch_Segment', 'YOLO_PyTorch_Pose'

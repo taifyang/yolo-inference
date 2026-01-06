@@ -1,8 +1,8 @@
 /* 
  * @Author: taifyang
  * @Date: 2025-12-21 21:47:22
- * @LastEditTime: 2025-12-23 08:40:19
- * @Description: libtorch classify source file for YOLO algorithm
+ * @LastEditTime: 2026-01-06 11:00:45
+ * @Description: source file for YOLO libtorch classification
  */
 
 #include "yolo_libtorch.h"
@@ -15,15 +15,7 @@ void YOLO_Libtorch_Classify::init(const Algo_Type algo_type, const Device_Type d
 		std::exit(-1);
 	}
 	YOLO_Libtorch::init(algo_type, device_type, model_type, model_path);
-
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
-	{
-		m_input_size.width = 224;
-		m_input_size.height = 224;
-		m_input_numel = 1 * 3 * m_input_size.width * m_input_size.height;
-	}
-
-	m_output_host = new float[m_class_num];
+	YOLO_Classify::init(algo_type, device_type, model_type, model_path);
 }
 
 void YOLO_Libtorch_Classify::pre_process()
@@ -90,7 +82,7 @@ void YOLO_Libtorch_Classify::process()
 		}
 	}
 
-	std::copy(pred.data_ptr<float>(), pred.data_ptr<float>() + m_class_num, m_output_host);
+	m_output0.assign(pred.data_ptr<float>(), pred.data_ptr<float>() + m_class_num);
 }
 
 void YOLO_Libtorch_Classify::post_process()
@@ -99,8 +91,8 @@ void YOLO_Libtorch_Classify::post_process()
 	float sum = 0.0f;
 	for (size_t i = 0; i < m_class_num; i++)
 	{
-		scores[i] = m_output_host[i];
-		sum += exp(m_output_host[i]);
+		scores[i] = m_output0[i];
+		sum += exp(m_output0[i]);
 	}
 	int id = std::distance(scores.begin(), std::max_element(scores.begin(), scores.end()));
 
@@ -112,9 +104,4 @@ void YOLO_Libtorch_Classify::post_process()
 
 	if(m_draw_result)
 		draw_result(m_output_cls);
-}
-
-void YOLO_Libtorch_Classify::release()
-{
-	delete[] m_output_host;
 }

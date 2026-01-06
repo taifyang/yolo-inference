@@ -1,8 +1,8 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2025-12-24 08:09:30
- * @Description: cuda post-processing decoding source file for YOLO algorithm
+ * @LastEditTime: 2026-01-03 20:39:23
+ * @Description: source file for cuda post-processing decoding
  */
 
 #include "decode.cuh"
@@ -24,7 +24,7 @@ static __device__ void affine_project_gpu(float* matrix, float x, float y, float
 	*oy = matrix[3] * x + matrix[4] * y + matrix[5];
 }
 
-static __global__ void decode_kernel(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float* inverse_affine_matrix, float* parray, int max_objects, int num_box_element, cv::Size input_size, Algo_Type algo_type, Task_Type task_type)
+static __global__ void decode_kernel(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float score_threshold, float* inverse_affine_matrix, float* parray, int max_objects, int num_box_element, cv::Size input_size, Algo_Type algo_type, Task_Type task_type)
 {
 	int position = blockDim.x * blockIdx.x + threadIdx.x;
 	if (position >= num_bboxes)
@@ -32,45 +32,56 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 
 	float* pitem;
 	float objectness;
-	float* class_confidence;
+	float* class_score;
+	float angle;
 	if(algo_type == YOLOv3 || algo_type == YOLOv4 || algo_type == YOLOv6 || algo_type == YOLOv8 || algo_type == YOLOv9 || algo_type == YOLOv10 || algo_type == YOLOv11 || algo_type == YOLOv12 || algo_type == YOLOv13)
 	{
-		pitem = predict + (4 + num_classes) * position;
-		if(task_type == Segment)
+		if(task_type == Detect)
 		{
-			pitem = pitem + 32 * position;
+			pitem = predict + (4 + num_classes) * position;
 		}
-		class_confidence = pitem + 4;
+		else if(task_type == Segment)
+		{
+			pitem = predict + (36 + num_classes) * position;
+		}
+        else if(task_type == Pose)
+        {
+            pitem = predict + 56 * position;
+        }
+		class_score = pitem + 4;
 	}
 	else if(algo_type == YOLOv5 || algo_type == YOLOv7)
 	{
-		pitem = predict + (5 + num_classes) * position;
+		if(task_type == Detect)
+		{
+			pitem = predict + (5 + num_classes) * position;
+		}
 		if(task_type == Segment)
 		{
-			pitem = pitem + 32 * position;
+			pitem = predict + (37 + num_classes) * position;
 		}
 		objectness = pitem[4];
 		if (objectness < confidence_threshold)
 			return;
-		class_confidence = pitem + 5;
+		class_score = pitem + 5;
 	}
 	
-	float confidence = *class_confidence++;
+	float score = *class_score++;
 	int label = 0;
-	for (int i = 1; i < num_classes; ++i, ++class_confidence)
+	for (int i = 1; i < num_classes; ++i, ++class_score)
 	{
-		if (*class_confidence > confidence)
+		if (*class_score > score && algo_type != Pose)
 		{
-			confidence = *class_confidence;
+			score = *class_score;
 			label = i;
 		}
 	}
 	
 	if(algo_type == YOLOv5 || algo_type == YOLOv7)
 	{
-		confidence *= objectness;
+		score *= objectness;
 	}
-	if (confidence < confidence_threshold)
+	if (score < score_threshold)
 		return;
 
 	int index = atomicAdd(parray, 1);
@@ -112,12 +123,26 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 	*pout_item++ = top;
 	*pout_item++ = right;
 	*pout_item++ = bottom;
-	*pout_item++ = confidence;
-	*pout_item++ = label;
-	*pout_item++ = 1; // 1 = keep, 0 = ignore
-	if(task_type == Segment)
+	*pout_item++ = score;
+	if(task_type == Pose)
 	{
-		*pout_item++ = position;
+		*pitem++;
+		*pout_item++ = 0;
+		*pout_item++ = 1; // 1 = keep, 0 = ignore
+		for(int i=0; i<51; i++)  
+			*pout_item++ = *pitem++;  
+		pout_item = parray + 1 + index * num_box_element;
+		for(int i=0; i<17; i++)        
+			affine_project_gpu(inverse_affine_matrix, pout_item[3 * i + 7],  pout_item[3 * i + 8], &pout_item[3 * i + 7],  &pout_item[3 * i + 8]);          
+	}
+	else
+	{
+		*pout_item++ = label;
+		*pout_item++ = 1; // 1 = keep, 0 = ignore
+		if(task_type == Segment)
+		{
+			*pout_item++ = position;
+		}
 	}
 }
 
@@ -168,12 +193,13 @@ static __global__ void nms_kernel(float* bboxes, int max_objects, float threshol
 	}
 }
 
-void decode_kernel_invoker(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float* inverse_affine_matrix, float* parray, int max_objects, int num_box_element, cv::Size input_size, cudaStream_t stream, Algo_Type algo_type, Task_Type task_type)
+void decode_kernel_invoker(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float score_threshold, float* inverse_affine_matrix, float* parray, int max_objects, int num_box_element, cv::Size input_size, cudaStream_t stream, Algo_Type algo_type, Task_Type task_type)
 {
 	auto grid = grid_dims(num_bboxes);
 	auto block = block_dims(num_bboxes);
-	decode_kernel << <grid, block, 0, stream >> > (predict, num_bboxes, num_classes, confidence_threshold, inverse_affine_matrix, parray, max_objects, num_box_element, input_size, algo_type, task_type);
+	decode_kernel << <grid, block, 0, stream >> > (predict, num_bboxes, num_classes, confidence_threshold, score_threshold, inverse_affine_matrix, parray, max_objects, num_box_element, input_size, algo_type, task_type);
 }
+
 
 void nms_kernel_invoker(float* parray, float nms_threshold, int max_objects, int num_box_element, cudaStream_t stream)
 {

@@ -1,8 +1,8 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2025-12-26 22:45:22
- * @Description: openvino segment source file for YOLO algorithm
+ * @LastEditTime: 2026-01-04 22:20:11
+ * @Description: source file for YOLO openvino segmentation
  */
 
 #include "yolo_openvino.h"
@@ -15,42 +15,20 @@ void YOLO_OpenVINO_Segment::init(const Algo_Type algo_type, const Device_Type de
 		std::exit(-1);
 	}
 	YOLO_OpenVINO::init(algo_type, device_type, model_type, model_path);
-
-	if (m_algo_type == YOLOv5)
-	{
-		m_output_numprob = 37 + m_class_num;
-		m_output_numbox = 3 * (m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32);
-	}
-	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
-	{
-		m_output_numprob = 36 + m_class_num;
-		m_output_numbox = m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32;
-	}
-	m_output_numdet = 1 * m_output_numprob * m_output_numbox;
-	m_output_numseg = m_mask_params.seg_channels * m_mask_params.seg_width * m_mask_params.seg_height;
+	YOLO_Segment::init(algo_type, device_type, model_type, model_path);
 }
 
 void YOLO_OpenVINO_Segment::pre_process()
 {
-	cv::Mat letterbox;
-	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
-
-	cv::cvtColor(letterbox, letterbox, cv::COLOR_BGR2RGB);
-	letterbox.convertTo(letterbox, CV_32FC3, 1.0f / 255.0f);
-
-	std::vector<cv::Mat> split_images;
-	cv::split(letterbox, split_images);
-	for(auto& split_image : split_images)
-		split_image = split_image.reshape(1, 1);
-	cv::hconcat(split_images, m_input);
+	YOLO_OpenVINO_Detect::pre_process();
 }
 
 void YOLO_OpenVINO_Segment::process()
 {
-	ov::Tensor input_tensor(m_input_port.get_element_type(), m_input_port.get_shape(), m_input.ptr(0)); //Create tensor from external memory
-	m_infer_request.set_input_tensor(input_tensor); // Set input tensor for model with one input
-	m_infer_request.infer(); //Start inference
-	m_output0_host = (float*)m_infer_request.get_output_tensor(0).data();  //Get the inference result 
+	ov::Tensor input_tensor(m_input_port.get_element_type(), m_input_port.get_shape(), m_input.ptr(0)); 
+	m_infer_request.set_input_tensor(input_tensor); 
+	m_infer_request.infer(); 
+	m_output0_host = (float*)m_infer_request.get_output_tensor(0).data(); 
 	m_output1_host = (float*)m_infer_request.get_output_tensor(1).data();
 }
 
@@ -133,7 +111,7 @@ void YOLO_OpenVINO_Segment::post_process()
 		m_output_seg[i] = output;
 	}
 
-	m_mask_params.params = m_params;
+	m_mask_params.params = YOLO_OpenVINO_Detect::m_params;
 	m_mask_params.input_shape = m_image.size();
 	int shape[4] = { 1, m_mask_params.seg_channels, m_mask_params.seg_width, m_mask_params.seg_height, };
 	cv::Mat output_mat1 = cv::Mat::zeros(4, shape, CV_32FC1);
