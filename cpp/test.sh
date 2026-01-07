@@ -1,4 +1,4 @@
-./yolo Libtorch Detect YOLOv3 CPU FP32 ../../weights/yolov3u_fp32_cpu.torchscript bus.jpg 
+./yolo Libtorch Detect YOLOv3 CPU FP32 ../../weights/yolov3u_fp32_cpu.torchscript bus.jpg
 ./yolo Libtorch Detect YOLOv3 GPU FP32 ../../weights/yolov3u_fp32_gpu.torchscript bus.jpg
 ./yolo Libtorch Detect YOLOv3 GPU FP16 ../../weights/yolov3u_fp16_gpu.torchscript bus.jpg
 ./yolo ONNXRuntime Detect YOLOv3 CPU FP32 ../../weights/yolov3u_fp32.onnx bus.jpg
@@ -230,6 +230,29 @@
 ./yolo TensorRT Segment YOLOv8 GPU FP16 ../../weights/yolov8n_seg_fp16.engine bus.jpg
 ./yolo TensorRT Segment YOLOv8 GPU INT8 ../../weights/yolov8n_seg_int8.engine bus.jpg
 
+./yolo Libtorch Pose YOLOv8 CPU FP32 ../../weights/yolov8n_pose_fp32_cpu.torchscript bus.jpg
+./yolo Libtorch Pose YOLOv8 GPU FP32 ../../weights/yolov8n_pose_fp32_gpu.torchscript bus.jpg
+./yolo Libtorch Pose YOLOv8 GPU FP16 ../../weights/yolov8n_pose_fp16_gpu.torchscript bus.jpg
+./yolo ONNXRuntime Pose YOLOv8 CPU FP32 ../../weights/yolov8n_pose_fp32.onnx bus.jpg
+./yolo ONNXRuntime Pose YOLOv8 GPU FP32 ../../weights/yolov8n_pose_fp32.onnx bus.jpg
+./yolo ONNXRuntime Pose YOLOv8 CPU FP16 ../../weights/yolov8n_pose_fp16.onnx bus.jpg
+./yolo ONNXRuntime Pose YOLOv8 GPU FP16 ../../weights/yolov8n_pose_fp16.onnx bus.jpg
+./yolo ONNXRuntime Pose YOLOv8 CPU INT8 ../../weights/yolov8n_pose_int8.onnx bus.jpg
+./yolo ONNXRuntime Pose YOLOv8 GPU INT8 ../../weights/yolov8n_pose_int8.onnx bus.jpg
+./yolo OpenCV Pose YOLOv8 CPU FP32 ../../weights/yolov8n_pose_fp32.onnx bus.jpg
+./yolo OpenCV Pose YOLOv8 GPU FP32 ../../weights/yolov8n_pose_fp32.onnx bus.jpg
+./yolo OpenCV Pose YOLOv8 CPU FP16 ../../weights/yolov8n_pose_fp16.onnx bus.jpg
+./yolo OpenCV Pose YOLOv8 GPU FP16 ../../weights/yolov8n_pose_fp16.onnx bus.jpg
+./yolo OpenVINO Pose YOLOv8 CPU FP32 ../../weights/yolov8n_pose_fp32.xml bus.jpg
+./yolo OpenVINO Pose YOLOv8 GPU FP32 ../../weights/yolov8n_pose_fp32.xml bus.jpg
+./yolo OpenVINO Pose YOLOv8 CPU FP16 ../../weights/yolov8n_pose_fp16.xml bus.jpg
+./yolo OpenVINO Pose YOLOv8 GPU FP16 ../../weights/yolov8n_pose_fp16.xml bus.jpg
+./yolo OpenVINO Pose YOLOv8 CPU INT8 ../../weights/yolov8n_pose_int8.xml bus.jpg
+./yolo OpenVINO Pose YOLOv8 GPU INT8 ../../weights/yolov8n_pose_int8.xml bus.jpg
+./yolo TensorRT Pose YOLOv8 GPU FP32 ../../weights/yolov8n_pose_fp32.engine bus.jpg
+./yolo TensorRT Pose YOLOv8 GPU FP16 ../../weights/yolov8n_pose_fp16.engine bus.jpg
+./yolo TensorRT Pose YOLOv8 GPU INT8 ../../weights/yolov8n_pose_int8.engine bus.jpg
+
 
 ./yolo Libtorch Detect YOLOv9 CPU FP32 ../../weights/yolov9t_fp32_cpu.torchscript bus.jpg
 ./yolo Libtorch Detect YOLOv9 GPU FP32 ../../weights/yolov9t_fp32_gpu.torchscript bus.jpg
@@ -371,6 +394,29 @@
 ./yolo TensorRT Segment YOLOv11 GPU FP16 ../../weights/yolov11n_seg_fp16.engine bus.jpg
 ./yolo TensorRT Segment YOLOv11 GPU INT8 ../../weights/yolov11n_seg_int8.engine bus.jpg
 
+./yolo Libtorch Pose YOLOv11 CPU FP32 ../../weights/yolov11n_pose_fp32_cpu.torchscript bus.jpg
+./yolo Libtorch Pose YOLOv11 GPU FP32 ../../weights/yolov11n_pose_fp32_gpu.torchscript bus.jpg
+./yolo Libtorch Pose YOLOv11 GPU FP16 ../../weights/yolov11n_pose_fp16_gpu.torchscript bus.jpg
+./yolo ONNXRuntime Pose YOLOv11 CPU FP32 ../../weights/yolov11n_pose_fp32.onnx bus.jpg
+./yolo ONNXRuntime Pose YOLOv11 GPU FP32 ../../weights/yolov11n_pose_fp32.onnx bus.jpg
+./yolo ONNXRuntime Pose YOLOv11 CPU FP16 ../../weights/yolov11n_pose_fp16.onnx bus.jpg
+./yolo ONNXRuntime Pose YOLOv11 GPU FP16 ../../weights/yolov11n_pose_fp16.onnx bus.jpg
+./yolo ONNXRuntime Pose YOLOv11 CPU INT8 ../../weights/yolov11n_pose_int8.onnx bus.jpg
+./yolo ONNXRuntime Pose YOLOv11 GPU INT8 ../../weights/yolov11n_pose_int8.onnx bus.jpg
+./yolo OpenCV Pose YOLOv11 CPU FP32 ../../weights/yolov11n_pose_fp32.onnx bus.jpg
+./yolo OpenCV Pose YOLOv11 GPU FP32 ../../weights/yolov11n_pose_fp32.onnx bus.jpg
+./yolo OpenCV Pose YOLOv11 CPU FP16 ../../weights/yolov11n_pose_fp16.onnx bus.jpg
+./yolo OpenCV Pose YOLOv11 GPU FP16 ../../weights/yolov11n_pose_fp16.onnx bus.jpg
+./yolo OpenVINO Pose YOLOv11 CPU FP32 ../../weights/yolov11n_pose_fp32.xml bus.jpg
+./yolo OpenVINO Pose YOLOv11 GPU FP32 ../../weights/yolov11n_pose_fp32.xml bus.jpg
+./yolo OpenVINO Pose YOLOv11 CPU FP16 ../../weights/yolov11n_pose_fp16.xml bus.jpg
+./yolo OpenVINO Pose YOLOv11 GPU FP16 ../../weights/yolov11n_pose_fp16.xml bus.jpg
+./yolo OpenVINO Pose YOLOv11 CPU INT8 ../../weights/yolov11n_pose_int8.xml bus.jpg
+./yolo OpenVINO Pose YOLOv11 GPU INT8 ../../weights/yolov11n_pose_int8.xml bus.jpg
+./yolo TensorRT Pose YOLOv11 GPU FP32 ../../weights/yolov11n_pose_fp32.engine bus.jpg
+./yolo TensorRT Pose YOLOv11 GPU FP16 ../../weights/yolov11n_pose_fp16.engine bus.jpg
+./yolo TensorRT Pose YOLOv11 GPU INT8 ../../weights/yolov11n_pose_int8.engine bus.jpg
+
 
 ./yolo Libtorch Classify YOLOv12 CPU FP32 ../../weights/yolov12n_cls_fp32_cpu.torchscript bus.jpg
 ./yolo Libtorch Classify YOLOv12 GPU FP32 ../../weights/yolov12n_cls_fp32_gpu.torchscript bus.jpg
@@ -441,6 +487,28 @@
 ./yolo TensorRT Segment YOLOv12 GPU FP16 ../../weights/yolov12n_seg_fp16.engine bus.jpg
 ./yolo TensorRT Segment YOLOv12 GPU INT8 ../../weights/yolov12n_seg_int8.engine bus.jpg
 
+./yolo Libtorch Pose YOLOv12 CPU FP32 ../../weights/yolov12n_pose_fp32_cpu.torchscript bus.jpg
+./yolo Libtorch Pose YOLOv12 GPU FP32 ../../weights/yolov12n_pose_fp32_gpu.torchscript bus.jpg
+./yolo Libtorch Pose YOLOv12 GPU FP16 ../../weights/yolov12n_pose_fp16_gpu.torchscript bus.jpg
+./yolo ONNXRuntime Pose YOLOv12 CPU FP32 ../../weights/yolov12n_pose_fp32.onnx bus.jpg
+./yolo ONNXRuntime Pose YOLOv12 GPU FP32 ../../weights/yolov12n_pose_fp32.onnx bus.jpg
+./yolo ONNXRuntime Pose YOLOv12 CPU FP16 ../../weights/yolov12n_pose_fp16.onnx bus.jpg
+./yolo ONNXRuntime Pose YOLOv12 GPU FP16 ../../weights/yolov12n_pose_fp16.onnx bus.jpg
+./yolo ONNXRuntime Pose YOLOv12 CPU INT8 ../../weights/yolov12n_pose_int8.onnx bus.jpg
+./yolo ONNXRuntime Pose YOLOv12 GPU INT8 ../../weights/yolov12n_pose_int8.onnx bus.jpg
+./yolo OpenCV Pose YOLOv12 CPU FP32 ../../weights/yolov12n_pose_fp32.onnx bus.jpg
+./yolo OpenCV Pose YOLOv12 GPU FP32 ../../weights/yolov12n_pose_fp32.onnx bus.jpg
+./yolo OpenCV Pose YOLOv12 CPU FP16 ../../weights/yolov12n_pose_fp16.onnx bus.jpg
+./yolo OpenCV Pose YOLOv12 GPU FP16 ../../weights/yolov12n_pose_fp16.onnx bus.jpg
+./yolo OpenVINO Pose YOLOv12 CPU FP32 ../../weights/yolov12n_pose_fp32.xml bus.jpg
+./yolo OpenVINO Pose YOLOv12 GPU FP32 ../../weights/yolov12n_pose_fp32.xml bus.jpg
+./yolo OpenVINO Pose YOLOv12 CPU FP16 ../../weights/yolov12n_pose_fp16.xml bus.jpg
+./yolo OpenVINO Pose YOLOv12 GPU FP16 ../../weights/yolov12n_pose_fp16.xml bus.jpg
+./yolo OpenVINO Pose YOLOv12 CPU INT8 ../../weights/yolov12n_pose_int8.xml bus.jpg
+./yolo OpenVINO Pose YOLOv12 GPU INT8 ../../weights/yolov12n_pose_int8.xml bus.jpg
+./yolo TensorRT Pose YOLOv12 GPU FP32 ../../weights/yolov12n_pose_fp32.engine bus.jpg
+./yolo TensorRT Pose YOLOv12 GPU FP16 ../../weights/yolov12n_pose_fp16.engine bus.jpg
+./yolo TensorRT Pose YOLOv12 GPU INT8 ../../weights/yolov12n_pose_int8.engine bus.jpg
 
 ./yolo Libtorch Detect YOLOv13 CPU FP32 ../../weights/yolov13n_fp32_cpu.torchscript bus.jpg    
 ./yolo Libtorch Detect YOLOv13 GPU FP32 ../../weights/yolov13n_fp32_gpu.torchscript bus.jpg
