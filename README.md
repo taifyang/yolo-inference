@@ -320,4 +320,4 @@ Python test in Docker with 25 vCPU Intel(R) Xeon(R) Platinum 8470Q , RTX 5090(32
 
 You can download some model weights in: <https://pan.baidu.com/s/1843WW7tNQK1ycqIALje_fA?pwd=adis>
 
-For your own model, you should transpose output dims such as from 1x84x8400 to 1x8400x84 for YOLOv8, YOLOv9, YOLOv11, YOLOv12, YOLOv13 detection, segmentation and pose.
+**For your own model, you should transpose output dims such as from 1x84x8400 to 1x8400x84 for YOLOv8, YOLOv9, YOLOv11, YOLOv12, YOLOv13 detection, segmentation and pose.**

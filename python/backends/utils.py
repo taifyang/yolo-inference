@@ -232,12 +232,12 @@ def plot_skeleton_kpts(im, kpt, score_threshold=0.5):
 
 
 '''
-description:            draw result
-param {*} image         input image
-param {*} preds         prediction result
-param {*} masks         masks
-param {*} input_shape   input image shape
-return {*}              output image
+description:    draw result
+param {*} image input image
+param {*} preds prediction result
+param {*} masks masks
+param {*} kpts  keypoints
+return {*}      output image
 '''
 def draw_result(image, preds, masks=[], kpts=None):
     image_copy = image.copy()   
