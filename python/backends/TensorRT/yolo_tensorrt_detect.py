@@ -1,7 +1,7 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2025-12-23 08:36:52
+LastEditTime: 2026-01-05 11:03:19
 Description: tensorrt inference class for YOLO detection algorithm
 '''
 
@@ -35,7 +35,7 @@ class YOLO_TensorRT_Detect(YOLO_TensorRT):
     return {*}
     '''       
     def pre_process(self) -> None:
-        input = letterbox_cupy(self.image, self.inputs_shape)
+        input = letterbox(self.image, self.inputs_shape, use_cupy=True)
         input = cupy.transpose(input[:, :, ::-1], (2, 0, 1))
         input = input.astype(cupy.float32) / 255.0
         self.input_ptr = input.data.ptr

@@ -1,7 +1,7 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2025-12-23 08:36:28
+LastEditTime: 2026-01-05 11:07:01
 Description: tensorrt inference class for YOLO segmentation algorithm
 '''
 
@@ -37,7 +37,7 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
     return {*}
     '''        
     def pre_process(self) -> None:
-        input = letterbox_cupy(self.image, self.inputs_shape)
+        input = letterbox(self.image, self.inputs_shape, use_cupy=True)
         input = cupy.transpose(input[:, :, ::-1], (2, 0, 1))
         input = input.astype(cupy.float32) / 255.0
         self.input_ptr = input.data.ptr
@@ -60,9 +60,10 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
     def post_process(self) -> None:
         if int(trt.__version__.split(".")[0]) < 10:
             output = np.squeeze(self.output1_host.reshape(self.outputs_shape[1]))
+            proto = np.squeeze(self.output0_host.reshape(self.outputs_shape[0]))
         else:
             output = np.squeeze(self.output0_host.reshape(self.outputs_shape[0]))
-            
+            proto = np.squeeze(self.output1_host.reshape(self.outputs_shape[1]))
         boxes = []
         scores = []
         
@@ -92,7 +93,6 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
             indices = nms(boxes, scores, self.iou_threshold) 
             boxes = boxes[indices]          
             masks_in = mask[indices]
-            proto = np.squeeze(self.outputs[1]).astype(dtype=np.float32)
             c, mh, mw = proto.shape 
             if self.algo_type in ['YOLOv5']:
                 masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)  
