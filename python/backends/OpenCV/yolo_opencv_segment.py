@@ -7,7 +7,7 @@ Description: opencv inference class for YOLO segmentation algorithm
 
 
 from backends.utils import *
-from backends.OpenCV.yolo_opencv import *
+from backends.OpenCV.yolo_opencv import YOLO_OpenCV
 
 
 '''

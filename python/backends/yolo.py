@@ -1,7 +1,7 @@
 '''
 Author: taifyang 
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-01-05 11:13:29
+LastEditTime: 2026-01-12 10:59:03
 Description: YOLO algorithm interface class
 '''
 
@@ -42,6 +42,7 @@ class YOLO:
                 'Detect':backends.ONNXRuntime.YOLO_ONNXRuntime_Detect,
                 'Segment':backends.ONNXRuntime.YOLO_ONNXRuntime_Segment,
                 'Pose':backends.ONNXRuntime.YOLO_ONNXRuntime_Pose,
+                'OBB':backends.ONNXRuntime.YOLO_ONNXRuntime_OBB,
             }
         except:
                pass
@@ -52,6 +53,7 @@ class YOLO:
                 'Detect':backends.OpenCV.YOLO_OpenCV_Detect,
                 'Segment':backends.OpenCV.YOLO_OpenCV_Segment,
                 'Pose':backends.OpenCV.YOLO_OpenCV_Pose,
+                'OBB':backends.OpenCV.YOLO_OpenCV_OBB,
             }
         except:
             pass
@@ -62,6 +64,7 @@ class YOLO:
                 'Detect':backends.OpenVINO.YOLO_OpenVINO_Detect,
                 'Segment':backends.OpenVINO.YOLO_OpenVINO_Segment,
                 'Pose':backends.OpenVINO.YOLO_OpenVINO_Pose,
+                'OBB':backends.OpenVINO.YOLO_OpenVINO_OBB,
             }
         except:
             pass
@@ -72,6 +75,7 @@ class YOLO:
                 'Detect':backends.PyTorch.YOLO_PyTorch_Detect,
                 'Segment':backends.PyTorch.YOLO_PyTorch_Segment,
                 'Pose':backends.PyTorch.YOLO_PyTorch_Pose,
+                'OBB':backends.PyTorch.YOLO_PyTorch_OBB,
             }
         except:
             pass
@@ -82,6 +86,7 @@ class YOLO:
                 'Detect':backends.TensorRT.YOLO_TensorRT_Detect,
                 'Segment':backends.TensorRT.YOLO_TensorRT_Segment,
                 'Pose':backends.TensorRT.YOLO_TensorRT_Pose,
+                'OBB':backends.TensorRT.YOLO_TensorRT_OBB,
             }
         except:
             pass

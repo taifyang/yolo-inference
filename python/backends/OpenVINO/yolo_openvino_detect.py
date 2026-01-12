@@ -7,7 +7,7 @@ Description: openvino inference class for YOLO detection algorithm
 
 
 from backends.utils import *
-from backends.OpenVINO.yolo_openvino import *
+from backends.OpenVINO.yolo_openvino import YOLO_OpenVINO
 
  
 '''

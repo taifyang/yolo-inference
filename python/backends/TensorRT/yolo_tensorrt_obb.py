@@ -1,8 +1,8 @@
 '''
 Author: taifyang
-Date: 2026-01-05 10:57:14
-LastEditTime: 2026-01-05 11:01:31
-Description: tensorrt inference class for YOLO pose algorithm
+Date: 2026-01-12 10:57:45
+LastEditTime: 2026-01-12 11:06:45
+Description: tensorrt inference class for YOLO obb algorithm
 '''
 
 
@@ -13,7 +13,7 @@ from backends.TensorRT.yolo_tensorrt import YOLO_TensorRT
 '''
 description: tensorrt inference class for the YOLO detection algorithm
 '''   
-class YOLO_TensorRT_Pose(YOLO_TensorRT):
+class YOLO_TensorRT_OBB(YOLO_TensorRT):
     '''
     description:            construction method
     param {*} self          instance of class
@@ -26,6 +26,9 @@ class YOLO_TensorRT_Pose(YOLO_TensorRT):
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__(algo_type, device_type, model_type, model_path)
         assert self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'], 'algo type not supported!'
+        self.class_num = 15		            
+        self.inputs_shape = (1024, 1024) 
+        self.iou_threshold = 0.7
         self.output0_device = cupy.empty(self.outputs_shape[0], dtype=np.float32)
         self.output0_ptr = self.output0_device.data.ptr
 
@@ -55,20 +58,27 @@ class YOLO_TensorRT_Pose(YOLO_TensorRT):
     return {*}
     '''  
     def post_process(self) -> None:
-        output = np.squeeze(self.output0_host.reshape(self.outputs_shape[0]))   
-        scores = output[..., 4]
-        xc = scores > self.score_threshold 
-        output[..., :4] = xywh2xyxy(output[..., :4])
+        boxes = []
+        scores = []
+
+        output = np.squeeze(self.output0_host.reshape(self.outputs_shape[0]))  
+        cls_scores = output[..., 4:(4 + self.class_num)]
+        xc = np.amax(cls_scores, axis=1) > self.score_threshold 
         box = output[xc][:, :4]
-        scores =  np.expand_dims(scores[xc], axis=1)
-        cls = np.zeros((len(box), 1))
-        kpts = output[xc][..., 5:]
-        boxes = np.concatenate([box, scores, cls, kpts], axis=1)
-        
+        cls = output[xc][:, 4:(4+self.class_num)]
+        angle = output[xc][:, -1:]
+        scores = np.max(cls, axis=1, keepdims=True) 
+        j = np.argmax(cls, axis=1, keepdims=True) 
+        boxes = np.concatenate([box, scores, j, angle], axis=1)
+            
         if len(boxes):   
-            indices = nms(boxes, scores, self.iou_threshold) 
+            boxes = np.array(boxes)
+            scores = np.array(scores).squeeze()
+            indices = nms_rotated(boxes, scores, self.iou_threshold)   
             boxes = boxes[indices]
-            boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
+            boxes = regularize_rboxes(boxes)
+            boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape, xywh=True)
+            boxes = np.array(list(reversed(boxes)))
             if self.draw_result:
-                self.result = draw_result(self.image, boxes, kpts=boxes[:, 6:])     
+                self.result = draw_result(self.image, boxes) 
   

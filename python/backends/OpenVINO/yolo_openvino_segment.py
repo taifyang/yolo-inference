@@ -7,7 +7,7 @@ Description: openvino inference class for YOLO segmentation algorithm
 
 
 from backends.utils import *
-from backends.OpenVINO.yolo_openvino import *
+from backends.OpenVINO.yolo_openvino import YOLO_OpenVINO
 
 
 '''

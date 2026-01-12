@@ -105,11 +105,11 @@ protected:
 
 	/**
 	 * @description: 						Non-Maximum Suppression
-	 * @param {vector<cv::Rect>} & boxes	detect bounding boxes
-	 * @param {vector<float>} &	scores		detect scores		
+	 * @param {vector<cv::Rect>&} boxes		detect bounding boxes
+	 * @param {vector<float>&} scores		detect scores		
 	 * @param {float} score_threshold		detect score threshold
 	 * @param {float} nms_threshold			IOU threshold
-	 * @param {vector<int>} & indices		detect indices
+	 * @param {vector<int>&} indices		output indices
 	 * @return {*}
 	 */
 	void nms(std::vector<cv::Rect>& boxes, std::vector<float>& scores, float score_threshold, float nms_threshold, std::vector<int> & indices)

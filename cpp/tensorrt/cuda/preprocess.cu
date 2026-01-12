@@ -1,7 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-03 20:39:42
+ * @LastEditTime: 2026-01-12 11:09:43
  * @Description: source file for cuda pre-processing decoding
  */
 
@@ -95,7 +95,7 @@ __global__ void warpaffine_kernel( uint8_t* src, int src_line_size, int src_widt
     *pdst_c2 = c2;
 }
 
-void preprocess_kernel_img(uint8_t* src, int src_width, int src_height, float* dst, int dst_width, int dst_height, float* affine_matrix, float* affine_matrix_inverse, cudaStream_t stream)
+void cuda_preprocess_img(uint8_t* src, int src_width, int src_height, float* dst, int dst_width, int dst_height, float* affine_matrix, float* affine_matrix_inverse, cudaStream_t stream)
 {
     AffineMatrix s2d,d2s;
     float scale = std::min(dst_height / (float)src_height, dst_width / (float)src_width);
@@ -116,7 +116,7 @@ void preprocess_kernel_img(uint8_t* src, int src_width, int src_height, float* d
     memcpy(d2s.value, m2x3_d2s.ptr<float>(0), sizeof(d2s.value));
 
     int jobs = dst_height * dst_width;
-    int threads = 256;
+    int threads = 1024;
     int blocks = ceil(jobs / (float)threads);
-    warpaffine_kernel<<<blocks, threads, 0, stream>>>(src, src_width*3, src_width, src_height, dst, dst_width, dst_height, 128, d2s, jobs);
+    warpaffine_kernel<<<blocks, threads, 0, stream>>>(src, src_width*3, src_width, src_height, dst, dst_width, dst_height, 114, d2s, jobs);
 }

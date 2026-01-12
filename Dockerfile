@@ -19,8 +19,9 @@ RUN rm onnxruntime-linux-x64-gpu-1.22.0.tgz
 RUN curl -k -L -O https://storage.openvinotoolkit.org/repositories/openvino/packages/2025.2/linux/openvino_toolkit_ubuntu24_2025.2.0.19140.c01cd93e24d_x86_64.tgz
 RUN tar -zxvf openvino_toolkit_ubuntu24_2025.2.0.19140.c01cd93e24d_x86_64.tgz
 RUN rm openvino_toolkit_ubuntu24_2025.2.0.19140.c01cd93e24d_x86_64.tgz
-RUN apt install libtbb-dev -y
+RUN apt install libtbb-dev libeigen3-dev -y
 RUN pip install torch==2.7.0 -i https://pypi.mirrors.ustc.edu.cn/simple/ -f https://download.pytorch.org/whl/cu128
 RUN pip install onnxruntime-gpu==1.22.0 -i https://pypi.mirrors.ustc.edu.cn/simple/
 RUN pip install openvino==2025.2.0 -i https://pypi.mirrors.ustc.edu.cn/simple/
 RUN pip install cupy-cuda12x -i https://pypi.mirrors.ustc.edu.cn/simple/
+RUN rm -r ~/.cache

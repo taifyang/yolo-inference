@@ -25,6 +25,7 @@ set(CMAKE_BUILD_TYPE "Release")
 set(BACKEND_LIBS "")
 
 find_package(OpenCV REQUIRED)
+include_directories(/usr/include/eigen3)
 include_directories(${OpenCV_INCLUDE_DIRS} ${OpenCV2_INCLUDE_DIRS})
 
 if(WITH_LIBTORCH)

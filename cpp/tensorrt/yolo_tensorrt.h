@@ -1,18 +1,19 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-05 10:13:42
+ * @LastEditTime: 2026-01-12 14:49:17
  * @Description: header file for YOLO tensorrt inference
  */
 
 #pragma once
 
-#include <cuda_runtime.h>
 #include "yolo_classify.h"
 #include "yolo_detect.h"
 #include "yolo_segment.h"
 #include "yolo_pose.h"
+#include "yolo_obb.h"
 #include "utils.h"
+#include <cuda_runtime.h>
 #include <NvInfer.h>
 #include <NvInferRuntime.h>
 #include <NvInferVersion.h>
@@ -348,6 +349,119 @@ private:
 	 * @description: box element num
 	 */
 	const int m_num_box_element = 58;
+};
+
+/**
+ * @description: tensorrt inference class for the yolo obb algorithm
+ */
+class YOLO_TensorRT_OBB : public YOLO_TensorRT_Detect, public YOLO_OBB
+{
+public:
+	/**
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
+	 * @return {*}
+	 */
+	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
+
+private:
+	/**
+	 * @description: model pre-process
+	 * @return {*}
+	 */
+	void pre_process();
+
+	/**
+	 * @description: model inference
+	 * @return {*}
+	 */
+	void process();
+
+	/**
+	 * @description: model post-process
+	 * @return {*}
+	 */
+	void post_process();
+
+	/**
+	 * @description: resource release
+	 * @return {*}
+	 */
+	void release();
+
+	/**
+	 * @description: input and output tensor bindings
+	 */
+	float* m_bindings[2];
+
+#ifndef _CUDA_PREPROCESS
+	/**
+	 * @description: pointer to input on host
+	 */
+	float* m_input_host;
+#else
+	/**
+	 * @description: pointer to uint8_t input on host 
+	 */
+	uint8_t* m_input_host;
+#endif // !_CUDA_PREPROCESS
+
+	/**
+	 * @description: pointer to output on device
+	 */
+	float* m_output_device;
+
+#ifdef _CUDA_PREPROCESS
+	/**
+	 * @description: d2s matrix on host
+	 */
+	float* m_d2s_host;
+
+	/**
+	 * @description: d2s matrix on device
+	 */
+	float* m_d2s_device;
+
+		/**
+	 * @description: s2d matrix on host
+	 */
+	float* m_s2d_host;
+
+	/**
+	 * @description: s2d matrix on device
+	 */
+	float* m_s2d_device;
+#endif // _CUDA_PREPROCESS
+
+#ifdef _CUDA_POSTPROCESS
+	/**
+	 * @description: output bounding box on host
+	 */
+	float* m_output_box_host;
+
+	/**
+	 * @description: output bounding box on device
+	 */
+	float* m_output_box_device;
+#endif // _CUDA_POSTPROCESS
+
+	/**
+	 * @description: box element num
+	 */
+	const int m_num_box_element = 8;
+
+		/**
+	 * @description: max input size
+	 */
+	const int m_max_input_size = sizeof(float) * 3 * 4096 * 4096;
+
+	/**
+	 * @description: max bounding box num
+	 */
+	const int m_max_box = 4096;
 };
 
 /**

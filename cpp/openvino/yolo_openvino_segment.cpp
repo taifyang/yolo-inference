@@ -28,12 +28,13 @@ void YOLO_OpenVINO_Segment::process()
 	ov::Tensor input_tensor(m_input_port.get_element_type(), m_input_port.get_shape(), m_input.ptr(0)); 
 	m_infer_request.set_input_tensor(input_tensor); 
 	m_infer_request.infer(); 
-	m_output0_host = (float*)m_infer_request.get_output_tensor(0).data(); 
-	m_output1_host = (float*)m_infer_request.get_output_tensor(1).data();
 }
 
 void YOLO_OpenVINO_Segment::post_process()
 {
+	m_output0_host = (float*)m_infer_request.get_output_tensor(0).data(); 
+	m_output1_host = (float*)m_infer_request.get_output_tensor(1).data();
+
 	std::vector<cv::Rect> boxes;
 	std::vector<float> scores;
 	std::vector<int> class_ids;

@@ -1,13 +1,13 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-01-05 11:07:01
+LastEditTime: 2026-01-12 10:49:13
 Description: tensorrt inference class for YOLO segmentation algorithm
 '''
 
 
 from backends.utils import *
-from backends.TensorRT.yolo_tensorrt import *
+from backends.TensorRT.yolo_tensorrt import YOLO_TensorRT
 
 
 '''

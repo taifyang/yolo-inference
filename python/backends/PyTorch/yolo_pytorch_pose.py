@@ -7,7 +7,7 @@ Description: pytorch inference class for YOLO pose algorithm
 
 
 from backends.utils import *
-from backends.PyTorch.yolo_pytorch import *
+from backends.PyTorch.yolo_pytorch import YOLO_PyTorch
 
 
 '''
