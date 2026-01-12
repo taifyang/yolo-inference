@@ -253,6 +253,30 @@ python main.py --algo_type YOLOv8 --backend_type TensorRT --task_type Pose --dev
 python main.py --algo_type YOLOv8 --backend_type TensorRT --task_type Pose --device_type GPU --model_type FP16 --model_path ../weights/yolov8n_pose_fp16.engine --input_path bus.jpg
 python main.py --algo_type YOLOv8 --backend_type TensorRT --task_type Pose --device_type GPU --model_type INT8 --model_path ../weights/yolov8n_pose_int8.engine --input_path bus.jpg
 
+python main.py --algo_type YOLOv8 --backend_type PyTorch --task_type OBB --device_type CPU --model_type FP32 --model_path ../weights/yolov8n_obb_fp32_cpu.torchscript --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type PyTorch --task_type OBB --device_type GPU --model_type FP32 --model_path ../weights/yolov8n_obb_fp32_gpu.torchscript --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type PyTorch --task_type OBB --device_type GPU --model_type FP16 --model_path ../weights/yolov8n_obb_fp16_gpu.torchscript --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type ONNXRuntime --task_type OBB --device_type CPU --model_type FP32 --model_path ../weights/yolov8n_obb_fp32.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type ONNXRuntime --task_type OBB --device_type GPU --model_type FP32 --model_path ../weights/yolov8n_obb_fp32.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type ONNXRuntime --task_type OBB --device_type CPU --model_type FP16 --model_path ../weights/yolov8n_obb_fp16.onnx --input_path boats.jpg 
+python main.py --algo_type YOLOv8 --backend_type ONNXRuntime --task_type OBB --device_type GPU --model_type FP16 --model_path ../weights/yolov8n_obb_fp16.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type ONNXRuntime --task_type OBB --device_type CPU --model_type INT8 --model_path ../weights/yolov8n_obb_int8.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type ONNXRuntime --task_type OBB --device_type GPU --model_type INT8 --model_path ../weights/yolov8n_obb_int8.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type OpenCV --task_type OBB --device_type CPU --model_type FP32 --model_path ../weights/yolov8n_obb_fp32.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type OpenCV --task_type OBB --device_type GPU --model_type FP32 --model_path ../weights/yolov8n_obb_fp32.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type OpenCV --task_type OBB --device_type CPU --model_type FP16 --model_path ../weights/yolov8n_obb_fp16.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type OpenCV --task_type OBB --device_type GPU --model_type FP16 --model_path ../weights/yolov8n_obb_fp16.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type OpenVINO --task_type OBB --device_type CPU --model_type FP32 --model_path ../weights/yolov8n_obb_fp32.xml --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type OpenVINO --task_type OBB --device_type GPU --model_type FP32 --model_path ../weights/yolov8n_obb_fp32.xml --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type OpenVINO --task_type OBB --device_type CPU --model_type FP16 --model_path ../weights/yolov8n_obb_fp16.xml --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type OpenVINO --task_type OBB --device_type GPU --model_type FP16 --model_path ../weights/yolov8n_obb_fp16.xml --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type OpenVINO --task_type OBB --device_type CPU --model_type INT8 --model_path ../weights/yolov8n_obb_int8.xml --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type OpenVINO --task_type OBB --device_type GPU --model_type INT8 --model_path ../weights/yolov8n_obb_int8.xml --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type TensorRT --task_type OBB --device_type GPU --model_type FP32 --model_path ../weights/yolov8n_obb_fp32.engine --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type TensorRT --task_type OBB --device_type GPU --model_type FP16 --model_path ../weights/yolov8n_obb_fp16.engine --input_path boats.jpg
+python main.py --algo_type YOLOv8 --backend_type TensorRT --task_type OBB --device_type GPU --model_type INT8 --model_path ../weights/yolov8n_obb_int8.engine --input_path boats.jpg
+
+
 python main.py --algo_type YOLOv9 --backend_type PyTorch --task_type Detect --device_type CPU --model_type FP32 --model_path ../weights/yolov9t_fp32_cpu.torchscript --input_path bus.jpg
 python main.py --algo_type YOLOv9 --backend_type PyTorch --task_type Detect --device_type GPU --model_type FP32 --model_path ../weights/yolov9t_fp32_gpu.torchscript --input_path bus.jpg
 python main.py --algo_type YOLOv9 --backend_type PyTorch --task_type Detect --device_type GPU --model_type FP16 --model_path ../weights/yolov9t_fp16_gpu.torchscript --input_path bus.jpg
@@ -416,6 +440,30 @@ python main.py --algo_type YOLOv11 --backend_type TensorRT --task_type Pose --de
 python main.py --algo_type YOLOv11 --backend_type TensorRT --task_type Pose --device_type GPU --model_type FP16 --model_path ../weights/yolov11n_pose_fp16.engine --input_path bus.jpg
 python main.py --algo_type YOLOv11 --backend_type TensorRT --task_type Pose --device_type GPU --model_type INT8 --model_path ../weights/yolov11n_pose_int8.engine --input_path bus.jpg
 
+python main.py --algo_type YOLOv11 --backend_type PyTorch --task_type OBB --device_type CPU --model_type FP32 --model_path ../weights/yolov11n_obb_fp32_cpu.torchscript --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type PyTorch --task_type OBB --device_type GPU --model_type FP32 --model_path ../weights/yolov11n_obb_fp32_gpu.torchscript --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type PyTorch --task_type OBB --device_type GPU --model_type FP16 --model_path ../weights/yolov11n_obb_fp16_gpu.torchscript --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type OBB --device_type CPU --model_type FP32 --model_path ../weights/yolov11n_obb_fp32.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type OBB --device_type GPU --model_type FP32 --model_path ../weights/yolov11n_obb_fp32.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type OBB --device_type CPU --model_type FP16 --model_path ../weights/yolov11n_obb_fp16.onnx --input_path boats.jpg 
+python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type OBB --device_type GPU --model_type FP16 --model_path ../weights/yolov11n_obb_fp16.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type OBB --device_type CPU --model_type INT8 --model_path ../weights/yolov11n_obb_int8.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type ONNXRuntime --task_type OBB --device_type GPU --model_type INT8 --model_path ../weights/yolov11n_obb_int8.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type OpenCV --task_type OBB --device_type CPU --model_type FP32 --model_path ../weights/yolov11n_obb_fp32.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type OpenCV --task_type OBB --device_type GPU --model_type FP32 --model_path ../weights/yolov11n_obb_fp32.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type OpenCV --task_type OBB --device_type CPU --model_type FP16 --model_path ../weights/yolov11n_obb_fp16.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type OpenCV --task_type OBB --device_type GPU --model_type FP16 --model_path ../weights/yolov11n_obb_fp16.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type OBB --device_type CPU --model_type FP32 --model_path ../weights/yolov11n_obb_fp32.xml --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type OBB --device_type GPU --model_type FP32 --model_path ../weights/yolov11n_obb_fp32.xml --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type OBB --device_type CPU --model_type FP16 --model_path ../weights/yolov11n_obb_fp16.xml --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type OBB --device_type GPU --model_type FP16 --model_path ../weights/yolov11n_obb_fp16.xml --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type OBB --device_type CPU --model_type INT8 --model_path ../weights/yolov11n_obb_int8.xml --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type OpenVINO --task_type OBB --device_type GPU --model_type INT8 --model_path ../weights/yolov11n_obb_int8.xml --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type TensorRT --task_type OBB --device_type GPU --model_type FP32 --model_path ../weights/yolov11n_obb_fp32.engine --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type TensorRT --task_type OBB --device_type GPU --model_type FP16 --model_path ../weights/yolov11n_obb_fp16.engine --input_path boats.jpg
+python main.py --algo_type YOLOv11 --backend_type TensorRT --task_type OBB --device_type GPU --model_type INT8 --model_path ../weights/yolov11n_obb_int8.engine --input_path boats.jpg
+
+
 python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Classify --device_type CPU --model_type FP32 --model_path ../weights/yolov12n_cls_fp32_cpu.torchscript --input_path bus.jpg
 python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Classify --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_cls_fp32_gpu.torchscript --input_path bus.jpg
 python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type Classify --device_type GPU --model_type FP16 --model_path ../weights/yolov12n_cls_fp16_gpu.torchscript --input_path bus.jpg
@@ -507,6 +555,30 @@ python main.py --algo_type YOLOv12 --backend_type OpenVINO --task_type Pose --de
 python main.py --algo_type YOLOv12 --backend_type TensorRT --task_type Pose --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_pose_fp32.engine --input_path bus.jpg
 python main.py --algo_type YOLOv12 --backend_type TensorRT --task_type Pose --device_type GPU --model_type FP16 --model_path ../weights/yolov12n_pose_fp16.engine --input_path bus.jpg
 python main.py --algo_type YOLOv12 --backend_type TensorRT --task_type Pose --device_type GPU --model_type INT8 --model_path ../weights/yolov12n_pose_int8.engine --input_path bus.jpg
+
+python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type OBB --device_type CPU --model_type FP32 --model_path ../weights/yolov12n_obb_fp32_cpu.torchscript --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type OBB --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_obb_fp32_gpu.torchscript --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type PyTorch --task_type OBB --device_type GPU --model_type FP16 --model_path ../weights/yolov12n_obb_fp16_gpu.torchscript --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type ONNXRuntime --task_type OBB --device_type CPU --model_type FP32 --model_path ../weights/yolov12n_obb_fp32.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type ONNXRuntime --task_type OBB --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_obb_fp32.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type ONNXRuntime --task_type OBB --device_type CPU --model_type FP16 --model_path ../weights/yolov12n_obb_fp16.onnx --input_path boats.jpg 
+python main.py --algo_type YOLOv12 --backend_type ONNXRuntime --task_type OBB --device_type GPU --model_type FP16 --model_path ../weights/yolov12n_obb_fp16.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type ONNXRuntime --task_type OBB --device_type CPU --model_type INT8 --model_path ../weights/yolov12n_obb_int8.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type ONNXRuntime --task_type OBB --device_type GPU --model_type INT8 --model_path ../weights/yolov12n_obb_int8.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type OpenCV --task_type OBB --device_type CPU --model_type FP32 --model_path ../weights/yolov12n_obb_fp32.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type OpenCV --task_type OBB --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_obb_fp32.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type OpenCV --task_type OBB --device_type CPU --model_type FP16 --model_path ../weights/yolov12n_obb_fp16.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type OpenCV --task_type OBB --device_type GPU --model_type FP16 --model_path ../weights/yolov12n_obb_fp16.onnx --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type OpenVINO --task_type OBB --device_type CPU --model_type FP32 --model_path ../weights/yolov12n_obb_fp32.xml --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type OpenVINO --task_type OBB --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_obb_fp32.xml --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type OpenVINO --task_type OBB --device_type CPU --model_type FP16 --model_path ../weights/yolov12n_obb_fp16.xml --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type OpenVINO --task_type OBB --device_type GPU --model_type FP16 --model_path ../weights/yolov12n_obb_fp16.xml --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type OpenVINO --task_type OBB --device_type CPU --model_type INT8 --model_path ../weights/yolov12n_obb_int8.xml --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type OpenVINO --task_type OBB --device_type GPU --model_type INT8 --model_path ../weights/yolov12n_obb_int8.xml --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type TensorRT --task_type OBB --device_type GPU --model_type FP32 --model_path ../weights/yolov12n_obb_fp32.engine --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type TensorRT --task_type OBB --device_type GPU --model_type FP16 --model_path ../weights/yolov12n_obb_fp16.engine --input_path boats.jpg
+python main.py --algo_type YOLOv12 --backend_type TensorRT --task_type OBB --device_type GPU --model_type INT8 --model_path ../weights/yolov12n_obb_int8.engine --input_path boats.jpg
+
 
 python main.py --algo_type YOLOv13 --backend_type PyTorch --task_type Detect --device_type CPU --model_type FP32 --model_path ../weights/yolov13n_fp32_cpu.torchscript --input_path bus.jpg
 python main.py --algo_type YOLOv13 --backend_type PyTorch --task_type Detect --device_type GPU --model_type FP32 --model_path ../weights/yolov13n_fp32_gpu.torchscript --input_path bus.jpg

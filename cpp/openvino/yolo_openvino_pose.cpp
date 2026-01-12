@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2026-01-03 21:31:46
- * @LastEditTime: 2026-01-05 00:14:26
+ * @LastEditTime: 2026-01-12 10:32:27
 * @Description: source file for YOLO openvino pose
  */
 
@@ -25,14 +25,13 @@ void YOLO_OpenVINO_Pose::pre_process()
 
 void YOLO_OpenVINO_Pose::process()
 {
-	ov::Tensor input_tensor(m_input_port.get_element_type(), m_input_port.get_shape(), m_input.ptr(0)); 
-	m_infer_request.set_input_tensor(input_tensor); 
-	m_infer_request.infer(); 
-	m_output0_host = (float*)m_infer_request.get_output_tensor(0).data(); 
+	YOLO_OpenVINO_Detect::process();
 }
 
 void YOLO_OpenVINO_Pose::post_process()
 {
+	m_output0_host = (float*)m_infer_request.get_output_tensor(0).data();
+
 	std::vector<cv::Rect> boxes;
 	std::vector<float> scores;
 	std::vector<int> class_ids;

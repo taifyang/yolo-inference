@@ -50,11 +50,12 @@ void YOLO_OpenVINO_Classify::process()
 	ov::Tensor input_tensor(m_input_port.get_element_type(), m_input_port.get_shape(), m_input.ptr(0)); 
 	m_infer_request.set_input_tensor(input_tensor); 
 	m_infer_request.infer(); 
-	m_output0_host = (float*)m_infer_request.get_output_tensor(0).data();
 }
 
 void YOLO_OpenVINO_Classify::post_process()
 {
+	m_output0_host = (float*)m_infer_request.get_output_tensor(0).data();
+
 	std::vector<float> scores(m_class_num); 
 	float sum = 0.0f;
 	for (size_t i = 0; i < m_class_num; i++)

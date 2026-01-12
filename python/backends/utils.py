@@ -1,18 +1,23 @@
 '''
 Author: taifyang
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-01-06 21:04:30
+LastEditTime: 2026-01-12 20:57:57
 Description: utilities functions
 '''
 
 
 import cv2
+import math
 import numpy as np
 try:
     import cupy
     from cupyx.scipy import ndimage
 except:
     print('cupy import failed!')
+try:
+    import torch
+except:
+    print('torch import failed!')
 from backends.yolo import *
 
 
@@ -135,7 +140,7 @@ def letterbox(im, new_shape=(416, 416), color=(114, 114, 114), use_cupy=False):
         else:
             im = cv2.resize(im, new_unpad, interpolation=cv2.INTER_LINEAR)
 
-     # add border
+    # add border
     if use_cupy:
         return cupy.pad(array=im_cupy, pad_width=((top, bottom), (left, right), (0, 0)), mode='constant', constant_values=(color, color))
     else:
@@ -204,6 +209,7 @@ def scale_mask(mask, input_shape, output_shape):
     mask = cv2.resize(mask, (output_shape[1], output_shape[0]), cv2.INTER_LINEAR)
     return mask
 
+
 '''
 description:            	plot skeleton keypoints
 param {*} im          		input image
@@ -232,6 +238,136 @@ def plot_skeleton_kpts(im, kpt, score_threshold=0.5):
 
 
 '''
+description:            NMS for oriented bounding boxes using probiou and fast-nms
+param {*} boxes         Rotated bounding boxes, format xywhr
+param {*} scores   		Confidence scores, shape (N,)
+param {*} threshold  	IoU threshold. Defaults to 0.45
+return {*}              Indices of boxes to keep after NMS     
+'''
+def nms_rotated(boxes, scores, threshold=0.45):
+    if isinstance(boxes, np.ndarray):
+        sorted_idx = np.argsort(-scores)
+        boxes = boxes[sorted_idx]
+        ious = np.triu(probiou(boxes, boxes), k=1)
+        pick = np.nonzero(np.max(ious, axis=0) < threshold)[0]
+    else:
+        sorted_idx = torch.argsort(scores, descending=True)  
+        boxes = boxes[sorted_idx]
+        ious = probiou(boxes, boxes).triu_(diagonal=1)
+        pick = torch.nonzero(ious.max(dim=0)[0] < threshold).squeeze_(-1)
+    return sorted_idx[pick]
+
+
+'''
+description:    Calculate the prob IoU between oriented bounding boxes, https://arxiv.org/pdf/2106.06072v1.pdf
+param {*} obb1  ground truth obbs with xywhr format
+param {*} obb2  predicted obbs with xywhr format
+param {*} eps   A small value to avoid division by zero. Defaults to 1e-7
+return {*}      A tensor of shape (N, M) representing obb similarities   
+'''
+def probiou(obb1, obb2, eps=1e-7):
+    if isinstance(obb1, np.ndarray) :
+        x1, y1 = obb1[..., 0:1], obb1[..., 1:2]
+        x2, y2 = obb2[..., 0][None, ...], obb2[..., 1][None, ...]
+        
+        a1, b1, c1 = _get_covariance_matrix(obb1)  
+        a2_raw, b2_raw, c2_raw = _get_covariance_matrix(obb2)
+        a2 = np.squeeze(a2_raw, axis=-1)[None, ...]
+        b2 = np.squeeze(b2_raw, axis=-1)[None, ...]
+        c2 = np.squeeze(c2_raw, axis=-1)[None, ...]
+
+        t1 = (((a1 + a2) * (y1 - y2)**2 + (b1 + b2) * (x1 - x2)**2 ) / ((a1 + a2) * (b1 + b2) - (c1 + c2)**2 + eps)) * 0.25
+        t2 = (((c1 + c2) * (x2 - x1) * (y1 - y2)) / ((a1 + a2) * (b1 + b2) - (c1 + c2)**2 + eps)) * 0.5  
+        term1 = np.clip(a1 * b1 - c1**2, 0, None) 
+        term2 = np.clip(a2 * b2 - c2**2, 0, None)
+        t3 = np.log(((a1 + a2) * (b1 + b2) - (c1 + c2)**2) / (4 * np.sqrt(term1 * term2) + eps) + eps) * 0.5
+        bd = np.clip(t1 + t2 + t3, eps, 100.0)
+        hd = np.sqrt(1.0 - np.exp(-bd) + eps) 
+    else: 
+        x1, y1 = obb1[..., :2].split(1, dim=-1)                                
+        x2, y2 = (x.squeeze(-1)[None] for x in obb2[..., :2].split(1, dim=-1))  
+        a1, b1, c1 = _get_covariance_matrix(obb1)                              
+        a2, b2, c2 = (x.squeeze(-1)[None] for x in _get_covariance_matrix(obb2))
+
+        t1 = (((a1 + a2) * (y1 - y2).pow(2) + (b1 + b2) * (x1 - x2).pow(2)) / ((a1 + a2) * (b1 + b2) - (c1 + c2).pow(2) + eps)) * 0.25
+        t2 = (((c1 + c2) * (x2 - x1) * (y1 - y2)) / ((a1 + a2) * (b1 + b2) - (c1 + c2).pow(2) + eps)) * 0.5
+        t3 = (((a1 + a2) * (b1 + b2) - (c1 + c2).pow(2)) / (4 * ((a1 * b1 - c1.pow(2)).clamp_(0) * (a2 * b2 - c2.pow(2)).clamp_(0)).sqrt() \
+                                                            + eps) + eps).log() * 0.5
+        bd = (t1 + t2 + t3).clamp(eps, 100.0)   
+        hd = (1.0 - (-bd).exp() + eps).sqrt()
+    return 1 - hd
+
+
+'''
+description:    Generating covariance matrix from obbs
+param {*} boxes rotated bounding boxes, with xywhr format
+return {*}      Covariance matrices corresponding to original rotated bounding boxes
+'''
+def _get_covariance_matrix(boxes):
+    # Gaussian bounding boxes, ignore the center points (the first two columns) because they are not needed here.
+    if isinstance(boxes, np.ndarray):                                            
+        gbbs = np.concatenate([boxes[:, 2:4]**2 / 12.0,  boxes[:, -1:]], axis=-1)    
+        a, b, c = np.split(gbbs, 3, axis=-1)
+        cos = np.cos(c)
+        sin = np.sin(c)
+        cos2 = cos **2
+        sin2 = sin** 2
+    else:
+        gbbs = torch.cat((boxes[:, 2:4].pow(2) / 12, boxes[:, -1:]), dim=-1)
+        a, b, c = gbbs.split(1, dim=-1)
+        cos = c.cos()
+        sin = c.sin()
+        cos2 = cos.pow(2)
+        sin2 = sin.pow(2)
+    return a * cos2 + b * sin2, a * sin2 + b * cos2, (a - b) * cos * sin
+
+'''
+description:    Regularize rotated bounding boxes to range [0, pi/2]
+param {*} boxes rotated bounding boxes 
+return {*}      regularized rotated bounding boxes
+'''
+def regularize_rboxes(rboxes):
+    if isinstance(rboxes, np.ndarray):
+        x, y, w, h, score, cls, t = rboxes[..., 0], rboxes[..., 1], rboxes[..., 2], rboxes[..., 3], rboxes[..., 4], rboxes[..., 5], rboxes[..., 6]
+        w_ = np.where(w > h, w, h) 
+        h_ = np.where(w > h, h, w) 
+        t = np.where(w > h, t, t + np.pi / 2) % np.pi
+        return np.stack([x, y, w_, h_, score, cls, t], axis=-1)
+    else:
+        x, y, w, h, score, cls, t  = rboxes.unbind(dim=-1)
+        w_ = torch.where(w > h, w, h)
+        h_ = torch.where(w > h, h, w)
+        t = torch.where(w > h, t, t + math.pi / 2) % math.pi
+        return torch.stack([x, y, w_, h_, score, cls, t], dim=-1) 
+
+
+'''
+description:    Convert batched Oriented Bounding Boxes (OBB) from [xywh, rotation] to [xy1, xy2, xy3, xy4]
+param {*} x     Boxes in [cx, cy, w, h, rotation] format of shape (n, 5) or (b, n, 5)t
+return {*}      Converted corner points of shape (n, 4, 2) or (b, n, 4, 2
+'''
+def xywhr2xyxyxyxy(x):
+    cos, sin, cat, stack = (
+        (torch.cos, torch.sin, torch.cat, torch.stack)
+        if isinstance(x, torch.Tensor)
+        else (np.cos, np.sin, np.concatenate, np.stack)
+    )
+
+    ctr = x[..., :2]
+    w, h, = (x[..., i : i + 1] for i in range(2, 4))
+    angle =  x[..., -1] 
+    cos_value, sin_value = cos(angle), sin(angle)
+    vec1 = [w / 2 * cos_value, w / 2 * sin_value]
+    vec2 = [-h / 2 * sin_value, h / 2 * cos_value]
+    vec1 = cat(vec1, -1)
+    vec2 = cat(vec2, -1)
+    pt1 = ctr + vec1 + vec2
+    pt2 = ctr + vec1 - vec2
+    pt3 = ctr - vec1 - vec2
+    pt4 = ctr - vec1 + vec2
+    return stack([pt1, pt2, pt3, pt4], -2)
+
+'''
 description:    draw result
 param {*} image input image
 param {*} preds prediction result
@@ -249,7 +385,13 @@ def draw_result(image, preds, masks=[], kpts=None):
         image_copy[mask] = [np.random.randint(0, 256), np.random.randint(0, 256), np.random.randint(0, 256)]
     result = (image*0.5 + image_copy*0.5).astype(np.uint8)
     
-    if kpts is not None:
+    if preds.shape[1] == 7:
+        boxes = np.concatenate((boxes, preds[..., -1:]), axis=1)   
+        for box, score, cls in zip(boxes, scores, classes):
+            box = xywhr2xyxyxyxy(box).astype(np.int32)
+            cv2.polylines(result, [np.asarray(box)], isClosed=True, color=(0, 255, 0), thickness=2)
+            cv2.putText(result, 'class:{0} score:{1:.2f}'.format(cls, score), (box[0][0], box[0][1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    elif kpts is not None:
         for box, score, cls, kpt in zip(boxes, scores, classes, kpts):
             box = box.astype(np.int32)
             cv2.rectangle(result, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
@@ -259,6 +401,5 @@ def draw_result(image, preds, masks=[], kpts=None):
         for box, score, cls in zip(boxes, scores, classes):
             box = box.astype(np.int32)
             cv2.rectangle(result, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
-            cv2.putText(result, 'class:{0} score:{1:.2f}'.format(cls, score), (box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-        
+            cv2.putText(result, 'class:{0} score:{1:.2f}'.format(cls, score), (box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)       
     return result

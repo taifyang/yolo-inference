@@ -45,7 +45,7 @@ protected:
 	/**
 	 * @description: 										scale boxes
 	 * @param {std::vector<cv::Rect>&} boxes				detect boxes
-	 * @param {td::vector<std::vector<float>>&} keypoints	pose keypoints
+	 * @param {std::vector<std::vector<float>>&} keypoints	pose keypoints
 	 * @param {Size} size									output image shape
 	 * @return {*}
 	 */
@@ -77,7 +77,7 @@ protected:
 
 	/**
 	 * @description: 								draw result
-	 * @param {std::vector<OutputDet>} output_det	pose model output
+	 * @param {std::vector<OutputPose>} output_det	pose model output
 	 * @return {*}
 	 */
 	void draw_result(std::vector<OutputPose> output_pose)

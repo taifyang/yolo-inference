@@ -7,7 +7,7 @@ Description: onnxruntime inference class for YOLO segmentation algorithm
 
 
 from backends.utils import *
-from backends.ONNXRuntime.yolo_onnxruntime import *
+from backends.ONNXRuntime.yolo_onnxruntime import YOLO_ONNXRuntime
             
 
 '''

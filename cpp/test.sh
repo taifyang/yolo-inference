@@ -253,6 +253,28 @@
 ./yolo TensorRT Pose YOLOv8 GPU FP16 ../../weights/yolov8n_pose_fp16.engine bus.jpg
 ./yolo TensorRT Pose YOLOv8 GPU INT8 ../../weights/yolov8n_pose_int8.engine bus.jpg
 
+./yolo Libtorch OBB YOLOv8 CPU FP32 ../../weights/yolov8n_obb_fp32_cpu.torchscript boats.jpg
+./yolo Libtorch OBB YOLOv8 GPU FP32 ../../weights/yolov8n_obb_fp32_gpu.torchscript boats.jpg
+./yolo Libtorch OBB YOLOv8 GPU FP16 ../../weights/yolov8n_obb_fp16_gpu.torchscript boats.jpg
+./yolo ONNXRuntime OBB YOLOv8 CPU FP32 ../../weights/yolov8n_obb_fp32.onnx boats.jpg
+./yolo ONNXRuntime OBB YOLOv8 GPU FP32 ../../weights/yolov8n_obb_fp32.onnx boats.jpg
+./yolo ONNXRuntime OBB YOLOv8 CPU FP16 ../../weights/yolov8n_obb_fp16.onnx boats.jpg
+./yolo ONNXRuntime OBB YOLOv8 GPU FP16 ../../weights/yolov8n_obb_fp16.onnx boats.jpg
+./yolo ONNXRuntime OBB YOLOv8 CPU INT8 ../../weights/yolov8n_obb_int8.onnx boats.jpg
+./yolo ONNXRuntime OBB YOLOv8 GPU INT8 ../../weights/yolov8n_obb_int8.onnx boats.jpg
+./yolo OpenCV OBB YOLOv8 CPU FP32 ../../weights/yolov8n_obb_fp32.onnx boats.jpg
+./yolo OpenCV OBB YOLOv8 GPU FP32 ../../weights/yolov8n_obb_fp32.onnx boats.jpg
+./yolo OpenCV OBB YOLOv8 CPU FP16 ../../weights/yolov8n_obb_fp16.onnx boats.jpg
+./yolo OpenCV OBB YOLOv8 GPU FP16 ../../weights/yolov8n_obb_fp16.onnx boats.jpg
+./yolo OpenVINO OBB YOLOv8 CPU FP32 ../../weights/yolov8n_obb_fp32.xml boats.jpg
+./yolo OpenVINO OBB YOLOv8 GPU FP32 ../../weights/yolov8n_obb_fp32.xml boats.jpg
+./yolo OpenVINO OBB YOLOv8 CPU FP16 ../../weights/yolov8n_obb_fp16.xml boats.jpg
+./yolo OpenVINO OBB YOLOv8 GPU FP16 ../../weights/yolov8n_obb_fp16.xml boats.jpg
+./yolo OpenVINO OBB YOLOv8 CPU INT8 ../../weights/yolov8n_obb_int8.xml boats.jpg
+./yolo OpenVINO OBB YOLOv8 GPU INT8 ../../weights/yolov8n_obb_int8.xml boats.jpg
+./yolo TensorRT OBB YOLOv8 GPU FP32 ../../weights/yolov8n_obb_fp32.engine boats.jpg
+./yolo TensorRT OBB YOLOv8 GPU FP16 ../../weights/yolov8n_obb_fp16.engine boats.jpg
+./yolo TensorRT OBB YOLOv8 GPU INT8 ../../weights/yolov8n_obb_int8.engine boats.jpg
 
 ./yolo Libtorch Detect YOLOv9 CPU FP32 ../../weights/yolov9t_fp32_cpu.torchscript bus.jpg
 ./yolo Libtorch Detect YOLOv9 GPU FP32 ../../weights/yolov9t_fp32_gpu.torchscript bus.jpg
@@ -417,6 +439,29 @@
 ./yolo TensorRT Pose YOLOv11 GPU FP16 ../../weights/yolov11n_pose_fp16.engine bus.jpg
 ./yolo TensorRT Pose YOLOv11 GPU INT8 ../../weights/yolov11n_pose_int8.engine bus.jpg
 
+./yolo Libtorch OBB YOLOv11 CPU FP32 ../../weights/yolov11n_obb_fp32_cpu.torchscript boats.jpg
+./yolo Libtorch OBB YOLOv11 GPU FP32 ../../weights/yolov11n_obb_fp32_gpu.torchscript boats.jpg
+./yolo Libtorch OBB YOLOv11 GPU FP16 ../../weights/yolov11n_obb_fp16_gpu.torchscript boats.jpg
+./yolo ONNXRuntime OBB YOLOv11 CPU FP32 ../../weights/yolov11n_obb_fp32.onnx boats.jpg
+./yolo ONNXRuntime OBB YOLOv11 GPU FP32 ../../weights/yolov11n_obb_fp32.onnx boats.jpg
+./yolo ONNXRuntime OBB YOLOv11 CPU FP16 ../../weights/yolov11n_obb_fp16.onnx boats.jpg
+./yolo ONNXRuntime OBB YOLOv11 GPU FP16 ../../weights/yolov11n_obb_fp16.onnx boats.jpg
+./yolo ONNXRuntime OBB YOLOv11 CPU INT8 ../../weights/yolov11n_obb_int8.onnx boats.jpg
+./yolo ONNXRuntime OBB YOLOv11 GPU INT8 ../../weights/yolov11n_obb_int8.onnx boats.jpg
+./yolo OpenCV OBB YOLOv11 CPU FP32 ../../weights/yolov11n_obb_fp32.onnx boats.jpg
+./yolo OpenCV OBB YOLOv11 GPU FP32 ../../weights/yolov11n_obb_fp32.onnx boats.jpg
+./yolo OpenCV OBB YOLOv11 CPU FP16 ../../weights/yolov11n_obb_fp16.onnx boats.jpg
+./yolo OpenCV OBB YOLOv11 GPU FP16 ../../weights/yolov11n_obb_fp16.onnx boats.jpg
+./yolo OpenVINO OBB YOLOv11 CPU FP32 ../../weights/yolov11n_obb_fp32.xml boats.jpg
+./yolo OpenVINO OBB YOLOv11 GPU FP32 ../../weights/yolov11n_obb_fp32.xml boats.jpg
+./yolo OpenVINO OBB YOLOv11 CPU FP16 ../../weights/yolov11n_obb_fp16.xml boats.jpg
+./yolo OpenVINO OBB YOLOv11 GPU FP16 ../../weights/yolov11n_obb_fp16.xml boats.jpg
+./yolo OpenVINO OBB YOLOv11 CPU INT8 ../../weights/yolov11n_obb_int8.xml boats.jpg
+./yolo OpenVINO OBB YOLOv11 GPU INT8 ../../weights/yolov11n_obb_int8.xml boats.jpg
+./yolo TensorRT OBB YOLOv11 GPU FP32 ../../weights/yolov11n_obb_fp32.engine boats.jpg
+./yolo TensorRT OBB YOLOv11 GPU FP16 ../../weights/yolov11n_obb_fp16.engine boats.jpg
+./yolo TensorRT OBB YOLOv11 GPU INT8 ../../weights/yolov11n_obb_int8.engine boats.jpg
+
 
 ./yolo Libtorch Classify YOLOv12 CPU FP32 ../../weights/yolov12n_cls_fp32_cpu.torchscript bus.jpg
 ./yolo Libtorch Classify YOLOv12 GPU FP32 ../../weights/yolov12n_cls_fp32_gpu.torchscript bus.jpg
@@ -509,6 +554,30 @@
 ./yolo TensorRT Pose YOLOv12 GPU FP32 ../../weights/yolov12n_pose_fp32.engine bus.jpg
 ./yolo TensorRT Pose YOLOv12 GPU FP16 ../../weights/yolov12n_pose_fp16.engine bus.jpg
 ./yolo TensorRT Pose YOLOv12 GPU INT8 ../../weights/yolov12n_pose_int8.engine bus.jpg
+
+./yolo Libtorch OBB YOLOv12 CPU FP32 ../../weights/yolov12n_obb_fp32_cpu.torchscript boats.jpg
+./yolo Libtorch OBB YOLOv12 GPU FP32 ../../weights/yolov12n_obb_fp32_gpu.torchscript boats.jpg
+./yolo Libtorch OBB YOLOv12 GPU FP16 ../../weights/yolov12n_obb_fp16_gpu.torchscript boats.jpg
+./yolo ONNXRuntime OBB YOLOv12 CPU FP32 ../../weights/yolov12n_obb_fp32.onnx boats.jpg
+./yolo ONNXRuntime OBB YOLOv12 GPU FP32 ../../weights/yolov12n_obb_fp32.onnx boats.jpg
+./yolo ONNXRuntime OBB YOLOv12 CPU FP16 ../../weights/yolov12n_obb_fp16.onnx boats.jpg
+./yolo ONNXRuntime OBB YOLOv12 GPU FP16 ../../weights/yolov12n_obb_fp16.onnx boats.jpg
+./yolo ONNXRuntime OBB YOLOv12 CPU INT8 ../../weights/yolov12n_obb_int8.onnx boats.jpg
+./yolo ONNXRuntime OBB YOLOv12 GPU INT8 ../../weights/yolov12n_obb_int8.onnx boats.jpg
+./yolo OpenCV OBB YOLOv12 CPU FP32 ../../weights/yolov12n_obb_fp32.onnx boats.jpg
+./yolo OpenCV OBB YOLOv12 GPU FP32 ../../weights/yolov12n_obb_fp32.onnx boats.jpg
+./yolo OpenCV OBB YOLOv12 CPU FP16 ../../weights/yolov12n_obb_fp16.onnx boats.jpg
+./yolo OpenCV OBB YOLOv12 GPU FP16 ../../weights/yolov12n_obb_fp16.onnx boats.jpg
+./yolo OpenVINO OBB YOLOv12 CPU FP32 ../../weights/yolov12n_obb_fp32.xml boats.jpg
+./yolo OpenVINO OBB YOLOv12 GPU FP32 ../../weights/yolov12n_obb_fp32.xml boats.jpg
+./yolo OpenVINO OBB YOLOv12 CPU FP16 ../../weights/yolov12n_obb_fp16.xml boats.jpg
+./yolo OpenVINO OBB YOLOv12 GPU FP16 ../../weights/yolov12n_obb_fp16.xml boats.jpg
+./yolo OpenVINO OBB YOLOv12 CPU INT8 ../../weights/yolov12n_obb_int8.xml boats.jpg
+./yolo OpenVINO OBB YOLOv12 GPU INT8 ../../weights/yolov12n_obb_int8.xml boats.jpg
+./yolo TensorRT OBB YOLOv12 GPU FP32 ../../weights/yolov12n_obb_fp32.engine boats.jpg
+./yolo TensorRT OBB YOLOv12 GPU FP16 ../../weights/yolov12n_obb_fp16.engine boats.jpg
+./yolo TensorRT OBB YOLOv12 GPU INT8 ../../weights/yolov12n_obb_int8.engine boats.jpg
+
 
 ./yolo Libtorch Detect YOLOv13 CPU FP32 ../../weights/yolov13n_fp32_cpu.torchscript bus.jpg    
 ./yolo Libtorch Detect YOLOv13 GPU FP32 ../../weights/yolov13n_fp32_gpu.torchscript bus.jpg

@@ -1,7 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-03 20:39:51
+ * @LastEditTime: 2026-01-12 15:23:35
  * @Description: head file for cuda pre-processing decoding
  * refer to https://github.com/wang-xinyu/tensorrtx/blob/master/yolov5/src/preprocess.h
  */
@@ -34,5 +34,4 @@ struct AffineMatrix
  * @param {cudaStream_t} stream		        cuda stream
  * @return {*}
  */
-void preprocess_kernel_img(uint8_t* src, int src_width, int src_height, float* dst, int dst_width, int dst_height, float* affine_matrix, float* affine_matrix_inverse, cudaStream_t stream);
-
+void cuda_preprocess_img(uint8_t* src, int src_width, int src_height, float* dst, int dst_width, int dst_height, float* affine_matrix, float* affine_matrix_inverse, cudaStream_t stream);
