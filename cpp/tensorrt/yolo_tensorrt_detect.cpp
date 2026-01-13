@@ -47,7 +47,7 @@ void YOLO_TensorRT_Detect::pre_process()
 {
 #ifdef _CUDA_PREPROCESS
 	cudaMemcpyAsync(m_input_host, m_image.data, sizeof(uint8_t) * 3 * m_image.cols * m_image.rows, cudaMemcpyHostToDevice, m_stream);
-	preprocess_kernel_img(m_input_host, m_image.cols, m_image.rows, m_input_device, m_input_size.width, m_input_size.height, m_d2s_host, m_s2d_host, m_stream);
+	cuda_preprocess_img(m_input_host, m_image.cols, m_image.rows, m_input_device, m_input_size.width, m_input_size.height, m_d2s_host, m_s2d_host, m_stream);
 	cudaMemcpyAsync(m_d2s_device, m_d2s_host, sizeof(float) * 6, cudaMemcpyHostToDevice, m_stream);
 	cudaMemcpyAsync(m_s2d_device, m_s2d_host, sizeof(float) * 6, cudaMemcpyHostToDevice, m_stream);
 #else
@@ -85,9 +85,9 @@ void YOLO_TensorRT_Detect::post_process()
 
 #ifdef _CUDA_POSTPROCESS
 	cudaMemset(m_output_box_device, 0, sizeof(float) * (m_num_box_element * m_max_box + 1));	
-	decode_kernel_invoker(m_output_device, m_output_numbox, m_class_num, m_confidence_threshold, m_score_threshold, m_d2s_device,
+	cuda_decode(m_output_device, m_output_numbox, m_class_num, m_confidence_threshold, m_score_threshold, m_d2s_device,
 		 m_output_box_device, m_max_box, m_num_box_element, m_input_size, m_stream, m_algo_type, m_task_type);
-	nms_kernel_invoker(m_output_box_device, m_nms_threshold, m_max_box, m_num_box_element, m_stream);
+	cuda_nms(m_output_box_device, m_nms_threshold, m_max_box, m_num_box_element, m_stream);
 	cudaMemcpyAsync(m_output_box_host, m_output_box_device, sizeof(float) * (m_num_box_element * m_max_box + 1), cudaMemcpyDeviceToHost, m_stream);
 	cudaStreamSynchronize(m_stream);
 

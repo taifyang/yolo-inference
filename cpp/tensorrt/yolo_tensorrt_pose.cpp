@@ -66,9 +66,9 @@ void YOLO_TensorRT_Pose::post_process()
 
 #ifdef _CUDA_POSTPROCESS
 	cudaMemset(m_output_box_device, 0, sizeof(float) * (m_num_box_element * m_max_box + 1));	
-	decode_kernel_invoker(m_output_device, m_output_numbox, m_class_num, m_confidence_threshold, m_score_threshold,
+	cuda_decode(m_output_device, m_output_numbox, m_class_num, m_confidence_threshold, m_score_threshold,
 		m_d2s_device, m_output_box_device, m_max_box, m_num_box_element, m_input_size, m_stream, m_algo_type, m_task_type);
-	nms_kernel_invoker(m_output_box_device, m_nms_threshold, m_max_box, m_num_box_element, m_stream);
+	cuda_nms(m_output_box_device, m_nms_threshold, m_max_box, m_num_box_element, m_stream);
 	cudaMemcpyAsync(m_output_box_host, m_output_box_device, sizeof(float) * (m_num_box_element * m_max_box + 1), cudaMemcpyDeviceToHost, m_stream);
 	cudaStreamSynchronize(m_stream);
 

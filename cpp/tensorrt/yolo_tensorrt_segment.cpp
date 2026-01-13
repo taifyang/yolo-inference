@@ -77,9 +77,9 @@ void YOLO_TensorRT_Segment::post_process()
 
 #ifdef _CUDA_POSTPROCESS
 	cudaMemset(m_output_box_device, 0, sizeof(float) * (m_num_box_element * m_max_box + 1));	
-	decode_kernel_invoker(m_output0_device, m_output_numbox, m_class_num, m_confidence_threshold, m_score_threshold, m_d2s_device, 
+	cuda_decode(m_output0_device, m_output_numbox, m_class_num, m_confidence_threshold, m_score_threshold, m_d2s_device, 
 		m_output_box_device, m_max_box, m_num_box_element, m_input_size, m_stream, m_algo_type, m_task_type);
-	nms_kernel_invoker(m_output_box_device, m_nms_threshold, m_max_box, m_num_box_element, m_stream);
+	cuda_nms(m_output_box_device, m_nms_threshold, m_max_box, m_num_box_element, m_stream);
 	cudaMemcpyAsync(m_output_box_host, m_output_box_device, sizeof(float) * (m_num_box_element * m_max_box + 1), cudaMemcpyDeviceToHost, m_stream);
 	cudaStreamSynchronize(m_stream);
 
@@ -127,9 +127,9 @@ void YOLO_TensorRT_Segment::post_process()
 				uint8_t* mask_device, *mask_resized_device, *mask_host;
 				cudaMalloc(&mask_device, sizeof(uint8_t) * mask_out_width * mask_out_height);
 				cudaMemset(mask_device, 0, sizeof(uint8_t) * mask_out_width * mask_out_height);	
-				decode_single_mask(l * x_ratio, t * y_ratio, mask_weights, m_output1_device, m_mask_params.seg_height, m_mask_params.seg_width, mask_device, 32, mask_out_width, mask_out_height, m_stream);
+				cuda_decode_mask(l * x_ratio, t * y_ratio, mask_weights, m_output1_device, m_mask_params.seg_height, m_mask_params.seg_width, mask_device, 32, mask_out_width, mask_out_height, m_stream);
 				cudaMalloc(&mask_resized_device, sizeof(uint8_t) * (width*height));
-				resize_cuda(mask_device, mask_resized_device, cv::Size(mask_out_width, mask_out_height), cv::Size(width, height), m_stream);
+				cuda_resize(mask_device, mask_resized_device, cv::Size(mask_out_width, mask_out_height), cv::Size(width, height), m_stream);
 				cudaMallocHost(&mask_host, sizeof(uint8_t) * width * height);
 				cudaMemcpyAsync(mask_host, mask_resized_device, sizeof(uint8_t) * width * height, cudaMemcpyDeviceToHost, m_stream);
 				cudaStreamSynchronize(m_stream);
