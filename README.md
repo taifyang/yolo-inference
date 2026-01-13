@@ -3,7 +3,7 @@ C++ and Python implementations of YOLOv3, YOLOv4, YOLOv5, YOLOv6, YOLOv7, YOLOv8
 
 Supported inference backends include Libtorch/PyTorch, ONNXRuntime, OpenCV, OpenVINO, TensorRT. 
 
-Supported task types include Classify, Detect, Segment, Pose.
+Supported task types include Classify, Detect, Segment, Pose, OBB.
 
 Supported model types include FP32, FP16, INT8.
 
@@ -88,12 +88,18 @@ C++ test in Docker with 25 vCPU Intel(R) Xeon(R) Platinum 8470Q , RTX 5090(32GB)
 | YOLOv8n            | Segment          | GPU                | FP16                  | 7.5ms    | 21.5ms       | 8.4ms   | ?        | 1.3ms    |
 | YOLOv8n            | Segment          | CPU                | INT8                  | ×        | 49.2ms       | ×       | 20.4ms   | ×        |
 | YOLOv8n            | Segment          | GPU                | INT8                  | ×        | 42.4ms       | ×       | ?        | 1.2ms    |
-| YOLOv8n            | Pose             | CPU                | FP32                  | 25.7ms   | 28.7s        | 48.4ms  | 13.4ms   | ×        |
+| YOLOv8n            | Pose             | CPU                | FP32                  | 25.7ms   | 28.7ms       | 48.4ms  | 13.4ms   | ×        |
 | YOLOv8n            | Pose             | GPU                | FP32                  | 4.1ms    | 8.7ms        | 6.1ms   | ?        | 1.2ms    |
 | YOLOv8n            | Pose             | CPU                | FP16                  | ×        | 45.0ms       | 48.8ms  | 13.2ms   | ×        |
 | YOLOv8n            | Pose             | GPU                | FP16                  | 4.0ms    | 12.4ms       | 6.3ms   | ?        | 0.9ms    |
 | YOLOv8n            | Pose             | CPU                | INT8                  | ×        | 40.8ms       | ×       | 15.6ms   | ×        |
 | YOLOv8n            | Pose             | GPU                | INT8                  | ×        | 35.6ms       | ×       | ?        | 0.8ms    |
+| YOLOv8n            | OBB              | CPU                | FP32                  | 221.5ms  | 248.2ms      | 319.3ms | 174.5ms  | ×        |
+| YOLOv8n            | OBB              | GPU                | FP32                  | 183.4ms  | 189.0ms      | 179.0ms | ?        | 2.9ms    |
+| YOLOv8n            | OBB              | CPU                | FP16                  | ×        | ×            | 316.6ms | 177.1ms  | ×        |
+| YOLOv8n            | OBB              | GPU                | FP16                  | 191.3ms  | ×            | 180.3ms | ?        | 2.3ms    |
+| YOLOv8n            | OBB              | CPU                | INT8                  | ×        | 264.6ms      | ×       | 189.3ms  | ×        |
+| YOLOv8n            | OBB              | GPU                | INT8                  | ×        | 244.3ms      | ×       | ?        | 2.2ms    |
 | YOLOv9t            | Detect           | CPU                | FP32                  | 43.8ms   | 49.0ms       | 61.0ms  | 18.0ms   | ×        |
 | YOLOv9t            | Detect           | GPU                | FP32                  | 7.5ms    | 10.3ms       | 11.2ms  | ?        | 2.2ms    |
 | YOLOv9t            | Detect           | CPU                | FP16                  | ×        | 52.3ms       | 60.6ms  | 17.9ms   | ×        |
@@ -136,6 +142,12 @@ C++ test in Docker with 25 vCPU Intel(R) Xeon(R) Platinum 8470Q , RTX 5090(32GB)
 | YOLOv11n           | Pose             | GPU                | FP16                  | 4.6ms    | 12.5ms       | ×       | ?        | 1.0ms    |
 | YOLOv11n           | Pose             | CPU                | INT8                  | ×        | 53.9ms       | ×       | 16.2ms   | ×        |
 | YOLOv11n           | Pose             | GPU                | INT8                  | ×        | 47.6ms       | ×       | ?        | 0.9ms    |
+| YOLOv11n           | OBB              | CPU                | FP32                  | 200.6ms  | 232.1ms      | 318.0ms | 174.5ms  | ×        |
+| YOLOv11n           | OBB              | GPU                | FP32                  | 155.8ms  | 161.4ms      | ×       | ?        | 2.9ms    |
+| YOLOv11n           | OBB              | CPU                | FP16                  | ×        | ×            | 320.0ms | 177.1ms  | ×        |
+| YOLOv11n           | OBB              | GPU                | FP16                  | 161.5ms  | ×            | ×       | ?        | 2.3ms    |
+| YOLOv11n           | OBB              | CPU                | INT8                  | ×        | 239.8ms      | ×       | 155.1ms  | ×        |
+| YOLOv11n           | OBB              | GPU                | INT8                  | ×        | 230.1ms      | ×       | ?        | 2.2ms    |
 | YOLOv12n           | Classify         | CPU                | FP32                  | 9.4ms    | 4.7ms        | 12.5ms  | 9.4ms    | ×        |
 | YOLOv12n           | Classify         | GPU                | FP32                  | 2.5ms    | 1.9ms        | 4.5ms   | ?        | 1.0ms    |
 | YOLOv12n           | Classify         | CPU                | FP16                  | ×        | 7.9ms        | 12.4ms  | 9.6ms    | ×        |
@@ -160,13 +172,18 @@ C++ test in Docker with 25 vCPU Intel(R) Xeon(R) Platinum 8470Q , RTX 5090(32GB)
 | YOLOv12n           | Pose             | GPU                | FP16                  | 12.1ms   | ×            | 10.2ms  | ?        | 1.3ms    |
 | YOLOv12n           | Pose             | CPU                | INT8                  | ×        | 71.2ms       | ×       | 22.0ms   | ×        |
 | YOLOv12n           | Pose             | GPU                | INT8                  | ×        | 57.7ms       | ×       | ?        | 1.4ms    |
+| YOLOv12n           | OBB              | CPU                | FP32                  | 197.7ms  | 170.2ms      | 515.4ms | 78.9ms   | ×        |
+| YOLOv12n           | OBB              | GPU                | FP32                  | 82.9ms   | 92.6ms       | 86.0ms  | ?        | 3.8ms    |
+| YOLOv12n           | OBB              | CPU                | FP16                  | ×        | ×            | 510.2ms | 79.4ms   | ×        |
+| YOLOv12n           | OBB              | GPU                | FP16                  | 82.2ms   | ×            | 86.5ms  | ?        | 3.1ms    |
+| YOLOv12n           | OBB              | CPU                | INT8                  | ×        | 244.5ms      | ×       | 80.8ms   | ×        |
+| YOLOv12n           | OBB              | GPU                | INT8                  | ×        | 181.0ms      | ×       | ?        | 3.3ms    |
 | YOLOv13n           | Detect           | CPU                | FP32                  | 50.1ms   | 45.7ms       | 183.1ms | 21.7ms   | ×        |
 | YOLOv13n           | Detect           | GPU                | FP32                  | 7.9ms    | 9.9ms        | 14.3ms  | ?        | 2.1ms    |
 | YOLOv13n           | Detect           | CPU                | FP16                  | ×        | 97.6ms       | 182.7ms | 21.5ms   | ×        |
 | YOLOv13n           | Detect           | GPU                | FP16                  | 7.9ms    | 19.2ms       | 16.4ms  | ?        | 1.7ms    |
 | YOLOv13n           | Detect           | CPU                | INT8                  | ×        | 109.2ms      | ×       | 22.2ms   | ×        |
 | YOLOv13n           | Detect           | GPU                | INT8                  | ×        | 84.4ms       | ×       | ?        | 2.6ms    |
-
 
 You can test Python code with:
 ```bash
@@ -244,6 +261,12 @@ Python test in Docker with 25 vCPU Intel(R) Xeon(R) Platinum 8470Q , RTX 5090(32
 | YOLOv8n            | Pose             | GPU                | FP16                  | 10.1ms   | 12.4ms       | 7.2ms   | ?        | 2.2ms    |
 | YOLOv8n            | Pose             | CPU                | INT8                  | ×        | 287.5ms      | ×       | 18.4ms   | ×        |
 | YOLOv8n            | Pose             | GPU                | INT8                  | ×        | 215.3ms      | ×       | ?        | 2.2ms    |
+| YOLOv8n            | OBB              | CPU                | FP32                  | 60.6ms   | 227.9ms      | 340.0ms | 219.4ms  | ×        |
+| YOLOv8n            | OBB              | GPU                | FP32                  | 20.2ms   | 159.9ms      | 190.5ms | ?        | 141.4ms  |
+| YOLOv8n            | OBB              | CPU                | FP16                  | ×        | ×            | 322.0ms | 209.9ms  | ×        |
+| YOLOv8n            | OBB              | GPU                | FP16                  | 19.4ms   | ×            | 186.2ms | ?        | 178.7ms  |
+| YOLOv8n            | OBB              | CPU                | INT8                  | ×        | 229.3ms      | ×       | 208.7ms  | ×        |
+| YOLOv8n            | OBB              | GPU                | INT8                  | ×        | 216.8ms      | ×       | ?        | 180.3ms  |
 | YOLOv9t            | Detect           | CPU                | FP32                  | 50.9ms   | 61.0ms       | 80.4ms  | 24.8ms   | ×        |
 | YOLOv9t            | Detect           | GPU                | FP32                  | 12.8ms   | 12.5ms       | 14.3ms  | ?        | 4.6ms    |
 | YOLOv9t            | Detect           | CPU                | FP16                  | ×        | 59.1ms       | 85.0ms  | 24.8ms   | ×        |
@@ -286,6 +309,12 @@ Python test in Docker with 25 vCPU Intel(R) Xeon(R) Platinum 8470Q , RTX 5090(32
 | YOLOv11n           | Pose             | GPU                | FP16                  | 9.7ms    | 12.8ms       | ×       | ?        | 2.4ms    |
 | YOLOv11n           | Pose             | CPU                | INT8                  | ×        | 334.3ms      | ×       | 18.7ms   | ×        |
 | YOLOv11n           | Pose             | GPU                | INT8                  | ×        | 257.2ms      | ×       | ?        | 2.3ms    |
+| YOLOv11n           | OBB              | CPU                | FP32                  | 75.6ms   | 201.8ms      | 300.5ms | 175.7ms  | ×        |
+| YOLOv11n           | OBB              | GPU                | FP32                  | 22.9ms   | 136.5ms      | ×       | ?        | 116.8ms  |
+| YOLOv11n           | OBB              | CPU                | FP16                  | ×        | ×            | 302.9ms | 178.0ms  | ×        |
+| YOLOv11n           | OBB              | GPU                | FP16                  | 22.7ms   | ×            | ×       | ?        | 148.9ms  |
+| YOLOv11n           | OBB              | CPU                | INT8                  | ×        | 220.6ms      | ×       | 180.6ms  | ×        |
+| YOLOv11n           | OBB              | GPU                | INT8                  | ×        | 203.2ms      | ×       | ?        | 135.3ms  |
 | YOLOv12n           | Classify         | CPU                | FP32                  | 8.9ms    | 5.3ms        | 15.0ms  | 6.2ms    | ×        |
 | YOLOv12n           | Classify         | GPU                | FP32                  | 2.8ms    | 2.3ms        | 5.2ms   | ?        | 1.2ms    |
 | YOLOv12n           | Classify         | CPU                | FP16                  | ×        | 8.9ms        | 13.4ms  | 5.8ms    | ×        |
@@ -305,11 +334,17 @@ Python test in Docker with 25 vCPU Intel(R) Xeon(R) Platinum 8470Q , RTX 5090(32
 | YOLOv12n           | Segment          | CPU                | INT8                  | ×        | 99.9ms       | ×       | 59.7ms   | ×        |
 | YOLOv12n           | Segment          | GPU                | INT8                  | ×        | 98.6ms       | ×       | ?        | 23.2ms   |
 | YOLOv12n           | Pose             | CPU                | FP32                  | 44.7ms   | 338.8ms      | 143.8ms | 20.8ms   | ×        |
-| YOLOv12n           | Pose             | GPU                | FP32                  | 11.1ms   | 10.5ms       | 12.7ms  | ?        | 2.9ms   |
+| YOLOv12n           | Pose             | GPU                | FP32                  | 11.1ms   | 10.5ms       | 12.7ms  | ?        | 2.9ms    |
 | YOLOv12n           | Pose             | CPU                | FP16                  | ×        | ×            | 144.9ms | 21.1ms   | ×        |
-| YOLOv12n           | Pose             | GPU                | FP16                  | 11.4ms   | ×            | 11.3ms  | ?        | 2.7ms   |
+| YOLOv12n           | Pose             | GPU                | FP16                  | 11.4ms   | ×            | 11.3ms  | ?        | 2.7ms    |
 | YOLOv12n           | Pose             | CPU                | INT8                  | ×        | 498.2ms      | ×       | 22.7ms   | ×        |
-| YOLOv12n           | Pose             | GPU                | INT8                  | ×        | 392.6ms      | ×       | ?        | 2.9ms   |
+| YOLOv12n           | Pose             | GPU                | INT8                  | ×        | 392.6ms      | ×       | ?        | 2.9ms    |
+| YOLOv12n           | OBB              | CPU                | FP32                  | 147.2ms  | 147.7ms      | 466.8ms | 93.1ms   | ×        |
+| YOLOv12n           | OBB              | GPU                | FP32                  | 22.9ms   | 64.8ms       | 68.6ms  | ?        | 50.5ms   |
+| YOLOv12n           | OBB              | CPU                | FP16                  | ×        | ×            | 479.6ms | 94.6ms   | ×        |
+| YOLOv12n           | OBB              | GPU                | FP16                  | 24.3ms   | ×            | 80.0ms  | ?        | 53.9ms   |
+| YOLOv12n           | OBB              | CPU                | INT8                  | ×        | 207.4ms      | ×       | 92.3ms   | ×        |
+| YOLOv12n           | OBB              | GPU                | INT8                  | ×        | 161.1ms      | ×       | ?        | 50.3ms   |
 | YOLOv13n           | Detect           | CPU                | FP32                  | 54.3ms   | 48.5ms       | 186.7ms | 25.5ms   | ×        |
 | YOLOv13n           | Detect           | GPU                | FP32                  | 12.4ms   | 12.1ms       | 18.1ms  | ?        | 4.7ms    |
 | YOLOv13n           | Detect           | CPU                | FP16                  | ×        | 99.3ms       | 184.5ms | 24.9ms   | ×        |
@@ -320,4 +355,5 @@ Python test in Docker with 25 vCPU Intel(R) Xeon(R) Platinum 8470Q , RTX 5090(32
 
 You can download some model weights in: <https://pan.baidu.com/s/1843WW7tNQK1ycqIALje_fA?pwd=adis>
 
-**For your own model, you should transpose output dims such as from 1x84x8400 to 1x8400x84 for YOLOv8, YOLOv9, YOLOv11, YOLOv12, YOLOv13 detection, segmentation and pose.**
+**For your own model, you should transpose output dims such as from 1x84x8400 to 1x8400x84 for YOLOv8, YOLOv9, YOLOv11, YOLOv12, YOLOv13 detection, segmentation, pose and obb.**
+

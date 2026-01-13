@@ -144,6 +144,16 @@ void YOLO_TensorRT_OBB::post_process()
 		output.box_rotate = cv::RotatedRect(cv::Point2f(picked_boxes_host[i*8+1], picked_boxes_host[i*8+2]), cv::Size2f(picked_boxes_host[i*8+3], picked_boxes_host[i*8+4]), angle);
 		m_output_obb[i] = output;
 	}
+	
+	delete [] picked_boxes_host;
+	cudaFree(picked_device);
+	cudaFree(a_d);
+	cudaFree(b_d);
+	cudaFree(c_d);
+	cudaFree(hd_d);
+	cudaFree(output_box_sorted_device);
+	cudaFree(sorted_idx_device);
+	cudaFree(scores_device);
 
 #else
 	cudaMemcpyAsync(m_output_host, m_output_device, sizeof(float) * m_output_numdet, cudaMemcpyDeviceToHost, m_stream);

@@ -36,6 +36,7 @@ enum Task_Type
 	Detect,
 	Segment,
 	Pose,
+	OBB,
 };
 
 /**
