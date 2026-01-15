@@ -1,13 +1,13 @@
 '''
 Author: taifyang
 Date: 2026-01-09 22:58:13
-LastEditTime: 2026-01-09 23:00:58
+LastEditTime: 2026-01-15 23:17:55
 Description: onnxruntime inference class for YOLO pose algorithm
 '''
 
 
 from backends.utils import *
-from backends.ONNXRuntime.yolo_onnxruntime import YOLO_ONNXRuntime
+from backends.ONNXRuntime.yolo_onnxruntime import *
 
 
 '''

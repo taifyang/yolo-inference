@@ -1,13 +1,13 @@
 '''
 Author: taifyang
 Date: 2024-06-12 22:23:07
-LastEditTime: 2025-12-26 22:06:06
+LastEditTime: 2026-01-15 23:18:10
 Description: opencv inference class for the YOLO classifaction algorithm
 '''
 
 
 from backends.utils import *
-from backends.OpenCV.yolo_opencv import YOLO_OpenCV
+from backends.OpenCV.yolo_opencv import *
 
 
 '''

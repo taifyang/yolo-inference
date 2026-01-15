@@ -1,13 +1,13 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2025-12-23 08:25:46
+LastEditTime: 2026-01-15 23:17:51
 Description: onnxruntime inference class for YOLO detection algorithm
 '''
 
 
 from backends.utils import *
-from backends.ONNXRuntime.yolo_onnxruntime import YOLO_ONNXRuntime
+from backends.ONNXRuntime.yolo_onnxruntime import *
 
 
 '''

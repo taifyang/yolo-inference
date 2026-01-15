@@ -1,13 +1,13 @@
 '''
 Author: taifyang
 Date: 2026-01-09 23:31:45
-LastEditTime: 2026-01-09 23:32:53
+LastEditTime: 2026-01-15 23:19:10
 Description: pytorch inference class for YOLO obb algorithm
 '''
 
 
 from backends.utils import *
-from backends.PyTorch.yolo_pytorch import YOLO_PyTorch
+from backends.PyTorch.yolo_pytorch import *
 
 
 '''

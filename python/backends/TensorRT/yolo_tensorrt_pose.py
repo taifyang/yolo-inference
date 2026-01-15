@@ -7,7 +7,7 @@ Description: tensorrt inference class for YOLO pose algorithm
 
 
 from backends.utils import *
-from backends.TensorRT.yolo_tensorrt import YOLO_TensorRT
+from backends.TensorRT.yolo_tensorrt import *
 
 
 '''

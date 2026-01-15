@@ -1,13 +1,13 @@
 '''
 Author: taifyang
 Date: 2024-06-12 22:23:07
-LastEditTime: 2025-12-23 08:39:33
+LastEditTime: 2026-01-15 23:18:35
 Description: openvino inference class for YOLO detection algorithm
 '''
 
 
 from backends.utils import *
-from backends.OpenVINO.yolo_openvino import YOLO_OpenVINO
+from backends.OpenVINO.yolo_openvino import *
 
  
 '''
