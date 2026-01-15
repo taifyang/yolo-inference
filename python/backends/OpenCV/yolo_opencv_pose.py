@@ -1,13 +1,13 @@
 '''
 Author: taifyang
 Date: 2026-01-03 23:46:27
-LastEditTime: 2026-01-03 23:49:18
+LastEditTime: 2026-01-15 23:18:20
 Description: opencv inference class for YOLO pose algorithm
 '''
 
 
 from backends.utils import *
-from backends.OpenCV.yolo_opencv import YOLO_OpenCV
+from backends.OpenCV.yolo_opencv import *
 
 
 '''

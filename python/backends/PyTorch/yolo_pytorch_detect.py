@@ -1,13 +1,13 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2025-12-23 08:28:35
+LastEditTime: 2026-01-15 23:19:08
 Description: pytorch inference class for YOLO detection algorithm
 '''
 
 
 from backends.utils import *
-from backends.PyTorch.yolo_pytorch import YOLO_PyTorch
+from backends.PyTorch.yolo_pytorch import *
 
 
 '''

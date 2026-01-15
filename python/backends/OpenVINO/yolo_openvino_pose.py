@@ -1,13 +1,13 @@
 '''
 Author: taifyang
 Date: 2026-01-05 10:50:30
-LastEditTime: 2026-01-05 10:50:40
+LastEditTime: 2026-01-15 23:18:40
 Description: openvino inference class for YOLO pose algorithm
 '''
 
 
 from backends.utils import *
-from backends.OpenVINO.yolo_openvino import YOLO_OpenVINO
+from backends.OpenVINO.yolo_openvino import *
 
  
 '''
