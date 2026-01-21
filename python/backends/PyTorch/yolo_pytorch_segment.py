@@ -1,7 +1,7 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-01-15 23:19:17
+LastEditTime: 2025-12-23 08:28:19
 Description: pytorch inference class for YOLO segmentation algorithm
 '''
 
@@ -20,7 +20,7 @@ class YOLO_PyTorch_Segment(YOLO_PyTorch):
     return {*}
     ''' 
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv9','YOLOv11', 'YOLOv12'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv9','YOLOv11', 'YOLOv12', 'YOLO26'], 'algo type not supported!'
         input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
@@ -37,11 +37,8 @@ class YOLO_PyTorch_Segment(YOLO_PyTorch):
     return {*}
     '''           
     def post_process(self) -> None:
-        boxes = []
-        scores = []
-
+        output = torch.squeeze(self.outputs[0]).to(torch.float32)
         if self.algo_type in ['YOLOv5']:
-            output = torch.squeeze(self.outputs[0]).to(torch.float32)
             output = output[output[..., 4] > self.confidence_threshold] 
             xc = output[..., 5:(5+self.class_num)].amax(1) > self.score_threshold
             output[..., :4] = xywh2xyxy(output[..., :4])  
@@ -49,15 +46,20 @@ class YOLO_PyTorch_Segment(YOLO_PyTorch):
             scores, j = cls.max(1, keepdim=True)
             boxes = torch.cat((box, scores*obj, j.float()), dim=1)          
         elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']: 
-            output = torch.squeeze(self.outputs[0]).to(torch.float32)
             xc = output[..., 4:(4+self.class_num)].amax(1) > self.score_threshold
             output[..., :4] = xywh2xyxy(output[..., :4])  
             box, cls, mask = output[xc].split((4, self.class_num, 32), 1)
             scores, j = cls.max(1, keepdim=True)
-            boxes = torch.cat((box, scores, j.float()), dim=1)    
+            boxes = torch.cat((box, scores, j.float()), dim=1)   
+        elif self.algo_type in ['YOLO26']:
+            output = output[output[..., 4] > self.score_threshold]
+            box = output[:, :4]
+            scores = output[:, 4]
+            boxes = output[:, :6]
+            mask = output[:, 6:]         
                           
         if len(boxes):   
-            indices = torchvision.ops.nms(box, scores.squeeze(), self.iou_threshold)
+            indices = torchvision.ops.nms(box, scores, self.iou_threshold)
             boxes = boxes[indices]       
             masks_in = mask[indices]
             proto = torch.squeeze(self.outputs[1]).to(dtype=torch.float32)
@@ -65,7 +67,9 @@ class YOLO_PyTorch_Segment(YOLO_PyTorch):
             if self.algo_type in ['YOLOv5']:
                 masks = (1/ (1 + torch.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)  
             elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
-                masks = (masks_in @ proto.reshape(c, -1)).reshape(-1, mh, mw)    
+                masks = (masks_in @ proto.reshape(c, -1)).reshape(-1, mh, mw)   
+            elif self.algo_type in ['YOLO26']:
+                masks = (mask @ proto.reshape(c, -1)).reshape(-1, mh, mw)  
             downsampled_bboxes = boxes.clone()
             downsampled_bboxes[:, 0] *= mw / self.inputs_shape[0]
             downsampled_bboxes[:, 2] *= mw / self.inputs_shape[0]
@@ -82,7 +86,7 @@ class YOLO_PyTorch_Segment(YOLO_PyTorch):
             resized_masks = np.array(resized_masks)
             if self.algo_type in ['YOLOv5']:
                 resized_masks = resized_masks > 0.5
-            elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
+            elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLO26']:
                 resized_masks = resized_masks > 0    
             if self.draw_result:
                 self.result = draw_result(self.image, boxes.cpu().numpy(), resized_masks.astype(np.bool_))

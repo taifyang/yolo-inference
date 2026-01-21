@@ -1,7 +1,7 @@
 '''
 Author: taifyang
 Date: 2026-01-05 11:09:10
-LastEditTime: 2026-01-15 23:19:14
+LastEditTime: 2026-01-05 11:24:45
 Description: pytorch inference class for YOLO pose algorithm
 '''
 
@@ -20,7 +20,7 @@ class YOLO_PyTorch_Pose(YOLO_PyTorch):
     return {*}
     '''    
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12', 'YOLO26'], 'algo type not supported!'
         input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
@@ -38,15 +38,20 @@ class YOLO_PyTorch_Pose(YOLO_PyTorch):
     '''           
     def post_process(self) -> None:       
         output = torch.squeeze(self.outputs[0]).to(torch.float32)
-        scores = output[..., 4]
-        xc = scores > self.score_threshold 
-        output[..., :4] = xywh2xyxy(output[..., :4])  
-        box = output[xc][:, :4]
-        scores = scores[xc].unsqueeze(1)
-        cls = torch.zeros((len(box), 1)).to(output.device)
-        kpts = output[xc][..., 5:]
-        boxes = torch.cat((box, scores, cls, kpts), dim=1)
-            
+        if self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']:
+            scores = output[..., 4]
+            xc = scores > self.score_threshold 
+            output[..., :4] = xywh2xyxy(output[..., :4])  
+            box = output[xc][:, :4]
+            scores = scores[xc].unsqueeze(1)
+            cls = torch.zeros((len(box), 1)).to(output.device)
+            kpts = output[xc][..., 5:]
+            boxes = torch.cat((box, scores, cls, kpts), dim=1)
+        elif self.algo_type in ['YOLO26']:
+            boxes = output[output[..., 4] > self.score_threshold]
+            box = boxes[:, :4]
+            scores = boxes[..., 4:5]
+        
         if len(boxes):   
             indices = torchvision.ops.nms(box, scores.squeeze(), self.iou_threshold)
             boxes = boxes[indices].cpu().numpy()

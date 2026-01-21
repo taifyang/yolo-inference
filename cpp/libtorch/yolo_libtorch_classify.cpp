@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2025-12-21 21:47:22
- * @LastEditTime: 2026-01-06 11:00:45
+ * @LastEditTime: 2026-01-19 19:11:00
  * @Description: source file for YOLO libtorch classification
  */
 
@@ -9,7 +9,7 @@
 
 void YOLO_Libtorch_Classify::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	if (algo_type != YOLOv5 && algo_type != YOLOv8 && algo_type != YOLOv11 && algo_type != YOLOv12)
+	if (algo_type != YOLOv5 && algo_type != YOLOv8 && algo_type != YOLOv11 && algo_type != YOLOv12 && algo_type != YOLO26)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
@@ -26,7 +26,7 @@ void YOLO_Libtorch_Classify::pre_process()
 		CenterCrop(m_image, crop_image);
 		Normalize(crop_image, crop_image, m_algo_type);
 	}
-	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLO26)
 	{
 		if (m_image.cols > m_image.rows)
 			cv::resize(m_image, crop_image, cv::Size(m_input_size.height * m_image.cols / m_image.rows, m_input_size.height));
@@ -70,7 +70,7 @@ void YOLO_Libtorch_Classify::process()
 			pred = m_output.toTensor().to(torch::kFloat).to(at::kCPU);
 		}
 	}
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLO26)
 	{
 		if (m_device == at::kCPU)
 		{
@@ -99,7 +99,7 @@ void YOLO_Libtorch_Classify::post_process()
 	m_output_cls.id = id;
 	if (m_algo_type == YOLOv5)
 		m_output_cls.score = exp(scores[id]) / sum;
-	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLO26)
 		m_output_cls.score = scores[id];
 
 	if(m_draw_result)

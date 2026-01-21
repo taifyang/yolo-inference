@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-03 20:38:11
+ * @LastEditTime: 2026-01-20 21:30:10
  * @Description: source file for YOLO openvino classification
  */
 
@@ -9,7 +9,7 @@
 
 void YOLO_OpenVINO_Classify::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	if (algo_type != YOLOv5 && algo_type != YOLOv8 && algo_type != YOLOv11 && algo_type != YOLOv12)
+	if (algo_type != YOLOv5 && algo_type != YOLOv8 && algo_type != YOLOv11 && algo_type != YOLOv12 && algo_type != YOLO26)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
@@ -26,7 +26,7 @@ void YOLO_OpenVINO_Classify::pre_process()
 		CenterCrop(m_image, crop_image);
 		Normalize(crop_image, crop_image, m_algo_type);
 	}
-	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLO26)
 	{
 		if (m_image.cols > m_image.rows)
 			cv::resize(m_image, crop_image, cv::Size(m_input_size.height * m_image.cols / m_image.rows, m_input_size.height));
@@ -68,7 +68,7 @@ void YOLO_OpenVINO_Classify::post_process()
 	m_output_cls.id = id;
 	if (m_algo_type == YOLOv5)
 		m_output_cls.score = exp(scores[id]) / sum;
-	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLO26)
 		m_output_cls.score = scores[id];
 
 	if(m_draw_result)

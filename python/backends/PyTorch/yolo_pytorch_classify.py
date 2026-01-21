@@ -1,7 +1,7 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-01-15 23:18:51
+LastEditTime: 2025-12-23 08:37:54
 Description: pytorch inference class for YOLO classifaction algorithm
 '''
 
@@ -20,11 +20,11 @@ class YOLO_PyTorch_Classify(YOLO_PyTorch):
     return {*}
     '''    
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv11', 'YOLOv12'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv11', 'YOLOv12', 'YOLO26'], 'algo type not supported!'
         if self.algo_type in ['YOLOv5']:
             input = centercrop(self.image, self.inputs_shape)
             input = normalize(input, self.algo_type)
-        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']:
+        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12', 'YOLO26']:
             self.inputs_shape = (224, 224)
             if self.image.shape[1] > self.image.shape[0]:
                 self.image = cv2.resize(self.image, (self.inputs_shape[0]*self.image.shape[1]//self.image.shape[0], self.inputs_shape[0]))
@@ -51,6 +51,6 @@ class YOLO_PyTorch_Classify(YOLO_PyTorch):
         if self.algo_type in ['YOLOv5'] and self.draw_result:
             print('class:', torch.argmax(output).cpu().item(), \
                   ' scores:', (torch.exp(torch.max(output))/torch.sum(torch.exp(output))).cpu().item())
-        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'] and self.draw_result:
+        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12', 'YOLO26'] and self.draw_result:
             print('class:', torch.argmax(output).cpu().item(), ' scores:', torch.max(output).cpu().item())
     

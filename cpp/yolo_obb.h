@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2026-01-08 22:18:50
- * @LastEditTime: 2026-01-09 00:03:42
+ * @LastEditTime: 2026-01-17 20:33:31
  * @Description: obb algorithm class
  */
 
@@ -36,8 +36,17 @@ public:
 	 */
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 	{
-		m_output_numprob = 5 + m_class_num;
-		m_output_numbox = m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32;
+		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+		{
+			m_output_numprob = 5 + m_class_num;
+			m_output_numbox = m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32;
+		}
+		else if(m_algo_type == YOLO26)
+		{
+			m_output_numprob = 7;
+			m_output_numbox = 300;
+		}
+
 		m_output_numdet = 1 * m_output_numprob * m_output_numbox;
 		m_input_numel = 1 * 3 * m_input_size.width * m_input_size.height;
 	}
@@ -57,12 +66,18 @@ protected:
 		assert(rboxes.size() == scores.size());
 		std::vector<int> sorted_idx = argsort_desc(scores);
 		std::vector<std::vector<float>> rboxes_sorted(rboxes.size());
-		for(int i=0; i<rboxes.size(); i++)	rboxes_sorted[i] = rboxes[sorted_idx[i]];
+		for(int i=0; i<rboxes.size(); i++)	
+		{
+			rboxes_sorted[i] = rboxes[sorted_idx[i]];
+		}
 		Eigen::MatrixXf boxes = vector2Eigen(rboxes_sorted);
 		Eigen::MatrixXf ious = triu_k1(probiou(boxes, boxes, 1e-7));
 		std::vector<int> pick = find_indices_max_below_threshold(ious, nms_threshold);
 		indices.resize(pick.size());
-		for(int i=0; i<pick.size(); i++)	indices[i] = sorted_idx[pick[i]];
+		for(int i=0; i<pick.size(); i++)
+		{
+			indices[i] = sorted_idx[pick[i]];
+		}
 	}
 
 	/**
@@ -73,7 +88,10 @@ protected:
 	std::vector<int> argsort_desc(const std::vector<float>& scores) 
 	{
 		std::vector<int> sorted_idx(scores.size());
-		for (int i = 0; i < scores.size(); ++i)		sorted_idx[i] = i;
+		for (int i = 0; i < scores.size(); ++i)		
+		{
+			sorted_idx[i] = i;
+		}
 		std::sort(sorted_idx.begin(), sorted_idx.end(), [&scores](int i, int j) {return scores[i] > scores[j]; });
 		return sorted_idx;
 	}
@@ -167,7 +185,9 @@ protected:
 		Eigen::MatrixXf result = upper;
 		int min_dim = std::min(mat.rows(), mat.cols());
 		for(int i = 0; i < min_dim; i++) 
+		{
 			result(i, i) = 0.0; 
+		}
 		return result;
 	}
 
@@ -201,7 +221,10 @@ protected:
 			float h_ = std::min(w, h);
 			float t_temp = (w > h) ? t : (t + M_PI/2);
 			float t_ = fmod(t_temp, M_PI);
-			if (t_ < 0) t_ += M_PI;
+			if (t_ < 0) 
+			{
+				t_ += M_PI;
+			}
 			rbox = {x, y, w_, h_, score, cls, t_};
 		}
 	}

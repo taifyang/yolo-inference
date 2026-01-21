@@ -1,7 +1,7 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-01-15 23:17:47
+LastEditTime: 2026-01-21 00:03:10
 Description: onnxruntime inference class for YOLO classifaction algorithm
 '''
 
@@ -20,11 +20,12 @@ class YOLO_ONNXRuntime_Classify(YOLO_ONNXRuntime):
     return {*}
     '''            
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv11', 'YOLOv12'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv11', 'YOLOv12', 'YOLO26'], 'algo type not supported!'
         if self.algo_type in ['YOLOv5']:
             input = centercrop(self.image, self.inputs_shape)
+            input = cv2.imread("host.png", -1)
             input = normalize(input, self.algo_type)
-        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']:
+        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12', 'YOLO26']:
             self.inputs_shape = (224, 224)
             if self.image.shape[1] > self.image.shape[0]:
                 self.image = cv2.resize(self.image, (self.inputs_shape[0]*self.image.shape[1]//self.image.shape[0], self.inputs_shape[0]))
@@ -49,6 +50,6 @@ class YOLO_ONNXRuntime_Classify(YOLO_ONNXRuntime):
         output = np.squeeze(self.outputs).astype(dtype=np.float32)
         if self.algo_type in ['YOLOv5'] and self.draw_result:
             print("class:", np.argmax(output), " scores:", np.exp(np.max(output))/np.sum(np.exp(output)))
-        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'] and self.draw_result:
+        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12', 'YOLO26'] and self.draw_result:
             print("class:", np.argmax(output), " scores:", np.max(output))
 

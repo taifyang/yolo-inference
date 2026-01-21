@@ -1,7 +1,7 @@
 '''
 Author: taifyang
 Date: 2026-01-09 23:31:45
-LastEditTime: 2026-01-15 23:19:10
+LastEditTime: 2026-01-09 23:32:53
 Description: pytorch inference class for YOLO obb algorithm
 '''
 
@@ -31,7 +31,7 @@ class YOLO_PyTorch_OBB(YOLO_PyTorch):
     return {*}
     '''    
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12', 'YOLO26'], 'algo type not supported!'
         input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
@@ -48,14 +48,15 @@ class YOLO_PyTorch_OBB(YOLO_PyTorch):
     return {*}
     '''           
     def post_process(self) -> None:
-        boxes = []
-        scores = []
-        
         output = torch.squeeze(self.outputs[0]).to(torch.float32)
-        xc = output[..., 4:(4+self.class_num)].amax(1) > self.score_threshold
-        box, cls, angle = output[xc].split((4, self.class_num, 1), 1)
-        scores, j = cls.max(1, keepdim=True)
-        boxes = torch.cat((box, scores, j, angle), 1)
+        if self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']: 
+            xc = output[..., 4:(4+self.class_num)].amax(1) > self.score_threshold
+            box, cls, angle = output[xc].split((4, self.class_num, 1), 1)
+            scores, j = cls.max(1, keepdim=True)
+            boxes = torch.cat((box, scores, j, angle), 1)
+        elif self.algo_type in ['YOLO26']:
+            boxes = output[output[..., 4] > self.score_threshold]
+            scores = boxes[..., 4:5]
 
         if len(boxes):   
             indices = nms_rotated(boxes, scores.squeeze(), self.iou_threshold) 

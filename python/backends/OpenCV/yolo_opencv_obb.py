@@ -1,7 +1,7 @@
 '''
 Author: taifyang
 Date: 2026-01-12 10:46:21
-LastEditTime: 2026-01-15 23:18:17
+LastEditTime: 2026-01-12 10:46:37
 Description: opencv inference class for YOLO pose algorithm
 '''
 
@@ -31,7 +31,7 @@ class YOLO_OpenCV_OBB(YOLO_OpenCV):
     return {*}
     '''    
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12', 'YOLO26'], 'algo type not supported!'
         input = letterbox(self.image, self.inputs_shape)
         self.inputs = cv2.dnn.blobFromImage(input, 1/255., size=self.inputs_shape, swapRB=True, crop=False)
         self.net.setInput(self.inputs)
@@ -42,11 +42,8 @@ class YOLO_OpenCV_OBB(YOLO_OpenCV):
     return {*}
     '''           
     def post_process(self) -> None:
-        boxes = []
-        scores = []
-
+        output = np.squeeze(self.outputs[0]).astype(np.float32)
         if self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']: 
-            output = np.squeeze(self.outputs[0]).astype(np.float32)
             cls_scores = output[..., 4:(4 + self.class_num)]
             xc = np.amax(cls_scores, axis=1) > self.score_threshold 
             box = output[xc][:, :4]
@@ -55,6 +52,9 @@ class YOLO_OpenCV_OBB(YOLO_OpenCV):
             scores = np.max(cls, axis=1, keepdims=True) 
             j = np.argmax(cls, axis=1, keepdims=True) 
             boxes = np.concatenate([box, scores, j, angle], axis=1)
+        elif self.algo_type in ['YOLO26']:
+            boxes = output[output[..., 4] > self.score_threshold]
+            scores = boxes[..., 4:5]
              
         if len(boxes):   
             boxes = np.array(boxes)

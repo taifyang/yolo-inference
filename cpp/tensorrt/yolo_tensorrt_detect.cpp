@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-04 23:48:17
+ * @LastEditTime: 2026-01-19 11:21:17
  * @Description: source file for YOLO tensorrt detection
  */
 
@@ -11,7 +11,7 @@
 
 void YOLO_TensorRT_Detect::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	if (algo_type != YOLOv3 && algo_type != YOLOv4 && algo_type != YOLOv5 && algo_type != YOLOv6 && algo_type != YOLOv7 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv10 && algo_type != YOLOv11 && algo_type != YOLOv12  && algo_type != YOLOv13)
+	if (algo_type != YOLOv3 && algo_type != YOLOv4 && algo_type != YOLOv5 && algo_type != YOLOv6 && algo_type != YOLOv7 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv10 && algo_type != YOLOv11 && algo_type != YOLOv12 && algo_type != YOLOv13 && algo_type != YOLO26)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
@@ -24,11 +24,11 @@ void YOLO_TensorRT_Detect::init(const Algo_Type algo_type, const Device_Type dev
 	cudaMallocHost(&m_input_host, m_max_input_size);
 	cudaMallocHost(&m_output0_host, sizeof(float) * m_output_numdet);
 
-	cudaMalloc(&m_input_device, m_max_input_size);
-	cudaMalloc(&m_output_device, sizeof(float) * m_output_numdet);
+	cudaMalloc(&m_input_device, sizeof(float) * m_input_numel);
+	cudaMalloc(&m_output0_device, sizeof(float) * m_output_numdet);
 
 	m_bindings[0] = m_input_device;
-	m_bindings[1] = m_output_device;
+	m_bindings[1] = m_output0_device;
 
 #ifdef _CUDA_PREPROCESS
 	cudaMallocHost(&m_d2s_host, sizeof(float) * 6);
@@ -46,10 +46,10 @@ void YOLO_TensorRT_Detect::init(const Algo_Type algo_type, const Device_Type dev
 void YOLO_TensorRT_Detect::pre_process()
 {
 #ifdef _CUDA_PREPROCESS
-	cudaMemcpyAsync(m_input_host, m_image.data, sizeof(uint8_t) * 3 * m_image.cols * m_image.rows, cudaMemcpyHostToDevice, m_stream);
-	cuda_preprocess_img(m_input_host, m_image.cols, m_image.rows, m_input_device, m_input_size.width, m_input_size.height, m_d2s_host, m_s2d_host, m_stream);
-	cudaMemcpyAsync(m_d2s_device, m_d2s_host, sizeof(float) * 6, cudaMemcpyHostToDevice, m_stream);
-	cudaMemcpyAsync(m_s2d_device, m_s2d_host, sizeof(float) * 6, cudaMemcpyHostToDevice, m_stream);
+	cudaMemcpy(m_input_host, m_image.data, sizeof(uint8_t) * 3 * m_image.cols * m_image.rows, cudaMemcpyHostToDevice);
+	cuda_preprocess_img(m_input_host, m_image.cols, m_image.rows, m_input_device, m_input_size.width, m_input_size.height, m_d2s_host, m_s2d_host);
+	cudaMemcpy(m_d2s_device, m_d2s_host, sizeof(float) * 6, cudaMemcpyHostToDevice);
+	cudaMemcpy(m_s2d_device, m_s2d_host, sizeof(float) * 6, cudaMemcpyHostToDevice);
 #else
 	cv::Mat letterbox;
 	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
@@ -64,7 +64,7 @@ void YOLO_TensorRT_Detect::pre_process()
 		*phost_g++ = pimage[1] / 255.0f;
 		*phost_b++ = pimage[0] / 255.0f;
 	}
-	cudaMemcpyAsync(m_input_device, m_input_host, sizeof(float) * m_input_numel, cudaMemcpyHostToDevice, m_stream);
+	cudaMemcpy(m_input_device, m_input_host, sizeof(float) * m_input_numel, cudaMemcpyHostToDevice);
 #endif // _CUDA_PREPROCESS
 }
 
@@ -73,7 +73,7 @@ void YOLO_TensorRT_Detect::process()
 	m_execution_context->executeV2((void**)m_bindings);
 
 #ifndef _CUDA_POSTPROCESS
-	cudaMemcpyAsync(m_output0_host, m_output_device, sizeof(float) * m_output_numdet, cudaMemcpyDeviceToHost, m_stream);
+	cudaMemcpy(m_output0_host, m_output0_device, sizeof(float) * m_output_numdet, cudaMemcpyDeviceToHost);
 #endif // !_CUDA_POSTPROCESS
 }
 
@@ -85,11 +85,10 @@ void YOLO_TensorRT_Detect::post_process()
 
 #ifdef _CUDA_POSTPROCESS
 	cudaMemset(m_output_box_device, 0, sizeof(float) * (m_num_box_element * m_max_box + 1));	
-	cuda_decode(m_output_device, m_output_numbox, m_class_num, m_confidence_threshold, m_score_threshold, m_d2s_device,
-		 m_output_box_device, m_max_box, m_num_box_element, m_input_size, m_stream, m_algo_type, m_task_type);
-	cuda_nms(m_output_box_device, m_nms_threshold, m_max_box, m_num_box_element, m_stream);
-	cudaMemcpyAsync(m_output_box_host, m_output_box_device, sizeof(float) * (m_num_box_element * m_max_box + 1), cudaMemcpyDeviceToHost, m_stream);
-	cudaStreamSynchronize(m_stream);
+	cuda_decode(m_output0_device, m_output_numbox, m_class_num, m_confidence_threshold, m_score_threshold, m_d2s_device,
+		 m_output_box_device, m_max_box, m_num_box_element, m_input_size, m_algo_type, m_task_type);
+	cuda_nms(m_output_box_device, m_nms_threshold, m_max_box, m_num_box_element);
+	cudaMemcpy(m_output_box_host, m_output_box_device, sizeof(float) * (m_num_box_element * m_max_box + 1), cudaMemcpyDeviceToHost);
 
 	for (size_t i = 0; i < m_max_box; i++)
 	{
@@ -143,6 +142,11 @@ void YOLO_TensorRT_Detect::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id] * objness;
 		}
+		else if (m_algo_type == YOLO26)
+		{
+			score = ptr[4];
+			class_id = int(ptr[5]);
+		}
 
 		if (score < m_score_threshold)
 			continue;
@@ -174,7 +178,7 @@ void YOLO_TensorRT_Detect::post_process()
 			int height = int(y2 - y1)> 0 ? int(y2 - y1) : 0;
 			box = cv::Rect(left, top, width, height);
 		}
-		else if (m_algo_type == YOLOv10)
+		else if (m_algo_type == YOLOv10 || m_algo_type == YOLO26)
 		{
 			int left = int(ptr[0]) > 0 ? int(ptr[0]) : 0;
 			int top = int(ptr[1]) > 0 ? int(ptr[1]) : 0;
@@ -192,20 +196,35 @@ void YOLO_TensorRT_Detect::post_process()
 
 	scale_boxes(boxes, m_image.size());
 
-	std::vector<int> indices;
-	nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
-	m_output_det.clear();
-	m_output_det.resize(indices.size());
-	for (int i = 0; i < indices.size(); i++)
+	f(m_algo_type == YOLO26)
 	{
-		int idx = indices[i];
-		OutputDet output;
-		output.id = class_ids[idx];
-		output.score = scores[idx];
-		output.box = boxes[idx];
-		m_output_det[i] = output;
+		m_output_det.clear();
+		m_output_det.resize(boxes.size());
+		for (int i = 0; i < boxes.size(); i++)
+		{
+			OutputDet output;
+			output.id = class_ids[i];
+			output.score = scores[i];
+			output.box = boxes[i];
+			m_output_det[i] = output;
+		}
 	}
-
+	else
+	{
+		std::vector<int> indices;
+		nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
+		m_output_det.clear();
+		m_output_det.resize(indices.size());
+		for (int i = 0; i < indices.size(); i++)
+		{
+			int idx = indices[i];
+			OutputDet output;
+			output.id = class_ids[idx];
+			output.score = scores[idx];
+			output.box = boxes[idx];
+			m_output_det[i] = output;
+		}
+	}
 #endif // _CUDA_POSTPROCESS
 
 	if(m_draw_result)
@@ -216,7 +235,7 @@ void YOLO_TensorRT_Detect::release()
 {
 	YOLO_TensorRT::release();
 
-	cudaFree(m_output_device);
+	cudaFree(m_output0_device);
 
 #ifdef _CUDA_PREPROCESS
 	cudaFree(m_d2s_device);
