@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-06 11:05:30
+ * @LastEditTime: 2026-01-19 21:08:09
  * @Description: source file for YOLO libtorch detection
  */
 
@@ -9,7 +9,7 @@
 
 void YOLO_Libtorch_Detect::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	if (algo_type != YOLOv3 && algo_type != YOLOv5 && algo_type != YOLOv6 && algo_type != YOLOv7 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv10 && algo_type != YOLOv11  && algo_type != YOLOv12  && algo_type != YOLOv13)
+	if (algo_type != YOLOv3 && algo_type != YOLOv5 && algo_type != YOLOv6 && algo_type != YOLOv7 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv10 && algo_type != YOLOv11  && algo_type != YOLOv12 && algo_type != YOLOv13 && m_algo_type != YOLO26)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
@@ -44,13 +44,11 @@ void YOLO_Libtorch_Detect::pre_process()
 void YOLO_Libtorch_Detect::process()
 {
 	m_output = m_module.forward(m_input);
-
 	torch::Tensor pred;
 	if (m_algo_type == YOLOv5 || m_algo_type == YOLOv7)
 		pred = m_output.toTuple()->elements()[0].toTensor().to(torch::kFloat).to(at::kCPU);
-	else if (m_algo_type == YOLOv3 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11|| m_algo_type == YOLOv12|| m_algo_type == YOLOv13)
+	else if (m_algo_type == YOLOv3 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13 || m_algo_type == YOLO26)
 		pred = m_output.toTensor().to(at::kCPU);
-
 	m_output0.assign(pred.data_ptr<float>(), pred.data_ptr<float>() + m_output_numdet);
 }
 
@@ -74,7 +72,7 @@ void YOLO_Libtorch_Detect::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id] * objness;
 		}
-		else if (m_algo_type == YOLOv3 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
+		else if (m_algo_type == YOLOv3 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13 || m_algo_type == YOLO26)
 		{
 			float* classes_scores = ptr + 4;
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
@@ -99,7 +97,7 @@ void YOLO_Libtorch_Detect::post_process()
 			height = (top + height) < m_image.rows ? height : (m_image.rows - top);
 			box = cv::Rect(left, top, width, height);
 		}
-		else if (m_algo_type == YOLOv10)
+		else if (m_algo_type == YOLOv10 || m_algo_type == YOLO26)
 		{
 			int left = int(ptr[0]) > 0 ? int(ptr[0]) : 0;
 			int top = int(ptr[1]) > 0 ? int(ptr[1]) : 0;
@@ -117,18 +115,34 @@ void YOLO_Libtorch_Detect::post_process()
 
 	scale_boxes(boxes, m_image.size());
 
-	std::vector<int> indices;
-	nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
-	m_output_det.clear();
-	m_output_det.resize(indices.size());
-	for (int i = 0; i < indices.size(); i++)
+	if(m_algo_type == YOLO26)
 	{
-		int idx = indices[i];
-		OutputDet output;
-		output.id = class_ids[idx];
-		output.score = scores[idx];
-		output.box = boxes[idx];
-		m_output_det[i] = output;
+		m_output_det.clear();
+		m_output_det.resize(boxes.size());
+		for (int i = 0; i < boxes.size(); i++)
+		{
+			OutputDet output;
+			output.id = class_ids[i];
+			output.score = scores[i];
+			output.box = boxes[i];
+			m_output_det[i] = output;
+		}
+	}
+	else
+	{
+		std::vector<int> indices;
+		nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
+		m_output_det.clear();
+		m_output_det.resize(indices.size());
+		for (int i = 0; i < indices.size(); i++)
+		{
+			int idx = indices[i];
+			OutputDet output;
+			output.id = class_ids[idx];
+			output.score = scores[idx];
+			output.box = boxes[idx];
+			m_output_det[i] = output;
+		}
 	}
 
 	if(m_draw_result)

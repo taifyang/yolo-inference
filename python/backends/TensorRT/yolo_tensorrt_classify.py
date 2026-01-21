@@ -1,7 +1,7 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2025-12-26 22:15:49
+LastEditTime: 2026-01-21 09:14:34
 Description: tensorrt inference class for YOLO classifaction algorithm
 '''
 
@@ -25,7 +25,7 @@ class YOLO_TensorRT_Classify(YOLO_TensorRT):
     '''    
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__(algo_type, device_type, model_type, model_path)
-        assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv11', 'YOLOv12'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv11', 'YOLOv12', 'YOLO26'], 'algo type not supported!'
         self.output0_device = cupy.empty(self.outputs_shape[0], dtype=np.float32)
         self.output_ptr = self.output0_device.data.ptr
     
@@ -38,7 +38,7 @@ class YOLO_TensorRT_Classify(YOLO_TensorRT):
         if self.algo_type in ['YOLOv5']:
             input = centercrop(self.image, self.inputs_shape, use_cupy=True)
             input = normalize(input, self.algo_type, use_cupy=True)
-        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']:
+        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12', 'YOLO26']:
             self.inputs_shape = (224, 224)
             if self.image.shape[1] > self.image.shape[0]:
                 self.image = cv2.resize(self.image, (self.inputs_shape[0]*self.image.shape[1]//self.image.shape[0], self.inputs_shape[0]))
@@ -69,6 +69,6 @@ class YOLO_TensorRT_Classify(YOLO_TensorRT):
         output = np.squeeze(self.output0_host.reshape(self.outputs_shape[0]))
         if self.algo_type in ['YOLOv5'] and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.exp(np.max(output))/np.sum(np.exp(output)))
-        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'] and self.draw_result:
+        elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12', 'YOLO26'] and self.draw_result:
             print('class:', np.argmax(output), ' scores:', np.max(output))
     

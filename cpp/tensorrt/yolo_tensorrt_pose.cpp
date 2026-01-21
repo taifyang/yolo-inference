@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2026-01-03 21:57:36
- * @LastEditTime: 2026-01-05 00:19:28
+ * @LastEditTime: 2026-01-17 21:40:00
  * @Description: source file for YOLO tensorrt pose
  */
 
@@ -11,7 +11,7 @@
 
 void YOLO_TensorRT_Pose::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {	
-	if (algo_type != YOLOv8 && algo_type != YOLOv11 && algo_type != YOLOv12)
+	if (algo_type != YOLOv8 && algo_type != YOLOv11 && algo_type != YOLOv12 && algo_type != YOLO26)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
@@ -24,11 +24,11 @@ void YOLO_TensorRT_Pose::init(const Algo_Type algo_type, const Device_Type devic
 	cudaMalloc(&m_input_host, m_max_input_size);
 	cudaMallocHost(&m_output0_host, sizeof(float) * m_output_numdet);
 
-	cudaMalloc(&m_input_device, m_max_input_size);
-	cudaMalloc(&m_output_device, sizeof(float) * m_output_numdet);
+	cudaMalloc(&m_input_device, sizeof(float) * m_input_numel);
+	cudaMalloc(&m_output0_device, sizeof(float) * m_output_numdet);
 
 	m_bindings[0] = m_input_device;
-	m_bindings[1] = m_output_device;
+	m_bindings[1] = m_output0_device;
 
 #ifdef _CUDA_PREPROCESS
 	cudaMallocHost(&m_d2s_host, sizeof(float) * 6);
@@ -53,7 +53,7 @@ void YOLO_TensorRT_Pose::process()
 	m_execution_context->executeV2((void**)m_bindings);
 
 #ifndef _CUDA_POSTPROCESS
-	cudaMemcpyAsync(m_output0_host, m_output_device, sizeof(float) * m_output_numdet, cudaMemcpyDeviceToHost, m_stream);
+	cudaMemcpy(m_output0_host, m_output0_device, sizeof(float) * m_output_numdet, cudaMemcpyDeviceToHost);
 #endif // !_CUDA_POSTPROCESS
 }
 
@@ -66,11 +66,10 @@ void YOLO_TensorRT_Pose::post_process()
 
 #ifdef _CUDA_POSTPROCESS
 	cudaMemset(m_output_box_device, 0, sizeof(float) * (m_num_box_element * m_max_box + 1));	
-	cuda_decode(m_output_device, m_output_numbox, m_class_num, m_confidence_threshold, m_score_threshold,
-		m_d2s_device, m_output_box_device, m_max_box, m_num_box_element, m_input_size, m_stream, m_algo_type, m_task_type);
-	cuda_nms(m_output_box_device, m_nms_threshold, m_max_box, m_num_box_element, m_stream);
-	cudaMemcpyAsync(m_output_box_host, m_output_box_device, sizeof(float) * (m_num_box_element * m_max_box + 1), cudaMemcpyDeviceToHost, m_stream);
-	cudaStreamSynchronize(m_stream);
+	cuda_decode(m_output0_device, m_output_numbox, m_class_num, m_confidence_threshold, m_score_threshold,
+		m_d2s_device, m_output_box_device, m_max_box, m_num_box_element, m_input_size, m_algo_type, m_task_type);
+	cuda_nms(m_output_box_device, m_nms_threshold, m_max_box, m_num_box_element);
+	cudaMemcpy(m_output_box_host, m_output_box_device, sizeof(float) * (m_num_box_element * m_max_box + 1), cudaMemcpyDeviceToHost);
 
 	for (size_t i = 0; i < m_max_box; i++)
 	{
@@ -120,22 +119,38 @@ void YOLO_TensorRT_Pose::post_process()
 		if (score < m_score_threshold)
 			continue;
 		
-		float x = ptr[0];
-		float y = ptr[1];
-		float w = ptr[2];
-		float h = ptr[3];
-		int left = int(x - 0.5 * w) > 0 ? int(x - 0.5 * w) : 0;
-		int top = int(y - 0.5 * h) > 0 ? int(y - 0.5 * h) : 0;
-		int width = int(w) > 0 ? int(w) : 0;
-		int height = int(h)> 0 ? int(h) : 0;
-		width = (left + width) < m_image.cols ? width : (m_image.cols - left);
-		height = (top + height) < m_image.rows ? height : (m_image.rows - top);
-		cv::Rect box = cv::Rect(left, top, width, height);
-
 		std::vector<float> keypoint(51);
-		for (int j = 0; j < keypoint.size(); j++)
+		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 		{
-			keypoint[j] = ptr[5 + j];
+			float x = ptr[0];
+			float y = ptr[1];
+			float w = ptr[2];
+			float h = ptr[3];
+			int left = int(x - 0.5 * w) > 0 ? int(x - 0.5 * w) : 0;
+			int top = int(y - 0.5 * h) > 0 ? int(y - 0.5 * h) : 0;
+			int width = int(w) > 0 ? int(w) : 0;
+			int height = int(h)> 0 ? int(h) : 0;
+			width = (left + width) < m_image.cols ? width : (m_image.cols - left);
+			height = (top + height) < m_image.rows ? height : (m_image.rows - top);
+			box = cv::Rect(left, top, width, height);
+			for (int j = 0; j < keypoint.size(); j++)
+			{
+				keypoint[j] = ptr[5 + j];
+			}
+		}
+		else if(m_algo_type == YOLO26)
+		{
+			int left = int(ptr[0]) > 0 ? int(ptr[0]) : 0;
+			int top = int(ptr[1]) > 0 ? int(ptr[1]) : 0;
+			int width = int(ptr[2] - ptr[0]) > 0 ? int(ptr[2] - ptr[0]) : 0;
+			int height = int(ptr[3] - ptr[1])> 0 ? int(ptr[3] - ptr[1]) : 0;
+			width = (left + width) < m_image.cols ? width : (m_image.cols - left);
+			height = (top + height) < m_image.rows ? height : (m_image.rows - top);
+			box = cv::Rect(left, top, width, height);
+			for (int j = 0; j < keypoint.size(); j++)
+			{
+				keypoint[j] = ptr[6 + j];
+			}
 		}
 
 		boxes.push_back(box);
@@ -145,22 +160,37 @@ void YOLO_TensorRT_Pose::post_process()
 
 	scale_boxes(boxes, keypoints, m_image.size());
 
-	std::vector<int> indices;
-	nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
-
-	m_output_pose.clear();
-	m_output_pose.resize(indices.size());
-	for (int i = 0; i < indices.size(); i++)
+	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 	{
-		int idx = indices[i];
-		OutputPose output;
-		output.id = 0;
-		output.score = scores[idx];
-		output.box = boxes[idx];
-		output.keypoint = keypoints[idx];
-		m_output_pose[i] = output;
+		std::vector<int> indices;
+		nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
+		m_output_pose.clear();
+		m_output_pose.resize(indices.size());
+		for (int i = 0; i < indices.size(); i++)
+		{
+			int idx = indices[i];
+			OutputPose output;
+			output.id = 0;
+			output.score = scores[idx];
+			output.box = boxes[idx];
+			output.keypoint = keypoints[idx];
+			m_output_pose[i] = output;
+		}
 	}
-    
+	else if(m_algo_type == YOLO26)
+	{
+		m_output_pose.clear();
+		m_output_pose.resize(boxes.size());
+		for (int i = 0; i < boxes.size(); i++)
+		{
+			OutputPose output;
+			output.id = 0;
+			output.score = scores[i];
+			output.box = boxes[i];
+			output.keypoint = keypoints[i];
+			m_output_pose[i] = output;
+		}
+	}   
 #endif // _CUDA_POSTPROCESS
 
 	if(m_draw_result)
@@ -171,7 +201,7 @@ void YOLO_TensorRT_Pose::release()
 {
 	YOLO_TensorRT::release();
 
-	cudaFree(m_output_device);
+	cudaFree(m_output0_device);
 
 #ifdef _CUDA_PREPROCESS
 	cudaFree(m_d2s_device);

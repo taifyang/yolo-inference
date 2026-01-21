@@ -1,7 +1,7 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-01-15 23:19:35
+LastEditTime: 2026-01-12 10:49:13
 Description: tensorrt inference class for YOLO segmentation algorithm
 '''
 
@@ -25,7 +25,7 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
     '''     
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__(algo_type, device_type, model_type, model_path)
-        assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLO26'], 'algo type not supported!'
         self.output0_device = cupy.empty(self.outputs_shape[0], dtype=np.float32)
         self.output1_device = cupy.empty(self.outputs_shape[1], dtype=np.float32)
         self.output0_ptr = self.output0_device.data.ptr
@@ -64,9 +64,7 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
         else:
             output = np.squeeze(self.output0_host.reshape(self.outputs_shape[0]))
             proto = np.squeeze(self.output1_host.reshape(self.outputs_shape[1]))
-        boxes = []
-        scores = []
-        
+ 
         if self.algo_type in ['YOLOv5']:
             output = output[output[..., 4] > self.confidence_threshold]
             xc = np.max(output[...,5:(5+self.class_num)], axis=1) > self.score_threshold
@@ -88,16 +86,25 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
             scores = np.max(cls, axis=1, keepdims=True) 
             j = np.argmax(cls, axis=1, keepdims=True) 
             boxes = np.concatenate([box, scores, j.astype(np.float32)], axis=1)   
-                          
-        if len(boxes):   
-            indices = nms(boxes, scores, self.iou_threshold) 
-            boxes = boxes[indices]          
-            masks_in = mask[indices]
+        elif self.algo_type in ['YOLO26']:
+            output = output[output[..., 4] > self.score_threshold]
+            box = output[:, :4]
+            scores = output[:, 4]
+            boxes = output[:, :6]
+            mask = output[:, 6:]  
+
+        if len(boxes): 
+            if self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:    
+                indices = nms(boxes, scores, self.iou_threshold) 
+                boxes = boxes[indices]          
+                masks_in = mask[indices]
             c, mh, mw = proto.shape 
             if self.algo_type in ['YOLOv5']:
                 masks = (1/ (1 + np.exp(-masks_in @ proto.reshape(c, -1)))).reshape(-1, mh, mw)  
-            if self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
-                masks = (masks_in @ proto.reshape(c, -1)).reshape(-1, mh, mw)      
+            elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
+                masks = (masks_in @ proto.reshape(c, -1)).reshape(-1, mh, mw) 
+            elif self.algo_type in ['YOLO26']:
+                masks = (mask @ proto.reshape(c, -1)).reshape(-1, mh, mw)       
             downsampled_bboxes = boxes.copy()
             downsampled_bboxes[:, 0] *= mw / self.inputs_shape[0]
             downsampled_bboxes[:, 2] *= mw / self.inputs_shape[0]
@@ -113,7 +120,7 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
             resized_masks = np.array(resized_masks)
             if self.algo_type in ['YOLOv5']:
                 resized_masks = resized_masks > 0.5
-            elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']:
+            elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLO26']:
                 resized_masks = resized_masks > 0       
             if self.draw_result:
                 self.result = draw_result(self.image, boxes, resized_masks)

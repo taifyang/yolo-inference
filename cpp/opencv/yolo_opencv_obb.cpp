@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2026-01-12 10:16:53
- * @LastEditTime: 2026-01-12 10:26:52
+ * @LastEditTime: 2026-01-17 20:36:10
  * @Description: source file for YOLO opencv obb
  */
 
@@ -9,7 +9,7 @@
 
 void YOLO_OpenCV_OBB::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	if (algo_type != YOLOv8 && algo_type != YOLOv11 && algo_type != YOLOv12)
+	if (algo_type != YOLOv8 && algo_type != YOLOv11 && algo_type != YOLOv12 && algo_type != YOLO26)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
@@ -30,7 +30,7 @@ void YOLO_OpenCV_OBB::post_process()
 {
 	m_output0_host = (float*)m_output[0].data;
 
-	std::vector<std::vector<float>> boxes_rotated;
+	std::vector<std::vector<float>> rboxes;
 	std::vector<float> scores;
 	std::vector<int> class_ids;
 
@@ -38,24 +38,37 @@ void YOLO_OpenCV_OBB::post_process()
 	{
 		float* ptr = m_output0_host + i * m_output_numprob;
 
-		float* classes_scores = ptr + 4;
-		int class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
-		float score = classes_scores[class_id];
-		if (score < m_score_threshold)
-			continue;
+		int class_id;
+		float score;
+		std::vector<float> rbox(7);
+		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+		{
+			float* classes_scores = ptr + 4;
+			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
+			score = classes_scores[class_id];
+			if (score < m_score_threshold)
+				continue;
+			float angle = ptr[m_class_num + 4];
+			rbox = { ptr[0], ptr[1], ptr[2], ptr[3], score, class_id, angle};
+		}
+		else if(m_algo_type == YOLO26)
+		{
+			if (ptr[4] < m_score_threshold)
+				continue;
+			std::copy(ptr, ptr + 7, rbox.begin());
+		}
 
-		float angle = ptr[m_class_num + 4];
-		boxes_rotated.push_back({ ptr[0], ptr[1], ptr[2], ptr[3], score, class_id, angle});
+		rboxes.push_back(rbox);
 		scores.push_back(score);
 		class_ids.push_back(class_id);
 	}
 
 	std::vector<int> indices;
-	nms_rotated(boxes_rotated, scores, m_score_threshold, m_nms_threshold, indices);
+	nms_rotated(rboxes, scores, m_score_threshold, m_nms_threshold, indices);
 
 	std::vector<std::vector<float>> boxes_nms(indices.size());
 	for(int i=0; i<indices.size(); i++)	
-		boxes_nms[i] = boxes_rotated[indices[i]];
+		boxes_nms[i] = rboxes[indices[i]];
 
 	regularize_rboxes(boxes_nms);
 	

@@ -1,14 +1,118 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-12 11:09:43
+ * @LastEditTime: 2026-01-19 18:38:38
  * @Description: source file for cuda pre-processing decoding
  */
 
 #include "preprocess.cuh"
 
-__global__ void warpaffine_kernel( uint8_t* src, int src_line_size, int src_width, int src_height, 
-	float* dst, int dst_width,  int dst_height, uint8_t const_value_st, AffineMatrix d2s, int edge) 
+__global__ void crop_kernel(uint8_t* src, uint8_t* dst, int src_w, int src_h, int crop_size, int left, int top, int channel)
+{
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+    if (x >= crop_size && y >= crop_size)
+        return;
+
+    int src_idx = ((top + y) * src_w + (left + x)) * channel;
+    int dst_idx = (y * crop_size + x) * channel;
+    for(int c=0; c<channel; ++c)
+    {
+        dst[dst_idx + c] = src[src_idx + c];  
+    }
+}
+
+void cuda_crop(uint8_t* src, uint8_t* dst, cv::Size src_size, int crop_size, int left, int top, int channel) 
+{
+    dim3 block(32, 32); 
+    dim3 grid((crop_size + block.x - 1) / block.x, (crop_size + block.y - 1) / block.y); 
+    crop_kernel<<<grid, block>>>(src, dst, src_size.width, src_size.height, crop_size, left, top, channel);
+}
+
+__global__ void resize_linear_kernel(uint8_t* src, uint8_t* dst, int src_w, int src_h, int dst_w, int dst_h, int channel)
+{
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+    if (x >= dst_w || y >= dst_h) 
+        return;
+
+    float src_x = (x)* (static_cast<float>(src_w-1) ) / (static_cast<float>(dst_w-1));
+    float src_y = (y )* (static_cast<float>(src_h-1) ) / (static_cast<float>(dst_h-1)) ;
+
+    int x0 = static_cast<int>(floor(src_x));
+    int x1 = min(x0 + 1, src_w - 1);
+    int y0 = static_cast<int>(floor(src_y));
+    int y1 = min(y0 + 1, src_h - 1);
+
+    float wx = src_x - x0;
+    float wy = src_y - y0;
+
+    int idx00 = (y0 * src_w + x0) * channel;
+    int idx01 = (y0 * src_w + x1) * channel;
+    int idx10 = (y1 * src_w + x0) * channel;
+    int idx11 = (y1 * src_w + x1) * channel;
+
+    for (int c = 0; c < channel; c++) 
+    {
+        float p00 = static_cast<float>(src[idx00 + c]);
+        float p01 = static_cast<float>(src[idx01 + c]);
+        float p10 = static_cast<float>(src[idx10 + c]);
+        float p11 = static_cast<float>(src[idx11 + c]);
+        float interpolated = (1 - wx) * (1 - wy) * p00 + wx * (1 - wy) * p01 + (1 - wx) * wy * p10 + wx * wy * p11;
+        dst[(y * dst_w + x) * channel + c] = static_cast<uint8_t>(interpolated);
+    }
+}
+
+void cuda_resize_linear(uint8_t* src, uint8_t* dst, cv::Size src_size, cv::Size dst_size, int channel) 
+{
+    dim3 block_size(32, 32);  
+    dim3 grid_size((dst_size.width + block_size.x - 1) / block_size.x, (dst_size.height + block_size.y - 1) / block_size.y);
+    resize_linear_kernel<<<grid_size, block_size>>>(src, dst, src_size.width, src_size.height, dst_size.width, dst_size.height, channel);
+}
+
+void cuda_centercrop(uint8_t* src, uint8_t* crop, uint8_t* dst, cv::Size src_size, cv::Size dst_size, int channel)
+{
+    int crop_size = std::min(src_size.width, src_size.height);
+    int left = (src_size.width - crop_size) / 2, top = (src_size.height - crop_size) / 2;
+    cuda_crop(src, crop, src_size, crop_size, left, top, channel);
+    cuda_resize_linear(crop, dst, cv::Size(crop_size, crop_size), dst_size, channel);
+}
+
+__global__ void normalize_kernel(uint8_t* src, float* dst, int width, int height, Algo_Type algo_type) 
+{
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+    if (x >= width && y >= height) 
+        return;
+
+    int idx = (y * width + x) * 3;
+    float b = static_cast<float>(src[idx]) / 255.0f;  
+    float g = static_cast<float>(src[idx + 1]) / 255.0f;
+    float r = static_cast<float>(src[idx + 2]) / 255.0f;
+
+    if (algo_type == YOLOv5)
+    {
+        b = (b - 0.406) / 0.225;
+        g = (g - 0.456) / 0.224;
+        r = (r - 0.485) / 0.229;
+    }
+
+    int chw_base = y * width + x;      
+    int chw_size = height * width;    
+    dst[0 * chw_size + chw_base] = r;   
+    dst[1 * chw_size + chw_base] = g;   
+    dst[2 * chw_size + chw_base] = b;  
+}
+
+void cuda_normalize(uint8_t* src, float* dst, cv::Size src_size, Algo_Type algo_type)
+{
+    dim3 block(32, 32);
+    dim3 grid((src_size.width + block.x - 1) / block.x, (src_size.height + block.y - 1) / block.y);
+    normalize_kernel<<<grid, block>>>(src, dst, src_size.width, src_size.height, algo_type);
+}
+
+__global__ void warpaffine_kernel(uint8_t* src, int src_line_size, int src_width, int src_height, 
+	float* dst, int dst_width, int dst_height, uint8_t const_value_st, AffineMatrix d2s, int edge) 
 {
     int position = blockDim.x * blockIdx.x + threadIdx.x;
     if (position >= edge) 
@@ -95,7 +199,7 @@ __global__ void warpaffine_kernel( uint8_t* src, int src_line_size, int src_widt
     *pdst_c2 = c2;
 }
 
-void cuda_preprocess_img(uint8_t* src, int src_width, int src_height, float* dst, int dst_width, int dst_height, float* affine_matrix, float* affine_matrix_inverse, cudaStream_t stream)
+void cuda_preprocess_img(uint8_t* src, int src_width, int src_height, float* dst, int dst_width, int dst_height, float* affine_matrix, float* affine_matrix_inverse)
 {
     AffineMatrix s2d,d2s;
     float scale = std::min(dst_height / (float)src_height, dst_width / (float)src_width);
@@ -118,5 +222,5 @@ void cuda_preprocess_img(uint8_t* src, int src_width, int src_height, float* dst
     int jobs = dst_height * dst_width;
     int threads = 1024;
     int blocks = ceil(jobs / (float)threads);
-    warpaffine_kernel<<<blocks, threads, 0, stream>>>(src, src_width*3, src_width, src_height, dst, dst_width, dst_height, 114, d2s, jobs);
+    warpaffine_kernel<<<blocks, threads>>>(src, src_width*3, src_width, src_height, dst, dst_width, dst_height, 114, d2s, jobs);
 }

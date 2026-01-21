@@ -1,7 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-12 15:11:44
+ * @LastEditTime: 2026-01-19 18:15:08
  * @Description: head file for cuda post-processing decoding
  */
 
@@ -26,13 +26,12 @@
  * @param {float* } parray					output array
  * @param {int} max_objects					max number of objects
  * @param {int} num_box_element				number of box element
- * @param {cudaStream_t} stream				cuda stream
  * @param {Algo_Type} algo_type				algorithm type
  * @param {Task_Type} task_type				task type
  * @return {*}
  */
 void cuda_decode(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float score_threshold, float* inverse_affine_matrix, float* parray, 
-	int max_objects, int num_box_element, cv::Size input_size, cudaStream_t stream, Algo_Type algo_type, Task_Type task_type);
+	int max_objects, int num_box_element, cv::Size input_size, Algo_Type algo_type, Task_Type task_type);
 
 /**
  * @description: 					cuda NMS
@@ -40,10 +39,9 @@ void cuda_decode(float* predict, int num_bboxes, int num_classes, float confiden
  * @param {float} nms_threshold		NMS threshold
  * @param {int} max_objects			max number of objects
  * @param {int} num_box_element		number of box element
- * @param {cudaStream_t} stream		cuda stream
  * @return {*}
  */
-void cuda_nms(float* parray, float nms_threshold, int max_objects, int num_box_element, cudaStream_t stream);
+void cuda_nms(float* parray, float nms_threshold, int max_objects, int num_box_element);
 
 /**
  * @description: 					decode single mask
@@ -57,21 +55,9 @@ void cuda_nms(float* parray, float nms_threshold, int max_objects, int num_box_e
  * @param {int} mask_dim			dim of mask
  * @param {int} out_width			result of output width
  * @param {int} out_height			result of output height
- * @param {cudaStream_t} stream		cuda stream
  * @return {*}
  */
-void cuda_decode_mask(float left, float top, float* mask_weights, float* mask_predict, int mask_width, int mask_height, uchar* mask_out,
-                    int mask_dim, int out_width, int out_height, cudaStream_t stream);
-
-/**
- * @brief  							cuda resize image
- * @param  {uchar*} src      		input image
- * @param  {uchar*} dst      		output image
- * @param  {cv::Size} src_size		input image size
- * @param  {cv::Size} dst_size 		output image size
- * @param  {cudaStream_t} stream	cuda stream
- */
-void cuda_resize(uchar* src, uchar* dst, cv::Size src_size, cv::Size dst_size, cudaStream_t stream);
+void cuda_decode_mask(float left, float top, float* mask_weights, float* mask_predict, int mask_width, int mask_height, uint8_t* mask_out, int mask_dim, int out_width, int out_height);
 
 /**
  * @brief  							cuda extract col 
@@ -80,9 +66,8 @@ void cuda_resize(uchar* src, uchar* dst, cv::Size src_size, cv::Size dst_size, c
  * @param {int} target_col 			target col
  * @param {int} rows      			input rows
  * @param {int} cols      			input cols
- * @param {cudaStream_t} stream		cuda stream
  */
-void cuda_extract_col(const float* input_d, float* output_d, int target_col, int rows, int cols, cudaStream_t stream);
+void cuda_extract_col(const float* input_d, float* output_d, int target_col, int rows, int cols);
 
 /**
  * @brief 						thrust argsort
@@ -99,9 +84,8 @@ void thrust_argsort(float* scores_d, int* sorted_idx_d, int num_bbox);
  * @param {float} threshold  		IOU threshold
  * @param {int} num_bbox   			number of input bbox
  * @param {int&} pick_size  		picked bbox size
- * @param {cudaStream_t} stream		cuda stream
  */
-void cuda_pick_bbox(const float* ious_d, int* pick_d, float threshold, int num_bbox, int& pick_size, cudaStream_t stream);
+void cuda_pick_bbox(const float* ious_d, int* pick_d, float threshold, int num_bbox, int& pick_size);
 
 /** 
  * @brief  							cuda extract rows
@@ -109,9 +93,8 @@ void cuda_pick_bbox(const float* ious_d, int* pick_d, float threshold, int num_b
  * @param {const int*} index_d   	index on device
  * @param {float*} output_d   		output on device
  * @param {int} num_bbox   			number of input bbox
- * @param {cudaStream_t} stream		cuda stream
  */
-void cuda_extract_rows(const float* input_d, const int* index_d, float* output_d, int num_bbox, cudaStream_t stream);
+void cuda_extract_rows(const float* input_d, const int* index_d, float* output_d, int num_bbox);
 
 /**
  * @brief 							cuda compute covariance matrix
@@ -120,9 +103,8 @@ void cuda_extract_rows(const float* input_d, const int* index_d, float* output_d
  * @param  {float*} b_d      		output b on device
  * @param  {float*} c_d      		output c on device
  * @param  {int} num_bbox   		number of input bbox
- * @param  {cudaStream_t} stream	cuda stream
  */
-void cuda_compute_covariance_matrix(const float* boxes_d, float* a_d, float* b_d, float* c_d, int num_bbox, cudaStream_t stream);
+void cuda_compute_covariance_matrix(const float* boxes_d, float* a_d, float* b_d, float* c_d, int num_bbox);
 
 /**
  * @brief 							cuda compute hd
@@ -136,28 +118,24 @@ void cuda_compute_covariance_matrix(const float* boxes_d, float* a_d, float* b_d
  * @param {const float*} c2_h       input c2 on device
  * @param {float*} hd_d        		output hd on device
  * @param {int} num_bbox   			number of input bbox
- * @param {cudaStream_t} stream		cuda stream
  */
 void cuda_compute_hd(const float* obb1_d, const float* obb2_d,
-    const float* a1_d, const float* b1_d, const float* c1_d, const float* a2_d, const float* b2_d, const float* c2_d,
-    float* hd_d, int box_num, cudaStream_t stream);
+    const float* a1_d, const float* b1_d, const float* c1_d, const float* a2_d, const float* b2_d, const float* c2_d, float* hd_d, int box_num);
 
 /**
  * @brief  							cuda triu k1
  * @param  {float*} mat_d     		matirx on device
  * @param  {int} rows      			input matirx rows
  * @param  {int} cols      			input matirx cols
- * @param  {cudaStream_t} stream	cuda stream
  */
-void cuda_triu_k1(float* mat_d, int rows, int cols, cudaStream_t stream);
+void cuda_triu_k1(float* mat_d, int rows, int cols);
 
 /**
  * @brief 							cuda regularize bbox
  * @param {float*} boxes_d 			boxes on device
  * @param {int} num_bbox   			number of input bbox
- * @param {cudaStream_t} stream		cuda stream
  */
-void cuda_regularize_bbox(float* boxes_d, int num_bbox, cudaStream_t stream);
+void cuda_regularize_bbox(float* boxes_d, int num_bbox);
 
 /**
  * @brief 							cuda scale boxes
@@ -168,6 +146,5 @@ void cuda_regularize_bbox(float* boxes_d, int num_bbox, cudaStream_t stream);
  * @param {float} gain 				scale of resize
  * @param {float} pad_w 			pad of witdh
  * @param {float} pad_h 			pad of height
- * @param {cudaStream_t} stream		cuda stream
  */
-void cuda_scale_boxes(float* boxes_d, int num_bbox, float output_w, float output_h, float gain, float pad_w, float pad_h, cudaStream_t stream);
+void cuda_scale_boxes(float* boxes_d, int num_bbox, float output_w, float output_h, float gain, float pad_w, float pad_h);

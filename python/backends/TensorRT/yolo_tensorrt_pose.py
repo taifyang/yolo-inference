@@ -1,7 +1,7 @@
 '''
 Author: taifyang
 Date: 2026-01-05 10:57:14
-LastEditTime: 2026-01-05 11:01:31
+LastEditTime: 2026-01-21 09:16:41
 Description: tensorrt inference class for YOLO pose algorithm
 '''
 
@@ -25,7 +25,7 @@ class YOLO_TensorRT_Pose(YOLO_TensorRT):
     '''      
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__(algo_type, device_type, model_type, model_path)
-        assert self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12', 'YOLO26'], 'algo type not supported!'
         self.output0_device = cupy.empty(self.outputs_shape[0], dtype=np.float32)
         self.output0_ptr = self.output0_device.data.ptr
 
@@ -55,19 +55,27 @@ class YOLO_TensorRT_Pose(YOLO_TensorRT):
     return {*}
     '''  
     def post_process(self) -> None:
-        output = np.squeeze(self.output0_host.reshape(self.outputs_shape[0]))   
-        scores = output[..., 4]
-        xc = scores > self.score_threshold 
-        output[..., :4] = xywh2xyxy(output[..., :4])
-        box = output[xc][:, :4]
-        scores =  np.expand_dims(scores[xc], axis=1)
-        cls = np.zeros((len(box), 1))
-        kpts = output[xc][..., 5:]
+        output = np.squeeze(self.output0_host.reshape(self.outputs_shape[0]))
+        if self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']:
+            scores = output[..., 4]
+            xc = scores > self.score_threshold 
+            output[..., :4] = xywh2xyxy(output[..., :4])
+            box = output[xc][:, :4]
+            scores =  np.expand_dims(scores[xc], axis=1)
+            cls = np.zeros((len(box), 1))
+            kpts = output[xc][..., 5:]
+        elif self.algo_type in ['YOLO26']:
+            output = output[output[..., 4] > self.score_threshold]
+            box = output[:, :4]
+            scores = output[..., 4:5]
+            cls = output[..., 5:6]
+            kpts = output[..., 6:]
         boxes = np.concatenate([box, scores, cls, kpts], axis=1)
         
-        if len(boxes):   
-            indices = nms(boxes, scores, self.iou_threshold) 
-            boxes = boxes[indices]
+        if len(boxes): 
+            if self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']:   
+                indices = nms(boxes, scores, self.iou_threshold) 
+                boxes = boxes[indices]
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
             if self.draw_result:
                 self.result = draw_result(self.image, boxes, kpts=boxes[:, 6:])     

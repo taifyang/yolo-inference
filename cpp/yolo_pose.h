@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2026-01-03 19:31:25
- * @LastEditTime: 2026-01-05 22:30:25
+ * @LastEditTime: 2026-01-17 20:19:33
  * @Description: pose algorithm class
  */
 
@@ -36,8 +36,17 @@ public:
 	 */
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 	{
-		m_output_numprob = 56;
-		m_output_numbox = m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32;
+		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+		{
+			m_output_numprob = 56;
+			m_output_numbox = m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32;
+		}
+		else if(m_algo_type == YOLO26)
+		{
+			m_output_numprob = 57;
+			m_output_numbox = 300;
+		}
+	
 		m_output_numdet = 1 * m_output_numprob * m_output_numbox;
 	}
 

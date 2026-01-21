@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-03 20:37:10
+ * @LastEditTime: 2026-01-19 23:37:42
  * @Description: source file for YOLO opencv classification
  */
 
@@ -9,7 +9,7 @@
 
 void YOLO_OpenCV_Classify::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	if (algo_type != YOLOv5 && algo_type != YOLOv8 && algo_type != YOLOv11 && algo_type != YOLOv12)
+	if (algo_type != YOLOv5 && algo_type != YOLOv8 && algo_type != YOLOv11 && algo_type != YOLOv12 && algo_type != YOLO26)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
@@ -24,10 +24,7 @@ void YOLO_OpenCV_Classify::pre_process()
 
 	if (m_algo_type == YOLOv5)
 	{
-#ifndef OPENCV_WITH_CUDA
-		CenterCrop(m_image, crop_image);
-		Normalize(crop_image, crop_image, m_algo_type);
-#else
+#ifdef OPENCV_WITH_CUDA
 		cv::cuda::GpuMat gpu_image, gpu_crop_image, gpu_cvt_image;
     	gpu_image.upload(m_image);
 		int crop_size = std::min(m_image.cols, m_image.rows);
@@ -38,18 +35,14 @@ void YOLO_OpenCV_Classify::pre_process()
 		cv::cuda::subtract(gpu_cvt_image, cv::Scalar(0.406, 0.456, 0.485), gpu_cvt_image);
 		cv::cuda::divide(gpu_cvt_image, cv::Scalar(0.225, 0.224, 0.229), gpu_cvt_image);
 		gpu_cvt_image.download(crop_image);
-#endif
-	}
-	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
-	{	
-#ifndef OPENCV_WITH_CUDA	
-		if (m_image.cols > m_image.rows)
-			cv::resize(m_image, crop_image, cv::Size(m_input_size.height * m_image.cols / m_image.rows, m_input_size.height));
-		else
-			cv::resize(m_image, crop_image, cv::Size(m_input_size.width, m_input_size.width * m_image.rows / m_image.cols));
+#else
 		CenterCrop(m_image, crop_image);
 		Normalize(crop_image, crop_image, m_algo_type);
-#else
+#endif
+	}
+	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLO26)
+	{	
+#ifdef OPENCV_WITH_CUDA	
 		cv::cuda::GpuMat gpu_image, gpu_crop_image, gpu_cvt_image;
 		gpu_image.upload(m_image);
 		if (m_image.cols > m_image.rows)
@@ -62,6 +55,13 @@ void YOLO_OpenCV_Classify::pre_process()
 		cv::cuda::resize(gpu_crop_image, gpu_crop_image, cv::Size(m_input_size.width, m_input_size.height));
 		gpu_crop_image.convertTo(gpu_cvt_image, CV_32FC3, 1. / 255.);
 		gpu_cvt_image.download(crop_image);
+#else
+		if (m_image.cols > m_image.rows)
+			cv::resize(m_image, crop_image, cv::Size(m_input_size.height * m_image.cols / m_image.rows, m_input_size.height));
+		else
+			cv::resize(m_image, crop_image, cv::Size(m_input_size.width, m_input_size.width * m_image.rows / m_image.cols));
+		CenterCrop(m_image, crop_image);
+		Normalize(crop_image, crop_image, m_algo_type);
 #endif
 	}
 
@@ -84,7 +84,7 @@ void YOLO_OpenCV_Classify::post_process()
 	m_output_cls.id = id;
 	if (m_algo_type == YOLOv5)
 		m_output_cls.score = exp(scores[id]) / sum;
-	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLO26)
 		m_output_cls.score = scores[id];
 
 	if(m_draw_result)

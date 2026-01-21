@@ -53,13 +53,11 @@ void YOLO_TensorRT::init(const Algo_Type algo_type, const Device_Type device_typ
 		std::exit(-1);
 	}
 
-	cudaStreamCreate(&m_stream);
 	m_execution_context = m_engine->createExecutionContext();
 }
 
 void YOLO_TensorRT::release()
 {
-	cudaStreamDestroy(m_stream);
 	cudaFree(m_input_device);
 
 #if NV_TENSORRT_MAJOR < 10

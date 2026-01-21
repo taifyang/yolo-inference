@@ -53,9 +53,14 @@ public:
 			m_output_numprob = 36 + m_class_num;
 			m_output_numbox = m_input_size.width / 8 * m_input_size.height / 8 + m_input_size.width / 16 * m_input_size.height / 16 + m_input_size.width / 32 * m_input_size.height / 32;
 		}
+		else if(m_algo_type == YOLO26)
+		{
+			m_output_numprob = 38;
+			m_output_numbox = 300;
+		}
 
 		m_output_numdet = 1 * m_output_numprob * m_output_numbox;	
-		m_output_numseg = m_mask_params.seg_channels * m_mask_params.seg_width * m_mask_params.seg_height;	
+		m_output_numseg = 1 * m_mask_params.seg_channels * m_mask_params.seg_width * m_mask_params.seg_height;	
 	}
 
 protected:

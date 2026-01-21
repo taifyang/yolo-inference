@@ -1,7 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-12 15:15:02
+ * @LastEditTime: 2026-01-19 18:09:32
  * @Description: source file for cuda post-processing decoding
  */
 
@@ -34,24 +34,41 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 	float objectness;
 	float* class_score;
 	float angle;
-	if(algo_type == YOLOv3 || algo_type == YOLOv4 || algo_type == YOLOv6 || algo_type == YOLOv8 || algo_type == YOLOv9 || algo_type == YOLOv10 || algo_type == YOLOv11 || algo_type == YOLOv12 || algo_type == YOLOv13)
+	if(algo_type == YOLOv3 || algo_type == YOLOv4 || algo_type == YOLOv6 || algo_type == YOLOv8 || algo_type == YOLOv9 || algo_type == YOLOv10 || algo_type == YOLOv11 || algo_type == YOLOv12 || algo_type == YOLOv13 || algo_type == YOLO26)
 	{
 		if(task_type == Detect)
 		{
-			pitem = predict + (4 + num_classes) * position;
+            if(algo_type == YOLO26)
+                pitem = predict + 6 * position;
+            else
+			    pitem = predict + (4 + num_classes) * position;
 		}
 		else if(task_type == Segment)
 		{
-			pitem = predict + (36 + num_classes) * position;
+            if(algo_type == YOLO26)
+                pitem = predict + 38 * position;
+            else
+			    pitem = predict + (36 + num_classes) * position;
 		}
         else if(task_type == Pose)
         {
-            pitem = predict + 56 * position;
+            if (algo_type == YOLOv8 || algo_type == YOLOv11 || algo_type == YOLOv12)
+                pitem = predict + 56 * position;
+            else if(algo_type == YOLO26)
+                pitem = predict + 57 * position;
         }
 		else if(task_type == OBB)
 		{
-			pitem = predict + (5 + num_classes) * position;
-			angle = pitem[4 + num_classes];
+            if (algo_type == YOLOv8 || algo_type == YOLOv11 || algo_type == YOLOv12)
+            {
+                pitem = predict + (5 + num_classes) * position;
+                angle = pitem[4 + num_classes];
+            }
+            else if(algo_type == YOLO26)
+            {
+                pitem = predict + 7 * position;
+                angle = pitem[6];
+            }
 		}
 		class_score = pitem + 4;
 	}
@@ -73,14 +90,21 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 	
 	float score = *class_score++;
 	int label = 0;
-	for (int i = 1; i < num_classes; ++i, ++class_score)
-	{
-		if (*class_score > score && algo_type != Pose)
-		{
-			score = *class_score;
-			label = i;
-		}
-	}
+    if(algo_type == YOLO26)
+    {
+        label = pitem[5];
+    }
+    else
+    {
+        for (int i = 1; i < num_classes; ++i, ++class_score)
+        {
+            if (*class_score > score && algo_type != Pose)
+            {
+                score = *class_score;
+                label = i;
+            }
+        }
+    }
 	
 	if(algo_type == YOLOv5 || algo_type == YOLOv7)
 	{
@@ -126,7 +150,7 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 			right = *pitem++ * input_size.width;
 			bottom = *pitem++ * input_size.height;
 		}
-		else if (algo_type == YOLOv10)
+		else if (algo_type == YOLOv10 || algo_type == YOLO26)
 		{
 			left = *pitem++;
 			top = *pitem++;
@@ -146,6 +170,8 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 		if(task_type == Pose)
 		{
 			*pitem++;
+            if(algo_type == YOLO26)
+                *pitem++;
 			*pout_item++ = 0;
 			*pout_item++ = 1; // 1 = keep, 0 = ignore
 			for(int i=0; i<51; i++)  
@@ -213,22 +239,23 @@ static __global__ void nms_kernel(float* bboxes, int max_objects, float threshol
 	}
 }
 
-void cuda_decode(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float score_threshold, float* inverse_affine_matrix, float* parray, int max_objects, int num_box_element, cv::Size input_size, cudaStream_t stream, Algo_Type algo_type, Task_Type task_type)
+void cuda_decode(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float score_threshold, float* inverse_affine_matrix, 
+    float* parray, int max_objects, int num_box_element, cv::Size input_size, Algo_Type algo_type, Task_Type task_type)
 {
 	auto grid = grid_dims(num_bboxes);
 	auto block = block_dims(num_bboxes);
-	decode_kernel << <grid, block, 0, stream >> > (predict, num_bboxes, num_classes, confidence_threshold, score_threshold, inverse_affine_matrix, parray, max_objects, num_box_element, input_size, algo_type, task_type);
+	decode_kernel<<<grid, block>>> (predict, num_bboxes, num_classes, confidence_threshold, score_threshold, inverse_affine_matrix, parray, max_objects, num_box_element, input_size, algo_type, task_type);
 }
 
-void cuda_nms(float* parray, float nms_threshold, int max_objects, int num_box_element, cudaStream_t stream)
+void cuda_nms(float* parray, float nms_threshold, int max_objects, int num_box_element)
 {
 	auto grid = grid_dims(max_objects);
 	auto block = block_dims(max_objects);
-	nms_kernel << <grid, block, 0, stream >> > (parray, max_objects, nms_threshold, num_box_element);
+	nms_kernel<<<grid, block>>> (parray, max_objects, nms_threshold, num_box_element);
 }
 
  static __global__ void cuda_decode_mask_kernel(int left, int top, float* mask_weights, float* mask_predict, int mask_width, int mask_height, 
-													unsigned char *mask_out, int mask_dim, int out_width, int out_height)
+    unsigned char *mask_out, int mask_dim, int out_width, int out_height)
 {
 	// mask_predict to mask_out
 	// mask_weights @ mask_predict
@@ -257,41 +284,13 @@ void cuda_nms(float* parray, float nms_threshold, int max_objects, int num_box_e
 	mask_out[dy * out_width + dx] = alpha*255;
 }
 
-void cuda_decode_mask(float left, float top, float* mask_weights, float* mask_predict, int mask_width, int mask_height, uchar* mask_out,
-                    int mask_dim, int out_width, int out_height, cudaStream_t stream)
+void cuda_decode_mask(float left, float top, float* mask_weights, float* mask_predict, int mask_width, int mask_height, 
+    uint8_t* mask_out, int mask_dim, int out_width, int out_height)
 {
 	// mask_weights is mask_dim(32 element) gpu pointer
 	dim3 grid((out_width + 31) / 32, (out_height + 31) / 32);
 	dim3 block(32, 32);
-	cuda_decode_mask_kernel<<<grid, block, 0, stream>>>(left, top, mask_weights, mask_predict, mask_width, mask_height, mask_out, mask_dim, out_width, out_height);
-}
-
-__global__ void resize_linear_kernel(const uchar* src, uchar* dst, int src_step, int dst_step,
-                                     int src_h, int src_w, int dst_h, int dst_w, float scale_h, float scale_w) 
-{
-    int dst_y = blockIdx.x * blockDim.x + threadIdx.x;
-    int dst_x = blockIdx.y * blockDim.y + threadIdx.y;
-    if (dst_y >= dst_h || dst_x >= dst_w) 
-        return;
-    int src_y = static_cast<int>(dst_y / scale_h);
-    int src_x = static_cast<int>(dst_x / scale_w);
-    src_y = min(max(src_y, 0), src_h - 1);
-    src_x = min(max(src_x, 0), src_w - 1);
-    dst[dst_y * dst_step + dst_x] = src[src_y * src_step + src_x];
-}
-
-void cuda_resize(uchar* src, uchar* dst, cv::Size src_size, cv::Size dst_size, cudaStream_t stream) 
-{
-    float scale_h = static_cast<float>(dst_size.height) / src_size.height;
-    float scale_w = static_cast<float>(dst_size.width) / src_size.width;
-
-    int src_step = src_size.width;  
-    int dst_step = dst_size.width;
-
-    const dim3 block_size(32, 32);  
-    const dim3 grid_size((dst_size.height + block_size.x - 1) / block_size.x,(dst_size.width + block_size.y - 1) / block_size.y);
-
-    resize_linear_kernel<<<grid_size, block_size, 0, stream>>>(src, dst, src_step, dst_step, src_size.height, src_size.width, dst_size.height, dst_size.width, scale_h, scale_w);
+	cuda_decode_mask_kernel<<<grid, block>>>(left, top, mask_weights, mask_predict, mask_width, mask_height, mask_out, mask_dim, out_width, out_height);
 }
 
 __global__ void extract_colKernel(const float* input_d, float* output_d, int target_col, int rows, int cols) 
@@ -301,19 +300,19 @@ __global__ void extract_colKernel(const float* input_d, float* output_d, int tar
         output_d[row] = input_d[row * cols + target_col];
 }
 
-void cuda_extract_col(const float* input_d, float* output_d, int target_col, int rows, int cols, cudaStream_t stream) 
+void cuda_extract_col(const float* input_d, float* output_d, int target_col, int rows, int cols) 
 {       
     auto grid = grid_dims(rows);
 	auto block = block_dims(rows);  
-    extract_colKernel<<<grid, block, 0, stream>>>(input_d, output_d, target_col, rows, cols);
+    extract_colKernel<<<grid, block>>>(input_d, output_d, target_col, rows, cols);
 }
 
-void thrust_argsort(float* scores_d, int* sorted_idx_d, int num_bbox)
+void thrust_argsort(float* scores_d, int* sorted_idx_d, int num_rboxes)
 {
     thrust::device_ptr<float> dev_ptr_scores(scores_d);
     thrust::device_ptr<int> dev_ptr_indices(sorted_idx_d);
-    thrust::sequence(thrust::device,  dev_ptr_indices,  dev_ptr_indices + num_bbox);
-    thrust::sort_by_key(thrust::device, dev_ptr_scores, dev_ptr_scores + num_bbox, dev_ptr_indices, thrust::greater<float>());
+    thrust::sequence(thrust::device,  dev_ptr_indices,  dev_ptr_indices + num_rboxes);
+    thrust::sort_by_key(thrust::device, dev_ptr_scores, dev_ptr_scores + num_rboxes, dev_ptr_indices, thrust::greater<float>());
 }
 
 __global__ void columnMaxKernel(const float* ious_d, float* col_max_d, int dim)
@@ -363,58 +362,59 @@ __global__ void collectIndicesKernel(const int* mask_d, const int* prefix_sum_d,
     }
 }
 
-void cuda_pick_bbox(const float* ious_d, int* pick_d, float threshold, int num_bboxes, int& pick_size, cudaStream_t stream) 
+void cuda_pick_bbox(const float* ious_d, int* pick_d, float threshold, int num_rboxes, int& pick_size) 
 {
     float* col_max_d = nullptr;
     int* mask_d = nullptr;
     int* prefix_sum_d = nullptr;
 
-    cudaMalloc((void**)&col_max_d, num_bboxes * sizeof(float));
-    cudaMalloc((void**)&mask_d, num_bboxes * sizeof(int));
-    cudaMalloc((void**)&prefix_sum_d, num_bboxes * sizeof(int)); 
+    cudaMalloc((void**)&col_max_d, num_rboxes * sizeof(float));
+    cudaMalloc((void**)&mask_d, num_rboxes * sizeof(int));
+    cudaMalloc((void**)&prefix_sum_d, num_rboxes * sizeof(int)); 
     
-    auto grid = grid_dims(num_bboxes);
-	auto block = block_dims(num_bboxes);  
+    auto grid = grid_dims(num_rboxes);
+	auto block = block_dims(num_rboxes);  
 
-    columnMaxKernel<<<num_bboxes, block, 0, stream>>>(ious_d, col_max_d, num_bboxes);
+    columnMaxKernel<<<num_rboxes, block>>>(ious_d, col_max_d, num_rboxes);
 
-    thresholdMaskKernel<<<grid, block, 0, stream>>>(col_max_d, mask_d, threshold, num_bboxes);
+    thresholdMaskKernel<<<grid, block>>>(col_max_d, mask_d, threshold, num_rboxes);
 
-    prefixSumKernel<<<grid, block, 0, stream>>>(mask_d, prefix_sum_d, num_bboxes);
+    prefixSumKernel<<<grid, block>>>(mask_d, prefix_sum_d, num_rboxes);
 
-    cudaMemcpy(&pick_size, &prefix_sum_d[num_bboxes - 1], sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&pick_size, &prefix_sum_d[num_rboxes - 1], sizeof(int), cudaMemcpyDeviceToHost);
 
-    collectIndicesKernel<<<grid, block, 0, stream>>>(mask_d, prefix_sum_d, pick_d, num_bboxes);
+    collectIndicesKernel<<<grid, block>>>(mask_d, prefix_sum_d, pick_d, num_rboxes);
 }
 
 
-__global__ void extract_rowsKernel(const float* input_d, const int* index_d, float* output_d, int num_bbox) 
+__global__ void extract_rowsKernel(const float* input_d, const int* index_d, float* output_d, int num_rboxes) 
 {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
-    if (tid < num_bbox) {
+    if (tid < num_rboxes) 
+    {
         int input_row = index_d[tid];
         for (int j = 0; j < 8; ++j) 
             output_d[tid * 8 + j] = input_d[input_row * 8 + j];
     }
 }
 
-void cuda_extract_rows(const float* input_d, const int* index_d, float* output_d, int num_bboxes, cudaStream_t stream) 
+void cuda_extract_rows(const float* input_d, const int* index_d, float* output_d, int num_rboxes) 
 {   
-    auto grid = grid_dims(num_bboxes);
-	auto block = block_dims(num_bboxes);                  
-    extract_rowsKernel<<<grid, block, 0, stream>>>(input_d, index_d, output_d, num_bboxes);
+    auto grid = grid_dims(num_rboxes);
+	auto block = block_dims(num_rboxes);                  
+    extract_rowsKernel<<<grid, block>>>(input_d, index_d, output_d, num_rboxes);
 }
 
 
-__global__ void compute_covariance_matrix_kernel(const float* boxes,  float* out1,  float* out2,  float* out3, int num_bbox) 
+__global__ void compute_covariance_matrix_kernel(const float* rboxes,  float* out1,  float* out2,  float* out3, int num_rboxes) 
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i >= num_bbox)
+    if (i >= num_rboxes)
         return;
     
-    float w = boxes[i * 8 + 3];
-    float h = boxes[i * 8 + 4];
-    float theta = boxes[i * 8 + 7];
+    float w = rboxes[i * 8 + 3];
+    float h = rboxes[i * 8 + 4];
+    float theta = rboxes[i * 8 + 7];
 
     float a = (w * w) / 12.0f;
     float b = (h * h) / 12.0f;
@@ -429,11 +429,11 @@ __global__ void compute_covariance_matrix_kernel(const float* boxes,  float* out
     out3[i] = (a - b) * cos_theta * sin_theta;
 }
 
-void cuda_compute_covariance_matrix(const float* boxes_d, float* a_d, float* b_d, float* c_d, int num_bboxes, cudaStream_t stream)
+void cuda_compute_covariance_matrix(const float* rboxes, float* a_d, float* b_d, float* c_d, int num_rboxes)
  {
-    auto grid = grid_dims(num_bboxes);
-	auto block = block_dims(num_bboxes);  
-    compute_covariance_matrix_kernel<<<grid, block, 0, stream>>>(boxes_d, a_d, b_d, c_d, num_bboxes);
+    auto grid = grid_dims(num_rboxes);
+	auto block = block_dims(num_rboxes);  
+    compute_covariance_matrix_kernel<<<grid, block>>>(rboxes, a_d, b_d, c_d, num_rboxes);
 }
 
 __global__ void compute_obb_pairwise_hd_kernel(
@@ -508,11 +508,11 @@ void cuda_compute_hd(
     const float* a2_d,
     const float* b2_d,
     const float* c2_d,
-    float* hd_d, int num_bbox, cudaStream_t stream) 
+    float* hd_d, int num_bbox) 
 {
     dim3 block_dim(32, 32);
     dim3 grid_dim((num_bbox + block_dim.x - 1) / block_dim.x, (num_bbox + block_dim.y - 1) / block_dim.y);
-    compute_obb_pairwise_hd_kernel<<<grid_dim, block_dim, 0, stream>>>(obb1_d, obb2_d, a1_d, b1_d, c1_d, a2_d, b2_d, c2_d, hd_d, num_bbox);
+    compute_obb_pairwise_hd_kernel<<<grid_dim, block_dim>>>(obb1_d, obb2_d, a1_d, b1_d, c1_d, a2_d, b2_d, c2_d, hd_d, num_bbox);
 }
 
 
@@ -526,11 +526,11 @@ __global__ void triu_k1_kernel(float* d_mat, int rows, int cols)
         d_mat[i * cols + j] = 0.0f;
 }
 
-void cuda_triu_k1(float* d_mat, int rows, int cols, cudaStream_t stream) 
+void cuda_triu_k1(float* d_mat, int rows, int cols) 
 {
     dim3 block(32, 32); 
     dim3 grid((rows + block.x - 1) / block.x, (cols + block.y - 1) / block.y);
-    triu_k1_kernel<<<grid, block, 0, stream>>>(d_mat, rows, cols);
+    triu_k1_kernel<<<grid, block>>>(d_mat, rows, cols);
 }
 
 __global__ void regularize_bboxKernel(float* rboxes_d, int num_bbox) 
@@ -553,11 +553,11 @@ __global__ void regularize_bboxKernel(float* rboxes_d, int num_bbox)
     }
 }
 
-void cuda_regularize_bbox(float* rboxes_d, int num_bboxes, cudaStream_t stream)
+void cuda_regularize_bbox(float* rboxes_d, int num_bboxes)
 {
     auto grid = grid_dims(num_bboxes);
 	auto block = block_dims(num_bboxes);
-    regularize_bboxKernel<<<grid, block, 0, stream>>>(rboxes_d, num_bboxes);
+    regularize_bboxKernel<<<grid, block>>>(rboxes_d, num_bboxes);
 }
 
 __device__ float clamp_dice(float val, float min_val, float max_val) 
@@ -597,9 +597,9 @@ __global__ void scale_boxes_kernel(float* boxes_d, int num_bbox, float output_w,
     boxes_d[box_idx * 8 + 4] = y2;
 }
 
-void cuda_scale_boxes(float* boxes_d, int num_bboxes, float output_w, float output_h, float gain, float pad_w, float pad_h, cudaStream_t stream)
+void cuda_scale_boxes(float* boxes_d, int num_bboxes, float output_w, float output_h, float gain, float pad_w, float pad_h)
 {
     auto grid = grid_dims(num_bboxes);
 	auto block = block_dims(num_bboxes);
-    scale_boxes_kernel<<<grid, block, 0, stream>>>(boxes_d, num_bboxes, output_w, output_h, gain, pad_w, pad_h);
+    scale_boxes_kernel<<<grid, block>>>(boxes_d, num_bboxes, output_w, output_h, gain, pad_w, pad_h);
 }

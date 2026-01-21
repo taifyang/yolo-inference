@@ -1,7 +1,7 @@
 '''
 Author: taifyang
 Date: 2026-01-09 22:58:13
-LastEditTime: 2026-01-15 23:17:55
+LastEditTime: 2026-01-20 22:36:50
 Description: onnxruntime inference class for YOLO pose algorithm
 '''
 
@@ -31,7 +31,7 @@ class YOLO_ONNXRuntime_OBB(YOLO_ONNXRuntime):
     return {*}
     '''    
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12'], 'algo type not supported!'
+        assert self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12', 'YOLO26'], 'algo type not supported!'
         input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW
         input = input / 255.0
@@ -47,11 +47,8 @@ class YOLO_ONNXRuntime_OBB(YOLO_ONNXRuntime):
     return {*}
     '''           
     def post_process(self) -> None:
-        boxes = []
-        scores = []
-
+        output = np.squeeze(self.outputs[0]).astype(np.float32)
         if self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12']: 
-            output = np.squeeze(self.outputs[0]).astype(np.float32)
             cls_scores = output[..., 4:(4 + self.class_num)]
             xc = np.amax(cls_scores, axis=1) > self.score_threshold 
             box = output[xc][:, :4]
@@ -60,6 +57,9 @@ class YOLO_ONNXRuntime_OBB(YOLO_ONNXRuntime):
             scores = np.max(cls, axis=1, keepdims=True) 
             j = np.argmax(cls, axis=1, keepdims=True) 
             boxes = np.concatenate([box, scores, j, angle], axis=1)
+        elif self.algo_type in ['YOLO26']:
+            boxes = output[output[..., 4] > self.score_threshold]
+            scores = boxes[..., 4:5]
              
         if len(boxes):   
             boxes = np.array(boxes)

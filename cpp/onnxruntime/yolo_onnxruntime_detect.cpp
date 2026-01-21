@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2025-12-21 22:21:42
- * @LastEditTime: 2026-01-06 12:52:59
+ * @LastEditTime: 2026-01-17 00:11:55
  * @Description: source file for YOLO onnxruntime detection
  */
 
@@ -9,7 +9,7 @@
 
 void YOLO_ONNXRuntime_Detect::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	if (algo_type != YOLOv3 && algo_type != YOLOv4 && algo_type != YOLOv5 && algo_type != YOLOv6 && algo_type != YOLOv7 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv10 && algo_type != YOLOv11 && algo_type != YOLOv12 && algo_type != YOLOv13)
+	if (algo_type != YOLOv3 && algo_type != YOLOv4 && algo_type != YOLOv5 && algo_type != YOLOv6 && algo_type != YOLOv7 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv10 && algo_type != YOLOv11 && algo_type != YOLOv12 && algo_type != YOLOv13 && algo_type != YOLO26)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
@@ -107,6 +107,11 @@ void YOLO_ONNXRuntime_Detect::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id] * objness;
 		}
+		else if (m_algo_type == YOLO26)
+		{
+			score = ptr[4];
+			class_id = int(ptr[5]);
+		}
 
 		if (score < m_score_threshold)
 			continue;
@@ -138,7 +143,7 @@ void YOLO_ONNXRuntime_Detect::post_process()
 			int height = int(y2 - y1)> 0 ? int(y2 - y1) : 0;
 			box = cv::Rect(left, top, width, height);
 		}
-		else if (m_algo_type == YOLOv10)
+		else if (m_algo_type == YOLOv10 || m_algo_type == YOLO26)
 		{
 			int left = int(ptr[0]) > 0 ? int(ptr[0]) : 0;
 			int top = int(ptr[1]) > 0 ? int(ptr[1]) : 0;
@@ -156,18 +161,34 @@ void YOLO_ONNXRuntime_Detect::post_process()
 
 	scale_boxes(boxes, m_image.size());
 
-	std::vector<int> indices;
-	nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
-	m_output_det.clear();
-	m_output_det.resize(indices.size());
-	for (int i = 0; i < indices.size(); i++)
+	if(m_algo_type == YOLO26)
 	{
-		int idx = indices[i];
-		OutputDet output;
-		output.id = class_ids[idx];
-		output.score = scores[idx];
-		output.box = boxes[idx];
-		m_output_det[i] = output;
+		m_output_det.clear();
+		m_output_det.resize(boxes.size());
+		for (int i = 0; i < boxes.size(); i++)
+		{
+			OutputDet output;
+			output.id = class_ids[i];
+			output.score = scores[i];
+			output.box = boxes[i];
+			m_output_det[i] = output;
+		}
+	}
+	else
+	{
+		std::vector<int> indices;
+		nms(boxes, scores, m_score_threshold, m_nms_threshold, indices);
+		m_output_det.clear();
+		m_output_det.resize(indices.size());
+		for (int i = 0; i < indices.size(); i++)
+		{
+			int idx = indices[i];
+			OutputDet output;
+			output.id = class_ids[idx];
+			output.score = scores[idx];
+			output.box = boxes[idx];
+			m_output_det[i] = output;
+		}
 	}
 
 	if(m_draw_result)

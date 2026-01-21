@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-12 14:49:17
+ * @LastEditTime: 2026-01-19 18:50:43
  * @Description: header file for YOLO tensorrt inference
  */
 
@@ -55,11 +55,6 @@ protected:
 	 * @description: nvinfer execution context
 	 */
 	nvinfer1::IExecutionContext* m_execution_context;
-
-	/**
-	 * @description: cuda stream
-	 */
-	cudaStream_t m_stream;
 
 	/**
 	 * @description: pointer to input device
@@ -136,7 +131,11 @@ private:
 	/**
 	 * @description: pointer to output on device
 	 */
-	float* m_output_device;
+	float* m_output0_device;
+
+#ifdef _CUDA_PREPROCESS
+	uint8_t *m_image_device, *m_image_crop, *m_image_centercrop_device, *m_image_resize_device;
+#endif // _CUDA_PREPROCESS
 };
 
 /**
@@ -200,7 +199,7 @@ protected:
 	/**
 	 * @description: pointer to output on device
 	 */
-	float* m_output_device;
+	float* m_output0_device;
 
 #ifdef _CUDA_PREPROCESS
 	/**
@@ -302,6 +301,10 @@ private:
 	 * @description: box element num
 	 */
 	const int m_num_box_element = 8;
+
+#ifdef _CUDA_POSTPROCESS
+	uint8_t* m_mask_device, *m_mask_resized_device, *m_mask_host;
+#endif // _CUDA_POSTPROCESS
 };
 
 /**
@@ -412,7 +415,7 @@ private:
 	/**
 	 * @description: pointer to output on device
 	 */
-	float* m_output_device;
+	float* m_output0_device;
 
 #ifdef _CUDA_PREPROCESS
 	/**
