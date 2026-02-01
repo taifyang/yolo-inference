@@ -1,7 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-19 18:38:38
+ * @LastEditTime: 2026-01-31 08:46:36
  * @Description: source file for cuda pre-processing decoding
  */
 
@@ -199,7 +199,7 @@ __global__ void warpaffine_kernel(uint8_t* src, int src_line_size, int src_width
     *pdst_c2 = c2;
 }
 
-void cuda_preprocess_img(uint8_t* src, int src_width, int src_height, float* dst, int dst_width, int dst_height, float* affine_matrix, float* affine_matrix_inverse)
+void cuda_preprocess_img(uint8_t* src, int src_width, int src_height, float* dst, int dst_width, int dst_height, float* d2s_device, float* s2d_device)
 {
     AffineMatrix s2d,d2s;
     float scale = std::min(dst_height / (float)src_height, dst_width / (float)src_width);
@@ -215,9 +215,9 @@ void cuda_preprocess_img(uint8_t* src, int src_width, int src_height, float* dst
     cv::Mat m2x3_d2s(2, 3, CV_32F, d2s.value);
     cv::invertAffineTransform(m2x3_s2d, m2x3_d2s);
 
-	memcpy(affine_matrix, m2x3_d2s.data, 6 * sizeof(affine_matrix));
-    memcpy(affine_matrix_inverse, m2x3_s2d.data, 6 * sizeof(affine_matrix_inverse));
     memcpy(d2s.value, m2x3_d2s.ptr<float>(0), sizeof(d2s.value));
+    cudaMemcpy(d2s_device, m2x3_d2s.data, sizeof(float) * 6, cudaMemcpyHostToDevice);
+    cudaMemcpy(s2d_device, m2x3_s2d.data, sizeof(float) * 6, cudaMemcpyHostToDevice);
 
     int jobs = dst_height * dst_width;
     int threads = 1024;

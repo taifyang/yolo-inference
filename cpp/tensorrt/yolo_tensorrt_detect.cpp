@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-19 11:21:17
+ * @LastEditTime: 2026-02-01 21:09:41
  * @Description: source file for YOLO tensorrt detection
  */
 
@@ -21,7 +21,11 @@ void YOLO_TensorRT_Detect::init(const Algo_Type algo_type, const Device_Type dev
 
 	m_task_type = Detect;
 
-	cudaMallocHost(&m_input_host, m_max_input_size);
+#ifdef _CUDA_PREPROCESS
+	cudaMalloc(&m_input, m_max_input_size);
+#else
+	cudaMallocHost(&m_input, m_max_input_size);
+#endif // _CUDA_PREPROCESS
 	cudaMallocHost(&m_output0_host, sizeof(float) * m_output_numdet);
 
 	cudaMalloc(&m_input_device, sizeof(float) * m_input_numel);
@@ -31,9 +35,7 @@ void YOLO_TensorRT_Detect::init(const Algo_Type algo_type, const Device_Type dev
 	m_bindings[1] = m_output0_device;
 
 #ifdef _CUDA_PREPROCESS
-	cudaMallocHost(&m_d2s_host, sizeof(float) * 6);
 	cudaMalloc(&m_d2s_device, sizeof(float) * 6);
-	cudaMallocHost(&m_s2d_host, sizeof(float) * 6);
 	cudaMalloc(&m_s2d_device, sizeof(float) * 6);
 #endif // _CUDA_PREPROCESS
 
@@ -46,25 +48,23 @@ void YOLO_TensorRT_Detect::init(const Algo_Type algo_type, const Device_Type dev
 void YOLO_TensorRT_Detect::pre_process()
 {
 #ifdef _CUDA_PREPROCESS
-	cudaMemcpy(m_input_host, m_image.data, sizeof(uint8_t) * 3 * m_image.cols * m_image.rows, cudaMemcpyHostToDevice);
-	cuda_preprocess_img(m_input_host, m_image.cols, m_image.rows, m_input_device, m_input_size.width, m_input_size.height, m_d2s_host, m_s2d_host);
-	cudaMemcpy(m_d2s_device, m_d2s_host, sizeof(float) * 6, cudaMemcpyHostToDevice);
-	cudaMemcpy(m_s2d_device, m_s2d_host, sizeof(float) * 6, cudaMemcpyHostToDevice);
+	cudaMemcpy(m_input, m_image.data, sizeof(uint8_t) * 3 * m_image.cols * m_image.rows, cudaMemcpyHostToDevice);
+	cuda_preprocess_img(m_input, m_image.cols, m_image.rows, m_input_device, m_input_size.width, m_input_size.height, m_d2s_device, m_s2d_device);
 #else
 	cv::Mat letterbox;
 	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
 	int image_area = letterbox.cols * letterbox.rows;
 	uchar* pimage = letterbox.data;
-	float* phost_r = m_input_host + image_area * 0;
-	float* phost_g = m_input_host + image_area * 1;
-	float* phost_b = m_input_host + image_area * 2;
+	float* phost_r = m_input + image_area * 0;
+	float* phost_g = m_input + image_area * 1;
+	float* phost_b = m_input + image_area * 2;
 	for (int i = 0; i < letterbox.cols * letterbox.rows; ++i, pimage += 3)
 	{
 		*phost_r++ = pimage[2] / 255.0f;
 		*phost_g++ = pimage[1] / 255.0f;
 		*phost_b++ = pimage[0] / 255.0f;
 	}
-	cudaMemcpy(m_input_device, m_input_host, sizeof(float) * m_input_numel, cudaMemcpyHostToDevice);
+	cudaMemcpy(m_input_device, m_input, sizeof(float) * m_input_numel, cudaMemcpyHostToDevice);
 #endif // _CUDA_PREPROCESS
 }
 
@@ -196,7 +196,7 @@ void YOLO_TensorRT_Detect::post_process()
 
 	scale_boxes(boxes, m_image.size());
 
-	f(m_algo_type == YOLO26)
+	if(m_algo_type == YOLO26)
 	{
 		m_output_det.clear();
 		m_output_det.resize(boxes.size());
@@ -239,7 +239,9 @@ void YOLO_TensorRT_Detect::release()
 
 #ifdef _CUDA_PREPROCESS
 	cudaFree(m_d2s_device);
-	cudaFreeHost(m_d2s_host);
+	cudaFree(m_input);
+#else
+	cudaFreeHost(m_input);
 #endif // _CUDA_PREPROCESS
 
 #ifdef _CUDA_POSTPROCESS
