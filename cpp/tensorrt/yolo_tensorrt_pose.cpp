@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2026-01-03 21:57:36
- * @LastEditTime: 2026-01-17 21:40:00
+ * @LastEditTime: 2026-02-01 20:45:57
  * @Description: source file for YOLO tensorrt pose
  */
 
@@ -21,7 +21,11 @@ void YOLO_TensorRT_Pose::init(const Algo_Type algo_type, const Device_Type devic
 
 	m_task_type = Pose;
 
-	cudaMalloc(&m_input_host, m_max_input_size);
+#ifdef _CUDA_PREPROCESS
+	cudaMalloc(&m_input, m_max_input_size);
+#else
+	cudaMallocHost(&m_input, m_max_input_size);
+#endif // _CUDA_PREPROCESS
 	cudaMallocHost(&m_output0_host, sizeof(float) * m_output_numdet);
 
 	cudaMalloc(&m_input_device, sizeof(float) * m_input_numel);
@@ -31,9 +35,7 @@ void YOLO_TensorRT_Pose::init(const Algo_Type algo_type, const Device_Type devic
 	m_bindings[1] = m_output0_device;
 
 #ifdef _CUDA_PREPROCESS
-	cudaMallocHost(&m_d2s_host, sizeof(float) * 6);
 	cudaMalloc(&m_d2s_device, sizeof(float) * 6);
-	cudaMallocHost(&m_s2d_host, sizeof(float) * 6);
 	cudaMalloc(&m_s2d_device, sizeof(float) * 6);
 #endif // _CUDA_PREPROCESS
 
@@ -119,6 +121,7 @@ void YOLO_TensorRT_Pose::post_process()
 		if (score < m_score_threshold)
 			continue;
 		
+		cv::Rect box;
 		std::vector<float> keypoint(51);
 		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 		{
@@ -205,7 +208,9 @@ void YOLO_TensorRT_Pose::release()
 
 #ifdef _CUDA_PREPROCESS
 	cudaFree(m_d2s_device);
-	cudaFreeHost(m_d2s_host);
+	cudaFree(m_input);
+#else
+	cudaFreeHost(m_input);
 #endif // _CUDA_PREPROCESS
 
 #ifdef _CUDA_POSTPROCESS

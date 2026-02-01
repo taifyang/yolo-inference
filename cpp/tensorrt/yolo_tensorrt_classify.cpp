@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-19 18:41:02
+ * @LastEditTime: 2026-01-31 08:39:23
  * @Description: source file for YOLO tensorrt classification
  */
 
@@ -21,7 +21,15 @@ void YOLO_TensorRT_Classify::init(const Algo_Type algo_type, const Device_Type d
 
 	m_task_type = Classify;
 
-	cudaMallocHost(&m_input_host, m_max_input_size);
+#ifdef _CUDA_PREPROCESS
+	cudaMalloc(&m_input, m_max_input_size);
+	cudaMalloc(&m_image_crop, m_max_input_size);
+	cudaMalloc(&m_image_centercrop_device, m_max_input_size);
+	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLO26)
+		cudaMalloc(&m_image_resize_device, m_max_input_size);
+#else
+	cudaMallocHost(&m_input, m_max_input_size);
+#endif // _CUDA_PREPROCESS
 	cudaMallocHost(&m_output0_host, sizeof(float) * m_class_num);
 
 	cudaMalloc(&m_input_device, sizeof(float) * m_input_numel);
@@ -29,23 +37,16 @@ void YOLO_TensorRT_Classify::init(const Algo_Type algo_type, const Device_Type d
 
 	m_bindings[0] = m_input_device;
 	m_bindings[1] = m_output0_device;
-
-	cudaMalloc(&m_image_device, m_max_input_size);
-	cudaMalloc(&m_image_crop, m_max_input_size);
-	cudaMalloc(&m_image_centercrop_device, m_max_input_size);
-
-	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLO26)
-		cudaMalloc(&m_image_resize_device, m_max_input_size);
 }
 
 void YOLO_TensorRT_Classify::pre_process()
 {
 #ifdef _CUDA_PREPROCESS
-	cudaMemcpy(m_image_device, m_image.data, sizeof(uint8_t)*3*m_image.cols*m_image.rows, cudaMemcpyHostToDevice);
+	cudaMemcpy(m_input, m_image.data, sizeof(uint8_t)*3*m_image.cols*m_image.rows, cudaMemcpyHostToDevice);
 
 	if (m_algo_type == YOLOv5)
 	{
-		cuda_centercrop(m_image_device, m_image_crop, m_image_centercrop_device, m_image.size(), m_input_size, m_image.channels());
+		cuda_centercrop(m_input, m_image_crop, m_image_centercrop_device, m_image.size(), m_input_size, m_image.channels());
 		cuda_normalize(m_image_centercrop_device, m_input_device, m_input_size, m_algo_type);
 	}
 	else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLO26)
@@ -54,12 +55,12 @@ void YOLO_TensorRT_Classify::pre_process()
 		if (m_image.cols > m_image.rows)
 		{
 			image_resize = cv::Size (m_input_size.height * m_image.cols / m_image.rows, m_input_size.height);		
-			cuda_resize_linear(m_image_device, m_image_resize_device, m_image.size(), image_resize, m_image.channels());
+			cuda_resize_linear(m_input, m_image_resize_device, m_image.size(), image_resize, m_image.channels());
 		}
 		else
 		{
 			image_resize = cv::Size(m_input_size.width, m_input_size.width * m_image.rows / m_image.cols);
-			cuda_resize_linear(m_image_device, m_image_resize_device, m_image.size(), image_resize, m_image.channels());
+			cuda_resize_linear(m_input, m_image_resize_device, m_image.size(), image_resize, m_image.channels());
 		}		
 
 		cuda_centercrop(m_image_resize_device, m_image_crop, m_image_centercrop_device, image_resize, m_input_size, m_image.channels());
@@ -95,7 +96,7 @@ void YOLO_TensorRT_Classify::pre_process()
 	}
 
 	cudaMemcpy(m_input_device, m_input_host, sizeof(float) * m_input_numel, cudaMemcpyHostToDevice);
-#endif
+#endif // _CUDA_PREPROCESS
 }
 
 void YOLO_TensorRT_Classify::process()
@@ -130,9 +131,11 @@ void YOLO_TensorRT_Classify::release()
 	YOLO_TensorRT::release();
 	
 	cudaFree(m_output0_device);
-	cudaFree(m_image_device);
+	cudaFree(m_input);
+#ifdef _CUDA_PREPROCESS
 	cudaFree(m_image_crop);
 	cudaFree(m_image_centercrop_device);
 	if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLO26)
 		cudaFree(m_image_resize_device);
+#endif // _CUDA_PREPROCESS
 }

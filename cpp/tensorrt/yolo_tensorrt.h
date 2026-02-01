@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-19 18:50:43
+ * @LastEditTime: 2026-02-01 21:15:57
  * @Description: header file for YOLO tensorrt inference
  */
 
@@ -55,6 +55,18 @@ protected:
 	 * @description: nvinfer execution context
 	 */
 	nvinfer1::IExecutionContext* m_execution_context;
+
+#ifndef _CUDA_PREPROCESS
+	/**
+	 * @description: pointer to input
+	 */
+	float* m_input;
+#else
+	/**
+	 * @description: pointer to uint8_t input 
+	 */
+	uint8_t* m_input;
+#endif // !_CUDA_PREPROCESS
 
 	/**
 	 * @description: pointer to input device
@@ -134,7 +146,7 @@ private:
 	float* m_output0_device;
 
 #ifdef _CUDA_PREPROCESS
-	uint8_t *m_image_device, *m_image_crop, *m_image_centercrop_device, *m_image_resize_device;
+	uint8_t *m_image_crop, *m_image_centercrop_device, *m_image_resize_device;
 #endif // _CUDA_PREPROCESS
 };
 
@@ -183,18 +195,6 @@ protected:
 	 * @description: input and output tensor bindings
 	 */
 	float* m_bindings[2];
-
-#ifndef _CUDA_PREPROCESS
-	/**
-	 * @description: pointer to input on host
-	 */
-	float* m_input_host;
-#else
-	/**
-	 * @description: pointer to uint8_t input on host 
-	 */
-	uint8_t* m_input_host;
-#endif // !_CUDA_PREPROCESS
 
 	/**
 	 * @description: pointer to output on device

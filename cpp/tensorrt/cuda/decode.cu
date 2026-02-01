@@ -1,7 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-19 18:09:32
+ * @LastEditTime: 2026-02-01 20:51:13
  * @Description: source file for cuda post-processing decoding
  */
 
@@ -18,7 +18,7 @@ dim3 block_dims(int numJobs)
 	return numJobs < BLOCK_SIZE ? numJobs : BLOCK_SIZE;
 }
 
-static __device__ void affine_project_gpu(float* matrix, float x, float y, float* ox, float* oy) 
+static __device__ void affine_project_kernel(float* matrix, float x, float y, float* ox, float* oy) 
 {
 	*ox = matrix[0] * x + matrix[1] * y + matrix[2];
 	*oy = matrix[3] * x + matrix[4] * y + matrix[5];
@@ -158,8 +158,8 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 			bottom = *pitem++;
 		}
 
-		affine_project_gpu(inverse_affine_matrix, left, top, &left, &top);
-		affine_project_gpu(inverse_affine_matrix, right, bottom, &right, &bottom);
+		affine_project_kernel(inverse_affine_matrix, left, top, &left, &top);
+		affine_project_kernel(inverse_affine_matrix, right, bottom, &right, &bottom);
 
 		float* pout_item = parray + 1 + index * num_box_element;
 		*pout_item++ = left;
@@ -178,7 +178,7 @@ static __global__ void decode_kernel(float* predict, int num_bboxes, int num_cla
 				*pout_item++ = *pitem++;  
 			pout_item = parray + 1 + index * num_box_element;
 			for(int i=0; i<17; i++)        
-				affine_project_gpu(inverse_affine_matrix, pout_item[3 * i + 7],  pout_item[3 * i + 8], &pout_item[3 * i + 7],  &pout_item[3 * i + 8]);          
+				affine_project_kernel(inverse_affine_matrix, pout_item[3 * i + 7],  pout_item[3 * i + 8], &pout_item[3 * i + 7],  &pout_item[3 * i + 8]);          
 		}
 		else
 		{
