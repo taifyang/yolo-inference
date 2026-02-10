@@ -14,6 +14,10 @@ Dependencies(tested):
 * [OpenVINO](https://github.com/openvinotoolkit/openvino) version 2024.1.0/2024.4.0/2025.2.0
 * [TensorRT](https://developer.nvidia.com/tensorrt/download) version 8.2.1.8/10.6.0.26/10.8.0.43
 * [Torch](https://pytorch.org) version 2.0.0+cu118/2.5.0+cu124/2.7.0+cu128
+  
+You can download some model weights in: <https://pan.baidu.com/s/1843WW7tNQK1ycqIALje_fA?pwd=adis>
+
+**For your own model, you should transpose output dims such as from 1x84x8400 to 1x8400x84 for YOLOv8, YOLOv9, YOLOv11, YOLOv12, YOLOv13 detection, segmentation, pose and obb.**
 
 You can test C++ code with:
 ```bash
@@ -412,7 +416,3 @@ Python test in Docker with 25 vCPU Intel(R) Xeon(R) Platinum 8470Q , RTX 5090(32
 | YOLO26n            | OBB              | CPU                | INT8                  | ×        | 105.9ms      | ×       | 29.0ms   | ×        |
 | YOLO26n            | OBB              | GPU                | INT8                  | ×        | 107.9ms      | ×       | ?        | 3.2ms    |
 
-
-You can download some model weights in: <https://pan.baidu.com/s/1843WW7tNQK1ycqIALje_fA?pwd=adis>
-
-**For your own model, you should transpose output dims such as from 1x84x8400 to 1x8400x84 for YOLOv8, YOLOv9, YOLOv11, YOLOv12, YOLOv13 detection, segmentation, pose and obb.**
