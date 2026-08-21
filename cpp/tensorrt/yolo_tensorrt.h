@@ -60,6 +60,15 @@ protected:
 #ifndef _CUDA_PREPROCESS
 	/**
 	 * @description: pointer to input
+	 */
+	float* m_input;
+#else
+	/**
+	 * @description: pointer to uint8_t input 
+	 */
+	uint8_t* m_input;
+#endif // !_CUDA_PREPROCESS
+
 	/**
 	 * @description: pointer to input device
 	 */
@@ -138,7 +147,7 @@ private:
 	float* m_output0_device;
 
 #ifdef _CUDA_PREPROCESS
-	uint8_t *m_image_device, *m_image_crop, *m_image_centercrop_device, *m_image_resize_device;
+	uint8_t *m_image_crop, *m_image_centercrop_device, *m_image_resize_device;
 #endif // _CUDA_PREPROCESS
 };
 
@@ -187,18 +196,6 @@ protected:
 	 * @description: input and output tensor bindings
 	 */
 	float* m_bindings[2];
-
-#ifndef _CUDA_PREPROCESS
-	/**
-	 * @description: pointer to input on host
-	 */
-	float* m_input_host;
-#else
-	/**
-	 * @description: pointer to uint8_t input on host 
-	 */
-	uint8_t* m_input_host;
-#endif // !_CUDA_PREPROCESS
 
 	/**
 	 * @description: pointer to output on device
@@ -471,6 +468,30 @@ private:
 	const int m_max_box = 4096;
 };
 
+/**
+ * @description: tensorrt inference class for the yolo depth estimation algorithm
+ */
+class YOLO_TensorRT_Depth : public YOLO_TensorRT_Detect, public YOLO_Depth
+{
+public:
+	/**
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
+	 * @return {*}
+	 */
+	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
+
+private:
+	/**
+	 * @description: model pre-process
+	 * @return {*}
+	 */
+	void pre_process();
+
+	/**
 	 * @description: model inference
 	 * @return {*}
 	 */
