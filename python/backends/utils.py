@@ -1,7 +1,7 @@
 '''
 Author: taifyang
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-01-12 20:57:57
+LastEditTime: 2026-08-16 16:18:01
 Description: utilities functions
 '''
 
@@ -13,6 +13,7 @@ try:
     import cupy
     from cupyx.scipy import ndimage
 except:
+    use_cupy = False
     print('cupy import failed!')
 try:
     import torch
@@ -375,7 +376,12 @@ param {*} masks masks
 param {*} kpts  keypoints
 return {*}      output image
 '''
-def draw_result(image, preds, masks=[], kpts=None):
+def draw_result(image, preds=None, masks=[], kpts=None):
+    if preds is None:
+        depth = np.clip(image * 1000, 0, 65535).astype(np.uint16)
+        depth = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+        return depth
+    
     image_copy = image.copy()   
     boxes = preds[..., :4] 
     scores = preds[..., 4]

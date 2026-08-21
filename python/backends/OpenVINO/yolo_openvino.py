@@ -1,7 +1,7 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2025-12-23 08:26:56
+LastEditTime: 2026-08-20 23:19:02
 Description: openvino inference class for YOLO algorithm
 '''
 
@@ -33,7 +33,10 @@ class YOLO_OpenVINO(YOLO):
             core = ov.Core()
         model  = core.read_model(model_path)
         self.algo_type = algo_type
-        self.compiled_model = core.compile_model(model, device_name='GPU' if device_type=='GPU' else 'CPU')
+        config = {
+            ov.properties.inference_num_threads(): self.threads_num   
+        }
+        self.compiled_model = core.compile_model(model, device_name='GPU' if device_type=='GPU' else 'CPU', config=config)
         assert self.compiled_model, 'compile model failed!'
     
     '''

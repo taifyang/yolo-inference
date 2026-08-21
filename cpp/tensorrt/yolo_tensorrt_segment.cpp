@@ -1,13 +1,13 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-02-01 21:10:11
+ * @LastEditTime: 2026-08-21 23:39:29
  * @Description: source file for YOLO tensorrt segmentation
  */
 
 #include "yolo_tensorrt.h"
 #include "cuda/preprocess.cuh"
-#include "cuda/decode.cuh"
+#include "cuda/postprocess.cuh"
 
 void YOLO_TensorRT_Segment::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
@@ -160,9 +160,6 @@ void YOLO_TensorRT_Segment::post_process()
 		m_output_seg[i] = output;
 	}
 
-	if(m_draw_result)
-		draw_result(m_output_seg);
-
 #else
 	for (int i = 0; i < m_output_numbox; ++i)
 	{
@@ -250,10 +247,10 @@ void YOLO_TensorRT_Segment::post_process()
 	{
 		GetMask(cv::Mat(temp_mask_proposals[i]).t(), output_mat1, m_output_seg[i], m_mask_params, m_algo_type);
 	}
+#endif // _CUDA_POSTPROCESS
 
 	if(m_draw_result)
 		draw_result(m_output_seg);
-#endif // _CUDA_POSTPROCESS
 }
 
 void YOLO_TensorRT_Segment::release()
@@ -276,3 +273,4 @@ void YOLO_TensorRT_Segment::release()
 	cudaFreeHost(m_mask_host);
 #endif // _CUDA_POSTPROCESS
 }
+

@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 
 	std::unique_ptr<YOLO> yolo = CreateFactory::instance().create(backend, task);
 	yolo->init(algo, device, model, model_path);
-	yolo->infer(images_path, false, false, argv);
+	yolo->infer(images_path, true, false, argv);
 	yolo->release();
 	return 0;
 }

@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-02-01 21:15:57
+ * @LastEditTime: 2026-08-15 10:44:11
  * @Description: header file for YOLO tensorrt inference
  */
 
@@ -12,6 +12,7 @@
 #include "yolo_segment.h"
 #include "yolo_pose.h"
 #include "yolo_obb.h"
+#include "yolo_depth.h"
 #include "utils.h"
 #include <cuda_runtime.h>
 #include <NvInfer.h>
@@ -465,6 +466,74 @@ private:
 	 * @description: max bounding box num
 	 */
 	const int m_max_box = 4096;
+};
+
+/**
+ * @description: tensorrt inference class for the yolo depth estimation algorithm
+ */
+class YOLO_TensorRT_Depth : public YOLO_TensorRT_Detect, public YOLO_Depth
+{
+public:
+	/**
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
+	 * @return {*}
+	 */
+	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
+
+private:
+	/**
+	 * @description: model pre-process
+	 * @return {*}
+	 */
+	void pre_process();
+
+	/**
+	 * @description: model inference
+	 * @return {*}
+	 */
+	void process();
+
+	/**
+	 * @description: model post-process
+	 * @return {*}
+	 */
+	void post_process();
+
+	/**
+	 * @description: resource release
+	 * @return {*}
+	 */
+	void release();
+
+	/**
+	 * @description: input and output tensor bindings
+	 */
+	float* m_bindings[2];
+
+#ifndef _CUDA_PREPROCESS
+	/**
+	 * @description: pointer to input on host
+	 */
+	float* m_input_host;
+#else
+	/**
+	 * @description: pointer to uint8_t input on host 
+	 */
+	uint8_t* m_input_host;
+#endif // !_CUDA_PREPROCESS
+
+	/**
+	 * @description: pointer to output on device
+	 */
+	float* m_output0_device;
+
+#ifdef _CUDA_POSTPROCESS
+	float* m_depth_device;
+#endif // _CUDA_POSTPROCESS
 };
 
 /**

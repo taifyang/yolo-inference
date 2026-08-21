@@ -7,7 +7,7 @@
 
 #include "yolo_tensorrt.h"
 #include "cuda/preprocess.cuh"
-#include "cuda/decode.cuh"
+#include "cuda/postprocess.cuh"
 
 void YOLO_TensorRT_Classify::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {

@@ -29,7 +29,7 @@ class YOLO_ONNXRuntime(YOLO):
         assert os.path.exists(model_path), 'model not exists!'
         assert device_type in ['CPU', 'GPU'], 'unsupported device type!'
         options = onnxruntime.SessionOptions()
-        options.intra_op_num_threads = max(1, os.cpu_count() // 2)
+        options.intra_op_num_threads = self.threads_num 
         if device_type == 'CPU':
             self.onnx_session = onnxruntime.InferenceSession(model_path, sess_options=options, providers=['CPUExecutionProvider'])
         elif device_type == 'GPU':

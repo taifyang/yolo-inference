@@ -1,7 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-02-01 20:52:06
+ * @LastEditTime: 2026-08-21 23:37:38
  * @Description: head file for cuda post-processing decoding
  */
 
@@ -10,6 +10,7 @@
 #include <cuda_runtime.h>
 #include <thrust/device_vector.h>
 #include <thrust/sort.h>
+#include <npp.h>
 #include "yolo_tensorrt.h"
 
 #define BLOCK_SIZE  1024
@@ -57,7 +58,8 @@ void cuda_nms(float* parray, float nms_threshold, int max_objects, int num_box_e
  * @param {int} out_height			result of output height
  * @return {*}
  */
-void cuda_decode_mask(float left, float top, float* mask_weights, float* mask_predict, int mask_width, int mask_height, uint8_t* mask_out, int mask_dim, int out_width, int out_height);
+void cuda_decode_mask(float left, float top, float* mask_weights, float* mask_predict, int mask_width, int mask_height, uint8_t* mask_out, 
+    int mask_dim, int out_width, int out_height);
 
 /**
  * @brief  							cuda extract col 
@@ -119,8 +121,8 @@ void cuda_compute_covariance_matrix(const float* boxes_d, float* a_d, float* b_d
  * @param {float*} hd_d        		output hd on device
  * @param {int} num_bbox   			number of input bbox
  */
-void cuda_compute_hd(const float* obb1_d, const float* obb2_d,
-    const float* a1_d, const float* b1_d, const float* c1_d, const float* a2_d, const float* b2_d, const float* c2_d, float* hd_d, int box_num);
+void cuda_compute_hd(const float* obb1_d, const float* obb2_d, const float* a1_d, const float* b1_d, const float* c1_d, 
+    const float* a2_d, const float* b2_d, const float* c2_d, float* hd_d, int box_num);
 
 /**
  * @brief  							cuda triu k1
@@ -148,3 +150,13 @@ void cuda_regularize_bbox(float* boxes_d, int num_bbox);
  * @param {float} pad_h 			pad of height
  */
 void cuda_scale_boxes(float* boxes_d, int num_bbox, float output_w, float output_h, float gain, float pad_w, float pad_h);
+
+
+/**
+ * @brief 							        cuda scale mask
+ * @param {const float*} m_output0_device 	input mask on device
+ * @param {float*} m_depth_device 			output mask on device
+ * @param {cv::Size} input_shape 			input image shape
+ * @param {cv::Size} output_shape 			output image shape
+ */
+void cuda_scale_mask(const float* m_output0_device, float* m_depth_device, const cv::Size input_shape, const cv::Size output_shape);

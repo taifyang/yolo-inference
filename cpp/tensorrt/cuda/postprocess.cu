@@ -1,11 +1,11 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-02-01 20:51:13
+ * @LastEditTime: 2026-08-21 23:38:17
  * @Description: source file for cuda post-processing decoding
  */
 
-#include "decode.cuh"
+#include "postprocess.cuh"
 
 dim3 grid_dims(int numJobs) 
 {
@@ -602,4 +602,51 @@ void cuda_scale_boxes(float* boxes_d, int num_bboxes, float output_w, float outp
     auto grid = grid_dims(num_bboxes);
 	auto block = block_dims(num_bboxes);
     scale_boxes_kernel<<<grid, block>>>(boxes_d, num_bboxes, output_w, output_h, gain, pad_w, pad_h);
+}
+
+void cuda_scale_mask(const float* src, float* dst, const cv::Size input_shape, const cv::Size output_shape)
+{
+    const int inW = input_shape.width;
+    const int inH = input_shape.height;
+    const int outW = output_shape.width;
+    const int outH = output_shape.height;
+
+    const double gain = std::min(static_cast<double>(inH)/outH, static_cast<double>(inW)/outW);
+    const int pad_w = static_cast<int>((inW - outW * gain) / 2.0);
+    const int pad_h = static_cast<int>((inH - outH * gain) / 2.0);
+
+    int roi_x = std::max(0, pad_w);
+    int roi_y = std::max(0, pad_h);
+    int roi_w = std::min(inW - 2 * pad_w, inW - roi_x);
+    int roi_h = std::min(inH - 2 * pad_h, inH - roi_y);
+
+    Npp32f* d_crop = nullptr;
+    size_t cropPitch{};
+    cudaMallocPitch(reinterpret_cast<void**>(&d_crop), &cropPitch, roi_w*sizeof(Npp32f), roi_h);
+
+    const int srcStep = static_cast<int>(inW * sizeof(Npp32f));
+    const Npp32f* pSrcOffset = reinterpret_cast<const Npp32f*>(src) + roi_y*(srcStep/sizeof(Npp32f)) + roi_x;
+
+    NppStatus st = nppiCopy_32f_C1R(pSrcOffset, srcStep, d_crop, static_cast<int>(cropPitch), NppiSize{roi_w, roi_h});
+    if(st != NPP_NO_ERROR) { cudaFree(d_crop); return; }
+
+    Npp32f* d_tmp_out = nullptr;
+    size_t tmpPitch{};
+    cudaMallocPitch(reinterpret_cast<void**>(&d_tmp_out), &tmpPitch, outW*sizeof(Npp32f), outH);
+
+    st = nppiResize_32f_C1R(
+        d_crop, static_cast<int>(cropPitch),
+        NppiSize{roi_w, roi_h}, NppiRect{0,0,roi_w,roi_h},
+        d_tmp_out, static_cast<int>(tmpPitch),
+        NppiSize{outW, outH}, NppiRect{0,0,outW,outH},
+        NPPI_INTER_LINEAR
+    );
+    if(st == NPP_NO_ERROR)
+    {
+        const size_t rowBytes = outW * sizeof(float);
+        cudaMemcpy2D(dst, rowBytes, d_tmp_out, tmpPitch, rowBytes, outH, cudaMemcpyDeviceToDevice);
+    }
+
+    cudaFree(d_crop);
+    cudaFree(d_tmp_out);
 }
