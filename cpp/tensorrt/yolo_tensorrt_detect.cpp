@@ -1,13 +1,13 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-02-01 21:09:41
+ * @LastEditTime: 2026-08-21 23:39:01
  * @Description: source file for YOLO tensorrt detection
  */
 
 #include "yolo_tensorrt.h"
 #include "cuda/preprocess.cuh"
-#include "cuda/decode.cuh"
+#include "cuda/postprocess.cuh"
 
 void YOLO_TensorRT_Detect::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
@@ -52,7 +52,7 @@ void YOLO_TensorRT_Detect::pre_process()
 	cuda_preprocess_img(m_input, m_image.cols, m_image.rows, m_input_device, m_input_size.width, m_input_size.height, m_d2s_device, m_s2d_device);
 #else
 	cv::Mat letterbox;
-	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
+	LetterBox(m_image, letterbox, m_params, m_input_size);
 	int image_area = letterbox.cols * letterbox.rows;
 	uchar* pimage = letterbox.data;
 	float* phost_r = m_input + image_area * 0;

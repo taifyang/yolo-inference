@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-05 09:29:19
+ * @LastEditTime: 2026-08-20 23:13:42
  * @Description: source file for YOLO onnxruntime inference
  */
 
@@ -13,7 +13,7 @@ void YOLO_ONNXRuntime::init(const Algo_Type algo_type, const Device_Type device_
 	m_algo_type = algo_type;
 
 	Ort::SessionOptions session_options;
-	session_options.SetIntraOpNumThreads(std::thread::hardware_concurrency() / 2);
+	session_options.SetIntraOpNumThreads(m_threads);
 	session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
 
 	if (device_type == GPU)

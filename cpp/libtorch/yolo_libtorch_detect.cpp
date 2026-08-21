@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-19 21:08:09
+ * @LastEditTime: 2026-08-09 20:52:14
  * @Description: source file for YOLO libtorch detection
  */
 
@@ -21,7 +21,7 @@ void YOLO_Libtorch_Detect::init(const Algo_Type algo_type, const Device_Type dev
 void YOLO_Libtorch_Detect::pre_process()
 {
 	cv::Mat letterbox;
-	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
+	LetterBox(m_image, letterbox, m_params, m_input_size);
 
 	cv::cvtColor(letterbox, letterbox, cv::COLOR_BGR2RGB);
 

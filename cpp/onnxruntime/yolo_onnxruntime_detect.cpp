@@ -27,7 +27,7 @@ void YOLO_ONNXRuntime_Detect::init(const Algo_Type algo_type, const Device_Type 
 void YOLO_ONNXRuntime_Detect::pre_process()
 {
 	cv::Mat letterbox;
-	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
+	LetterBox(m_image, letterbox, m_params, m_input_size);
 
 	cv::cvtColor(letterbox, letterbox, cv::COLOR_BGR2RGB);
 	letterbox.convertTo(letterbox, CV_32FC3, 1.0f / 255.0f);

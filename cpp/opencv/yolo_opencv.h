@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-12 10:20:18
+ * @LastEditTime: 2026-08-09 22:59:31
  * @Description: header file for YOLO opencv inference
  */
 
@@ -12,6 +12,7 @@
 #include "yolo_segment.h"
 #include "yolo_pose.h"
 #include "yolo_obb.h"
+#include "yolo_depth.h"
 #include "utils.h"
 #include <opencv2/opencv.hpp>
 
@@ -183,6 +184,36 @@ private:
  * @description: class for the yolo opencv obb inference
  */
 class YOLO_OpenCV_OBB : public YOLO_OpenCV_Detect, public YOLO_OBB
+{
+public:
+	/**
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
+	 * @return {*}
+	 */
+	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
+
+private:
+	/**
+	 * @description: model pre-process
+	 * @return {*}
+	 */
+	void pre_process();
+
+	/**
+	 * @description: model post-process
+	 * @return {*}
+	 */
+	void post_process();
+};
+
+/**
+ * @description: class for the yolo opencv depth estimation inference
+ */
+class YOLO_OpenCV_Depth : public YOLO_OpenCV_Detect, public YOLO_Depth
 {
 public:
 	/**

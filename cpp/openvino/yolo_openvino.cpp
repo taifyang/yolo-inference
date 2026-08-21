@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-03 20:38:32
+ * @LastEditTime: 2026-08-20 21:23:58
  * @Description: source file for YOLO openvino inference
  */
 
@@ -18,10 +18,12 @@ void YOLO_OpenVINO::init(const Algo_Type algo_type, const Device_Type device_typ
 	}
 
 	ov::Core core; //Initialize OpenVINO Runtime Core 
+	ov::AnyMap config;
+	config["INFERENCE_NUM_THREADS"] = m_threads;
 	ov::CompiledModel compiled_model;
 	try
 	{
-		 compiled_model = core.compile_model(model_path, device_type == GPU ? "GPU" : "CPU"); //Compile the Model 
+		 compiled_model = core.compile_model(model_path, device_type == GPU ? "GPU" : "CPU", config); //Compile the Model 
 	}
 	catch (const std::exception& e)
 	{

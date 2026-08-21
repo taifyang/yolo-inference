@@ -37,6 +37,7 @@ enum Task_Type
 	Segment,
 	Pose,
 	OBB,
+	Depth,
 };
 
 /**
@@ -135,6 +136,16 @@ protected:
 	virtual void post_process() = 0;
 
 	/**
+	 * @description: algorithm type
+	 */
+	Algo_Type m_algo_type;
+
+	/**
+	 * @description: model type
+	 */
+	Model_Type m_model_type;
+
+	/**
 	 * @description: input image
 	 */
 	cv::Mat m_image;
@@ -155,14 +166,9 @@ protected:
 	int m_input_numel = 1 * 3 * m_input_size.width * m_input_size.height;
 
 	/**
-	 * @description: algorithm type
+	 * @description: thread number for CPU inference
 	 */
-	Algo_Type m_algo_type;
-
-	/**
-	 * @description: model type
-	 */
-	Model_Type m_model_type;
+	int m_threads = 12;
 
 	/**
 	 * @description: draw result

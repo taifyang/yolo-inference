@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-19 23:27:58
+ * @LastEditTime: 2026-08-09 23:44:28
  * @Description: source file for YOLO opencv detection
  */
 
@@ -21,8 +21,8 @@ void YOLO_OpenCV_Detect::init(const Algo_Type algo_type, const Device_Type devic
 void YOLO_OpenCV_Detect::pre_process()
 {
 	cv::Mat letterbox;
-	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
-	cv::dnn::blobFromImage(letterbox, m_input, 1. / 255., cv::Size(m_input_size.width, m_input_size.height), cv::Scalar(), true, false);
+	LetterBox(m_image, letterbox, m_params, m_input_size);
+	cv::dnn::blobFromImage(letterbox, m_input, 1. / 255., m_input_size, cv::Scalar(), true, false);
 }
 
 void YOLO_OpenCV_Detect::post_process()

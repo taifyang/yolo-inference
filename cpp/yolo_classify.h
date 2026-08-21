@@ -1,3 +1,9 @@
+/* 
+ * @Author: taifyang
+ * @Date: 2025-10-21 06:50:02
+ * @LastEditTime: 2026-08-09 23:05:17
+ * @Description: 
+ */
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
@@ -37,13 +43,11 @@ public:
 	{
 		if(m_algo_type == YOLOv5)
 		{
-			m_input_size.width = 640;
-			m_input_size.height = 640;
+			m_input_size = cv::Size(640, 640);
 		}
 		else if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLO26)
 		{
-			m_input_size.width = 224;
-			m_input_size.height = 224;
+			m_input_size = cv::Size(224, 224);
 		}
 		m_input_numel = 1 * 3 * m_input_size.width * m_input_size.height;
 	}
@@ -54,7 +58,7 @@ protected:
 		int crop_size = std::min(input_image.cols, input_image.rows);
 		int left = (input_image.cols - crop_size) / 2, top = (input_image.rows - crop_size) / 2;
 		output_image = input_image(cv::Rect(left, top, crop_size, crop_size));
-		cv::resize(output_image, output_image, cv::Size(m_input_size.width, m_input_size.height));
+		cv::resize(output_image, output_image, m_input_size);
 	}
 
 	void Normalize(cv::Mat& input_image, cv::Mat& output_image, Algo_Type algo_type)

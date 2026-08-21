@@ -30,7 +30,7 @@ void YOLO_OpenCV_Classify::pre_process()
 		int crop_size = std::min(m_image.cols, m_image.rows);
 		int left = (m_image.cols - crop_size) / 2, top = (m_image.rows - crop_size) / 2;
 		gpu_crop_image = gpu_image(cv::Rect(left, top, crop_size, crop_size));
-		cv::cuda::resize(gpu_crop_image, gpu_crop_image, cv::Size(m_input_size.width, m_input_size.height));
+		cv::cuda::resize(gpu_crop_image, gpu_crop_image, m_input_size);
 		gpu_crop_image.convertTo(gpu_cvt_image, CV_32FC3, 1. / 255.);
 		cv::cuda::subtract(gpu_cvt_image, cv::Scalar(0.406, 0.456, 0.485), gpu_cvt_image);
 		cv::cuda::divide(gpu_cvt_image, cv::Scalar(0.225, 0.224, 0.229), gpu_cvt_image);
@@ -52,7 +52,7 @@ void YOLO_OpenCV_Classify::pre_process()
 		int crop_size = std::min(crop_image.cols, crop_image.rows);
 		int left = (crop_image.cols - crop_size) / 2, top = (crop_image.rows - crop_size) / 2;
 		gpu_crop_image = gpu_image(cv::Rect(left, top, crop_size, crop_size));
-		cv::cuda::resize(gpu_crop_image, gpu_crop_image, cv::Size(m_input_size.width, m_input_size.height));
+		cv::cuda::resize(gpu_crop_image, gpu_crop_image, m_input_size);
 		gpu_crop_image.convertTo(gpu_cvt_image, CV_32FC3, 1. / 255.);
 		gpu_cvt_image.download(crop_image);
 #else
