@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-03 20:34:03
+ * @LastEditTime: 2026-08-20 23:13:09
  * @Description: source file for YOLO libtorch inference
  */
 
@@ -44,5 +44,11 @@ void YOLO_Libtorch::init(const Algo_Type algo_type, const Device_Type device_typ
 	if (model_type == FP16)
 	{
 		m_module.to(torch::kHalf);
+	}
+	
+	if(device_type == CPU)
+	{
+		torch::set_num_threads(m_threads);
+		torch::set_num_interop_threads(1);
 	}
 }

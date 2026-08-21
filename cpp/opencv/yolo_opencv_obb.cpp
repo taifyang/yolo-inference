@@ -21,9 +21,9 @@ void YOLO_OpenCV_OBB::init(const Algo_Type algo_type, const Device_Type device_t
 void YOLO_OpenCV_OBB::pre_process()
 {
 	cv::Mat letterbox;
-	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
+	LetterBox(m_image, letterbox, m_params, m_input_size);
 
-	cv::dnn::blobFromImage(letterbox, m_input, 1. / 255., cv::Size(m_input_size.width, m_input_size.height), cv::Scalar(), true, false);
+	cv::dnn::blobFromImage(letterbox, m_input, 1. / 255., m_input_size, cv::Scalar(), true, false);
 }
 
 void YOLO_OpenCV_OBB::post_process()

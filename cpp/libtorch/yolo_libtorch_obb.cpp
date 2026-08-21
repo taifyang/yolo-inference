@@ -21,7 +21,7 @@
 void YOLO_Libtorch_OBB::pre_process()
 {
 	cv::Mat letterbox;
-	LetterBox(m_image, letterbox, m_params, cv::Size(m_input_size.width, m_input_size.height));
+	LetterBox(m_image, letterbox, m_params, m_input_size);
 
 	cv::cvtColor(letterbox, letterbox, cv::COLOR_BGR2RGB);
 

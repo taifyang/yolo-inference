@@ -1,7 +1,7 @@
 '''
 Author: taifyang 
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-01-12 10:59:03
+LastEditTime: 2026-08-21 23:54:12
 Description: YOLO algorithm interface class
 '''
 
@@ -27,7 +27,8 @@ class YOLO:
         self.score_threshold = 0.25      	
         self.iou_threshold = 0.45        	
         self.confidence_threshold = 0.25	
-        self.inputs_shape = (640, 640)   	
+        self.inputs_shape = (640, 640)   
+        self.threads_num = 12	
 
     '''
     description:    task map
@@ -43,6 +44,7 @@ class YOLO:
                 'Segment':backends.ONNXRuntime.YOLO_ONNXRuntime_Segment,
                 'Pose':backends.ONNXRuntime.YOLO_ONNXRuntime_Pose,
                 'OBB':backends.ONNXRuntime.YOLO_ONNXRuntime_OBB,
+                'Depth':backends.ONNXRuntime.YOLO_ONNXRuntime_Depth,
             }
         except:
                pass
@@ -54,6 +56,7 @@ class YOLO:
                 'Segment':backends.OpenCV.YOLO_OpenCV_Segment,
                 'Pose':backends.OpenCV.YOLO_OpenCV_Pose,
                 'OBB':backends.OpenCV.YOLO_OpenCV_OBB,
+                'Depth':backends.OpenCV.YOLO_OpenCV_Depth,
             }
         except:
             pass
@@ -65,6 +68,7 @@ class YOLO:
                 'Segment':backends.OpenVINO.YOLO_OpenVINO_Segment,
                 'Pose':backends.OpenVINO.YOLO_OpenVINO_Pose,
                 'OBB':backends.OpenVINO.YOLO_OpenVINO_OBB,
+                'Depth':backends.OpenVINO.YOLO_OpenVINO_Depth,
             }
         except:
             pass
@@ -76,6 +80,7 @@ class YOLO:
                 'Segment':backends.PyTorch.YOLO_PyTorch_Segment,
                 'Pose':backends.PyTorch.YOLO_PyTorch_Pose,
                 'OBB':backends.PyTorch.YOLO_PyTorch_OBB,
+                'Depth':backends.PyTorch.YOLO_PyTorch_Depth,
             }
         except:
             pass
@@ -87,6 +92,7 @@ class YOLO:
                 'Segment':backends.TensorRT.YOLO_TensorRT_Segment,
                 'Pose':backends.TensorRT.YOLO_TensorRT_Pose,
                 'OBB':backends.TensorRT.YOLO_TensorRT_OBB,
+                'Depth':backends.TensorRT.YOLO_TensorRT_Depth,
             }
         except:
             pass

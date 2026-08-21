@@ -1,7 +1,7 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2025-12-23 08:26:15
+LastEditTime: 2026-08-20 23:20:45
 Description: opencv inference class for YOLO algorithm
 '''
 
@@ -33,6 +33,7 @@ class YOLO_OpenCV(YOLO):
         if device_type == 'CPU':
             self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
             self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+            cv2.setNumThreads(4);  
         elif device_type == 'GPU':
             self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
             if model_type == 'FP32':

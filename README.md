@@ -214,6 +214,12 @@ C++ test in Docker with 25 vCPU Intel(R) Xeon(R) Platinum 8470Q , RTX 5090(32GB)
 | YOLO26n            | OBB              | GPU                | FP16                  | 8.6ms    | ×            | ×       | ?        | 2.6ms    |
 | YOLO26n            | OBB              | CPU                | INT8                  | ×        | 104.3ms      | ×       | 33.5ms   | ×        |
 | YOLO26n            | OBB              | GPU                | INT8                  | ×        | 97.1ms       | ×       | ?        | 2.5ms    |
+| YOLO26n            | Depth            | CPU                | FP32                  | 73.4ms   | 77.7ms       | 311.0ms | 33.4ms   | ×        |
+| YOLO26n            | Depth            | GPU                | FP32                  | 11.8ms   | 23.6ms       | 257.1ms | ?        | 3.1ms    |
+| YOLO26n            | Depth            | CPU                | FP16                  | ×        | ×            | 240.1ms | 32.4ms   | ×        |
+| YOLO26n            | Depth            | GPU                | FP16                  | 16.6ms   | ×            | 218.1ms | ?        | 2.1ms    |
+| YOLO26n            | Depth            | CPU                | INT8                  | ×        | 100.4ms      | ×       | 37.1ms   | ×        |
+| YOLO26n            | Depth            | GPU                | INT8                  | ×        | 69.5ms       | ×       | ?        | 2.1ms    |
 
 You can test Python code with:
 ```bash
@@ -411,6 +417,13 @@ Python test in Docker with 25 vCPU Intel(R) Xeon(R) Platinum 8470Q , RTX 5090(32
 | YOLO26n            | OBB              | GPU                | FP16                  | 21.4ms   | ×            | ×       | ?        | 3.1ms    |
 | YOLO26n            | OBB              | CPU                | INT8                  | ×        | 105.9ms      | ×       | 29.0ms   | ×        |
 | YOLO26n            | OBB              | GPU                | INT8                  | ×        | 107.9ms      | ×       | ?        | 3.2ms    |
+
+| YOLO26n            | Depth            | CPU                | FP32                  | 65.7ms   | 78.2ms       | 307.4ms | 37.6ms   | ×        |
+| YOLO26n            | Depth            | GPU                | FP32                  | 15.4ms   | 19.0ms       | 306.3ms | ?        | 6.4ms    |
+| YOLO26n            | Depth            | CPU                | FP16                  | ×        | ×            | 342.8ms | 37.4ms   | ×        |
+| YOLO26n            | Depth            | GPU                | FP16                  | 15.3ms   | ×            | 346.0ms | ?        | 6.7ms    |
+| YOLO26n            | Depth            | CPU                | INT8                  | ×        | 79.5ms       | ×       | 44.0ms   | ×        |
+| YOLO26n            | Depth            | GPU                | INT8                  | ×        | 70.6ms       | ×       | ?        | 6.5ms    |
 
 
 You can download some model weights in: <https://pan.baidu.com/s/1843WW7tNQK1ycqIALje_fA?pwd=adis>

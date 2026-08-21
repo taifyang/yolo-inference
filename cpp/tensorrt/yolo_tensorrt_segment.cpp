@@ -1,13 +1,13 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-19 21:01:12
+ * @LastEditTime: 2026-08-21 23:39:29
  * @Description: source file for YOLO tensorrt segmentation
  */
 
 #include "yolo_tensorrt.h"
 #include "cuda/preprocess.cuh"
-#include "cuda/decode.cuh"
+#include "cuda/postprocess.cuh"
 
 void YOLO_TensorRT_Segment::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
@@ -21,7 +21,11 @@ void YOLO_TensorRT_Segment::init(const Algo_Type algo_type, const Device_Type de
 
 	m_task_type = Segment;
 
-	cudaMallocHost(&m_input_host, m_max_input_size);
+#ifdef _CUDA_PREPROCESS
+	cudaMalloc(&m_input, m_max_input_size);
+#else
+	cudaMallocHost(&m_input, m_max_input_size);
+#endif // _CUDA_PREPROCESS;
 	cudaMallocHost(&m_output0_host, sizeof(float) * m_output_numdet);
 	cudaMallocHost(&m_output1_host, sizeof(float) * m_output_numseg);
 
@@ -84,6 +88,8 @@ void YOLO_TensorRT_Segment::post_process()
 		m_output_box_device, m_max_box, m_num_box_element, m_input_size, m_algo_type, m_task_type);
 	cuda_nms(m_output_box_device, m_nms_threshold, m_max_box, m_num_box_element);
 	cudaMemcpy(m_output_box_host, m_output_box_device, sizeof(float) * (m_num_box_element * m_max_box + 1), cudaMemcpyDeviceToHost);
+	cudaMemcpy(m_d2s_host, m_d2s_device, sizeof(float) * 6, cudaMemcpyDeviceToHost);
+	cudaMemcpy(m_s2d_host, m_s2d_device, sizeof(float) * 6, cudaMemcpyDeviceToHost);
 
 	for (size_t i = 0; i < m_max_box; i++)
 	{
@@ -153,9 +159,6 @@ void YOLO_TensorRT_Segment::post_process()
 		output.mask = masks[i];
 		m_output_seg[i] = output;
 	}
-
-	if(m_draw_result)
-		draw_result(m_output_seg);
 
 #else
 	for (int i = 0; i < m_output_numbox; ++i)
@@ -244,10 +247,10 @@ void YOLO_TensorRT_Segment::post_process()
 	{
 		GetMask(cv::Mat(temp_mask_proposals[i]).t(), output_mat1, m_output_seg[i], m_mask_params, m_algo_type);
 	}
+#endif // _CUDA_POSTPROCESS
 
 	if(m_draw_result)
 		draw_result(m_output_seg);
-#endif // _CUDA_POSTPROCESS
 }
 
 void YOLO_TensorRT_Segment::release()
@@ -259,7 +262,9 @@ void YOLO_TensorRT_Segment::release()
 
 #ifdef _CUDA_PREPROCESS
 	cudaFree(m_d2s_device);
-	cudaFreeHost(m_d2s_host);
+	cudaFree(m_input);
+#else
+	cudaFreeHost(m_input);
 #endif // _CUDA_PREPROCESS
 
 #ifdef _CUDA_POSTPROCESS
@@ -268,3 +273,4 @@ void YOLO_TensorRT_Segment::release()
 	cudaFreeHost(m_mask_host);
 #endif // _CUDA_POSTPROCESS
 }
+
