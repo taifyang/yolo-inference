@@ -1,7 +1,7 @@
-/*
- * @Author: taifyang 
- * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2025-10-16 21:04:01
+/* 
+ * @Author: taifyang
+ * @Date: 2025-10-21 06:50:02
+ * @LastEditTime: 2026-08-22 09:20:28
  * @Description: header file for YOLO algorithm
  */
 
