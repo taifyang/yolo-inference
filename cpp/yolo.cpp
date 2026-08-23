@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2025-10-21 06:50:02
- * @LastEditTime: 2026-08-22 09:20:39
+ * @LastEditTime: 2026-08-22 12:11:49
  * @Description: source file for YOLO algorithm
  */
 
@@ -185,7 +185,7 @@ CreateFactory::CreateFactory()
     size_t task_size = magic_enum::enum_count<Task_Type>();
     m_create_registry.resize(backend_size, std::vector<CreateFunction>(task_size));
 
-#ifdef _YOLO_Libtorch
+#ifdef _YOLO_LIBTORCH
 #  define X(TkStr,TkEnum) register_class(Backend_Type::Libtorch, TkEnum, +[]()->std::unique_ptr<YOLO>{return std::make_unique<YOLO_Libtorch_##TkStr>();});
 #else
 #  define X(TkStr,TkEnum) register_class(Backend_Type::Libtorch, TkEnum, +[]()->std::unique_ptr<YOLO>{return nullptr;});
@@ -193,7 +193,7 @@ CreateFactory::CreateFactory()
 YOLO_TASK_LIST
 #undef X
 
-#ifdef _YOLO_ONNXRuntime
+#ifdef _YOLO_ONNXRUNTIME
 #  define X(TkStr,TkEnum) register_class(Backend_Type::ONNXRuntime, TkEnum, +[]()->std::unique_ptr<YOLO>{return std::make_unique<YOLO_ONNXRuntime_##TkStr>();});
 #else
 #  define X(TkStr,TkEnum) register_class(Backend_Type::ONNXRuntime, TkEnum, +[]()->std::unique_ptr<YOLO>{return nullptr;});

@@ -1,7 +1,7 @@
 '''
 Author: taifyang 
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-08-21 23:53:03
+LastEditTime: 2026-08-22 16:30:40
 Description: YOLO algorithm interface class
 '''
 
@@ -28,7 +28,7 @@ class YOLO:
         self.iou_threshold = 0.45        	
         self.confidence_threshold = 0.25	
         self.inputs_shape = (640, 640)   
-        self.threads_num = 12	
+        self.threads_num = 24	
 
     '''
     description:    task map
@@ -36,68 +36,16 @@ class YOLO:
     return {*}      algorithm class instance
     '''    
     def task_map(self):
-        map = {}
-        try:
-            map['ONNXRuntime'] = {
-                'Classify':backends.ONNXRuntime.YOLO_ONNXRuntime_Classify,
-                'Detect':backends.ONNXRuntime.YOLO_ONNXRuntime_Detect,
-                'Segment':backends.ONNXRuntime.YOLO_ONNXRuntime_Segment,
-                'Pose':backends.ONNXRuntime.YOLO_ONNXRuntime_Pose,
-                'OBB':backends.ONNXRuntime.YOLO_ONNXRuntime_OBB,
-                'Depth':backends.ONNXRuntime.YOLO_ONNXRuntime_Depth,
-            }
-        except:
-               pass
-        
-        try:
-            map['OpenCV'] =  {
-                'Classify':backends.OpenCV.YOLO_OpenCV_Classify,
-                'Detect':backends.OpenCV.YOLO_OpenCV_Detect,
-                'Segment':backends.OpenCV.YOLO_OpenCV_Segment,
-                'Pose':backends.OpenCV.YOLO_OpenCV_Pose,
-                'OBB':backends.OpenCV.YOLO_OpenCV_OBB,
-                'Depth':backends.OpenCV.YOLO_OpenCV_Depth,
-            }
-        except:
-            pass
-                             
-        try:
-            map['OpenVINO'] = {
-                'Classify':backends.OpenVINO.YOLO_OpenVINO_Classify,
-                'Detect':backends.OpenVINO.YOLO_OpenVINO_Detect,
-                'Segment':backends.OpenVINO.YOLO_OpenVINO_Segment,
-                'Pose':backends.OpenVINO.YOLO_OpenVINO_Pose,
-                'OBB':backends.OpenVINO.YOLO_OpenVINO_OBB,
-                'Depth':backends.OpenVINO.YOLO_OpenVINO_Depth,
-            }
-        except:
-            pass
-        
-        try:
-            map['PyTorch'] = {
-                'Classify':backends.PyTorch.YOLO_PyTorch_Classify,
-                'Detect':backends.PyTorch.YOLO_PyTorch_Detect,
-                'Segment':backends.PyTorch.YOLO_PyTorch_Segment,
-                'Pose':backends.PyTorch.YOLO_PyTorch_Pose,
-                'OBB':backends.PyTorch.YOLO_PyTorch_OBB,
-                'Depth':backends.PyTorch.YOLO_PyTorch_Depth,
-            }
-        except:
-            pass
-        
-        try:
-            map['TensorRT'] = {
-                'Classify':backends.TensorRT.YOLO_TensorRT_Classify,
-                'Detect':backends.TensorRT.YOLO_TensorRT_Detect,
-                'Segment':backends.TensorRT.YOLO_TensorRT_Segment,
-                'Pose':backends.TensorRT.YOLO_TensorRT_Pose,
-                'OBB':backends.TensorRT.YOLO_TensorRT_OBB,
-                'Depth':backends.TensorRT.YOLO_TensorRT_Depth,
-            }
-        except:
-            pass
-
-        return map
+        backend_names = ["ONNXRuntime", "OpenCV", "OpenVINO", "PyTorch", "TensorRT"]
+        task_names = ["Classify", "Detect", "Segment", "Pose", "OBB", "Depth"]
+        mapping = {}
+        for bk in backend_names:
+            try:
+                mod = getattr(backends, bk)
+                mapping[bk] = {t: getattr(mod, f"YOLO_{bk}_{t}") for t in task_names}
+            except (AttributeError, ImportError):
+                continue
+        return mapping
     
     '''
     description:                inference interface
