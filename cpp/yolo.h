@@ -168,7 +168,7 @@ protected:
 	/**
 	 * @description: thread number for CPU inference
 	 */
-	int m_threads = 12;
+	int m_threads = 24;
 
 	/**
 	 * @description: draw result
