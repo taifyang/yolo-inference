@@ -120,5 +120,5 @@ void YOLO_OpenVINO_Pose::post_process()
 	}
 
 	if(m_draw_result)
-		draw_result(m_output_pose);
+		draw_result();
 }

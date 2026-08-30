@@ -26,8 +26,7 @@ void YOLO_Libtorch_Pose::pre_process()
 void YOLO_Libtorch_Pose::process()
 {
 	m_output = m_module.forward(m_input);
-	torch::Tensor pred;
-	pred = m_output.toTensor().to(at::kCPU);
+	torch::Tensor pred = m_output.toTensor().to(at::kCPU);
 	m_output0.assign(pred.data_ptr<float>(), pred.data_ptr<float>() + m_output_numdet);
 }
 
@@ -121,5 +120,5 @@ void YOLO_Libtorch_Pose::post_process()
 	}
 
 	if(m_draw_result)
-		draw_result(m_output_pose);
+		draw_result();
 }

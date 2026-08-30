@@ -1,7 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-08-21 23:37:38
+ * @LastEditTime: 2026-08-30 10:50:41
  * @Description: head file for cuda post-processing decoding
  */
 
@@ -151,12 +151,20 @@ void cuda_regularize_bbox(float* boxes_d, int num_bbox);
  */
 void cuda_scale_boxes(float* boxes_d, int num_bbox, float output_w, float output_h, float gain, float pad_w, float pad_h);
 
+/**
+ * @brief 							    cuda scale mask(float)
+ * @param {const float*} src 	        input image
+ * @param {float*} dst 			        output image
+ * @param {const cv::Size} input_shape  input image shape
+ * @param {const cv::Size} output_shape output image shape
+ */
+void cuda_scale_mask(const float* src, float* dst, const cv::Size input_shape, const cv::Size output_shape);
 
 /**
- * @brief 							        cuda scale mask
- * @param {const float*} m_output0_device 	input mask on device
- * @param {float*} m_depth_device 			output mask on device
- * @param {cv::Size} input_shape 			input image shape
- * @param {cv::Size} output_shape 			output image shape
+ * @brief 							    cuda scale mask(uint8_t)
+ * @param {const uint8_t*} src 	        input image
+ * @param {uint8_t*} dst 			    output image
+ * @param {const cv::Size} input_shape  input image shape
+ * @param {const cv::Size} output_shape output image shape
  */
-void cuda_scale_mask(const float* m_output0_device, float* m_depth_device, const cv::Size input_shape, const cv::Size output_shape);
+void cuda_scale_mask(const uint8_t* src, uint8_t* dst, const cv::Size input_shape, const cv::Size output_shape);

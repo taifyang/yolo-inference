@@ -23,20 +23,6 @@ public:
 	}
 
 protected:
-	void scale_mask(cv::Mat& mask, const cv::Size input_shape, const cv::Size output_shape)
-	{
-		double gain = std::min(static_cast<double>(input_shape.height) / output_shape.height,
-							static_cast<double>(input_shape.width) / output_shape.width);
-
-		int pad_w = static_cast<int>((input_shape.width - output_shape.width * gain) / 2);
-		int pad_h = static_cast<int>((input_shape.height - output_shape.height * gain) / 2);
-
-		cv::Rect roi(pad_w, pad_h, mask.cols - 2 * pad_w, mask.rows - 2 * pad_h);
-		roi &= cv::Rect(0, 0, mask.cols, mask.rows);
-		mask = mask(roi).clone();
-		cv::resize(mask, mask, cv::Size(output_shape.width, output_shape.height), 0, 0, cv::INTER_LINEAR);
-	}
-
 	/**
 	 * @description: draw result
 	 * @return {*}

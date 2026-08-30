@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2026-01-03 21:31:46
- * @LastEditTime: 2026-08-09 23:45:32
+ * @LastEditTime: 2026-08-26 00:01:55
 * @Description: source file for YOLO openvino depth estimation
  */
 
@@ -32,10 +32,11 @@ void YOLO_OpenVINO_Depth::post_process()
 {
 	m_output0_host = (float*)m_infer_request.get_output_tensor(0).data();
 
-	m_depth = cv::Mat::zeros(m_input_size.width, m_input_size.height, CV_32FC1);	
+	cv::Mat depth = cv::Mat::zeros(m_input_size, CV_32FC1);
+	m_depth = cv::Mat::zeros(m_image.size(), CV_32FC1);		
 	m_result = cv::Mat::zeros(m_image.size(), CV_16UC1);
-	std::copy(m_output0_host, m_output0_host + m_output_numdet, (float*)m_depth.data);
-	scale_mask(m_depth, m_input_size, m_image.size());
+	std::copy(m_output0_host, m_output0_host + m_output_numdet, (float*)depth.data);
+	scale_mask(depth, m_depth, m_input_size, m_image.size());
 	
 	if(m_draw_result)
 		draw_result();

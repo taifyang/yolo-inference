@@ -1,8 +1,8 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-08-09 23:43:09
-Description: tensorrt inference class for YOLO depth estimation algorithm
+LastEditTime: 2026-01-12 10:49:13
+Description: tensorrt inference class for YOLO semantic segmentation algorithm
 '''
 
 
@@ -11,9 +11,9 @@ from backends.TensorRT.yolo_tensorrt import *
 
 
 '''
-description: tensorrt inference class for the YOLO depth estimation algorithm
+description: tensorrt inference class for the YOLO semantic segmentation algorithm
 '''             
-class YOLO_TensorRT_Depth(YOLO_TensorRT):
+class YOLO_TensorRT_Semantic(YOLO_TensorRT):
     '''
     description:            construction method
     param {*} self          instance of class
@@ -26,8 +26,8 @@ class YOLO_TensorRT_Depth(YOLO_TensorRT):
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         super().__init__(algo_type, device_type, model_type, model_path)
         assert self.algo_type in ['YOLO26'], 'algo type not supported!'
-        self.inputs_shape = (768, 768)
-        self.output0_device = cupy.empty(self.outputs_shape[0], dtype=np.float32)
+        self.inputs_shape = (1024, 1024)
+        self.output0_device = cupy.empty(self.outputs_shape[0], dtype=np.uint8)
         self.output0_ptr = self.output0_device.data.ptr
                
     '''
@@ -57,7 +57,11 @@ class YOLO_TensorRT_Depth(YOLO_TensorRT):
     '''            
     def post_process(self) -> None:
         output = np.squeeze(self.output0_host.reshape(self.outputs_shape[0]))
-        depth = scale_masks(output, self.inputs_shape, self.image.shape)
+        class_map = scale_masks(output, self.inputs_shape, self.image.shape)
+        mask = class_map.astype(np.uint8)
         if self.draw_result:
-            self.result = draw_result(task_type='Depth', image=depth)
- 
+            masks = []
+            for cls_id in np.unique(mask):
+                binary_mask = (mask == cls_id).astype(np.bool_)
+                masks.append(binary_mask)
+            self.result = draw_result(task_type='Semantic', image=self.image, masks=masks)

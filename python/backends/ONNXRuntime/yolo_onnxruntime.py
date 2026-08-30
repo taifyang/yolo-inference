@@ -44,7 +44,7 @@ class YOLO_ONNXRuntime(YOLO):
     
     '''
     description:    model infenence
-    param {*} self  instance of class
+    param {*} self  instance of class   
     return {*}
     '''    
     def process(self) -> None:

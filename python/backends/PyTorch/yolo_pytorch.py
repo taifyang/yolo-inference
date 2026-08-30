@@ -1,7 +1,7 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-08-20 23:18:50
+LastEditTime: 2026-08-30 21:04:12
 Description: pytorch inference class for YOLO algorithm
 '''
 
@@ -39,7 +39,7 @@ class YOLO_PyTorch(YOLO):
         if self.device_type == 'GPU':
             self.net = self.net.cuda()
         else:
-            torch.set_num_threads(self.threads_num )
+            torch.set_num_threads(self.threads_num)
             torch.set_num_interop_threads(1)
     
     '''

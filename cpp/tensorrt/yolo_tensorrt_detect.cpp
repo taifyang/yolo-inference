@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-08-21 23:39:01
+ * @LastEditTime: 2026-08-30 11:20:53
  * @Description: source file for YOLO tensorrt detection
  */
 
@@ -31,8 +31,8 @@ void YOLO_TensorRT_Detect::init(const Algo_Type algo_type, const Device_Type dev
 	cudaMalloc(&m_input_device, sizeof(float) * m_input_numel);
 	cudaMalloc(&m_output0_device, sizeof(float) * m_output_numdet);
 
-	m_bindings[0] = m_input_device;
-	m_bindings[1] = m_output0_device;
+	m_bindings.push_back(m_input_device);
+	m_bindings.push_back(m_output0_device);
 
 #ifdef _CUDA_PREPROCESS
 	cudaMalloc(&m_d2s_device, sizeof(float) * 6);
@@ -70,7 +70,7 @@ void YOLO_TensorRT_Detect::pre_process()
 
 void YOLO_TensorRT_Detect::process()
 {
-	m_execution_context->executeV2((void**)m_bindings);
+	m_execution_context->executeV2(m_bindings.data());
 
 #ifndef _CUDA_POSTPROCESS
 	cudaMemcpy(m_output0_host, m_output0_device, sizeof(float) * m_output_numdet, cudaMemcpyDeviceToHost);
@@ -228,7 +228,7 @@ void YOLO_TensorRT_Detect::post_process()
 #endif // _CUDA_POSTPROCESS
 
 	if(m_draw_result)
-		draw_result(m_output_det);
+		draw_result();
 }
 
 void YOLO_TensorRT_Detect::release()

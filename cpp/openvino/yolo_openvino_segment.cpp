@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-20 21:34:59
+ * @LastEditTime: 2026-08-30 11:22:03
  * @Description: source file for YOLO openvino segmentation
  */
 
@@ -164,5 +164,5 @@ cv::Rect box;
 	}
 
 	if(m_draw_result)
-		draw_result(m_output_seg);
+		draw_result();
 }

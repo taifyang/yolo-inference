@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2026-01-03 21:57:36
- * @LastEditTime: 2026-08-15 10:34:19
+ * @LastEditTime: 2026-08-25 22:25:30
  * @Description: source file for YOLO tensorrt depth estimation
  */
 
@@ -31,8 +31,8 @@ void YOLO_TensorRT_Depth::init(const Algo_Type algo_type, const Device_Type devi
 	cudaMalloc(&m_input_device, sizeof(float) * m_input_numel);
 	cudaMalloc(&m_output0_device, sizeof(float) * m_output_numdet);
 
-	m_bindings[0] = m_input_device;
-	m_bindings[1] = m_output0_device;
+	m_bindings.push_back(m_input_device);
+	m_bindings.push_back(m_output0_device);
 }
 
 void YOLO_TensorRT_Depth::pre_process()
@@ -42,7 +42,7 @@ void YOLO_TensorRT_Depth::pre_process()
 
 void YOLO_TensorRT_Depth::process()
 {
-	m_execution_context->executeV2((void**)m_bindings);
+	m_execution_context->executeV2(m_bindings.data());
 
 //#ifndef _CUDA_POSTPROCESS
 	cudaMemcpy(m_output0_host, m_output0_device, sizeof(float) * m_output_numdet, cudaMemcpyDeviceToHost);
@@ -51,16 +51,18 @@ void YOLO_TensorRT_Depth::process()
 
 void YOLO_TensorRT_Depth::post_process()
 {		
+	m_depth = cv::Mat::zeros(m_image.size(), CV_32FC1);
+
 #ifdef _CUDA_POSTPROCESS
 	cudaMalloc(&m_depth_device, sizeof(float) * m_image.cols * m_image.rows);
 	cuda_scale_mask(m_output0_device, m_depth_device, m_input_size, m_image.size());
-	m_depth = cv::Mat::zeros(m_image.size(), CV_32FC1);
 	cudaMemcpy(m_depth.data, m_depth_device, sizeof(float) * m_image.cols * m_image.rows, cudaMemcpyDeviceToHost);
+	cudaFree(m_depth_device);
 #else
-	m_result = cv::Mat::zeros(m_image.size(), CV_16UC1);	
-	m_depth = cv::Mat::zeros(m_input_size.width, m_input_size.height, CV_32FC1);	
-	std::copy(m_output0_host, m_output0_host + m_output_numdet, (float*)m_depth.data);
-	scale_mask(m_depth, m_input_size, m_image.size());
+	cv::Mat depth = cv::Mat::zeros(m_input_size, CV_32FC1);
+	m_result = cv::Mat::zeros(m_image.size(), CV_16UC1);
+	std::copy(m_output0_host, m_output0_host + m_output_numdet, (float*)depth.data);
+	scale_mask(depth, m_depth, m_input_size, m_image.size());
 #endif // !_CUDA_POSTPROCESS
 
 	if(m_draw_result)

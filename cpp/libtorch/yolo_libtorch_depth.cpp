@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2025-12-21 21:51:23
- * @LastEditTime: 2026-08-09 23:06:37
+ * @LastEditTime: 2026-08-25 22:17:25
  * @Description: source file for YOLO libtorch depth estimation
  */
 
@@ -32,10 +32,11 @@ void YOLO_Libtorch_Depth::process()
 
 void YOLO_Libtorch_Depth::post_process()
 {
-	m_depth = cv::Mat::zeros(m_input_size, CV_32FC1);	
+	cv::Mat depth = cv::Mat::zeros(m_input_size, CV_32FC1);
+	m_depth = cv::Mat::zeros(m_image.size(), CV_32FC1);	
 	m_result = cv::Mat::zeros(m_image.size(), CV_16UC1);
-	std::copy(m_output0.begin(), m_output0.end(), (float*)m_depth.data);
-	scale_mask(m_depth, m_input_size, m_image.size());
+	std::copy(m_output0.begin(), m_output0.end(), (float*)depth.data);
+	scale_mask(depth, m_depth, m_input_size, m_image.size());
 	
 	if(m_draw_result)
 		draw_result();

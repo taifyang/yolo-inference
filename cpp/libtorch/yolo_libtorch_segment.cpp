@@ -26,9 +26,8 @@ void YOLO_Libtorch_Segment::pre_process()
 void YOLO_Libtorch_Segment::process()
 {	
 	m_output = m_module.forward(m_input);
-	torch::Tensor pred0, pred1;
-	pred0 = m_output.toTuple()->elements()[0].toTensor().to(torch::kFloat).to(at::kCPU);
-	pred1 = m_output.toTuple()->elements()[1].toTensor().to(torch::kFloat).to(at::kCPU);
+	torch::Tensor pred0 = m_output.toTuple()->elements()[0].toTensor().to(torch::kFloat).to(at::kCPU);
+	torch::Tensor pred1 = m_output.toTuple()->elements()[1].toTensor().to(torch::kFloat).to(at::kCPU);
 	m_output0.assign(pred0.data_ptr<float>(), pred0.data_ptr<float>() + m_output_numdet);
 	m_output1.assign(pred1.data_ptr<float>(), pred1.data_ptr<float>() + m_output_numseg);
 }
@@ -164,5 +163,5 @@ void YOLO_Libtorch_Segment::post_process()
 	}
 
 	if(m_draw_result)
-		draw_result(m_output_seg);
+		draw_result();
 }

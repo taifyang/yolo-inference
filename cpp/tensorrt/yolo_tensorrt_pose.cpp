@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2026-01-03 21:57:36
- * @LastEditTime: 2026-02-01 20:45:57
+ * @LastEditTime: 2026-08-30 11:32:08
  * @Description: source file for YOLO tensorrt pose
  */
 
@@ -31,8 +31,8 @@ void YOLO_TensorRT_Pose::init(const Algo_Type algo_type, const Device_Type devic
 	cudaMalloc(&m_input_device, sizeof(float) * m_input_numel);
 	cudaMalloc(&m_output0_device, sizeof(float) * m_output_numdet);
 
-	m_bindings[0] = m_input_device;
-	m_bindings[1] = m_output0_device;
+	m_bindings.push_back(m_input_device);
+	m_bindings.push_back(m_output0_device);
 
 #ifdef _CUDA_PREPROCESS
 	cudaMalloc(&m_d2s_device, sizeof(float) * 6);
@@ -52,7 +52,7 @@ void YOLO_TensorRT_Pose::pre_process()
 
 void YOLO_TensorRT_Pose::process()
 {
-	m_execution_context->executeV2((void**)m_bindings);
+	m_execution_context->executeV2(m_bindings.data());
 
 #ifndef _CUDA_POSTPROCESS
 	cudaMemcpy(m_output0_host, m_output0_device, sizeof(float) * m_output_numdet, cudaMemcpyDeviceToHost);
@@ -197,7 +197,7 @@ void YOLO_TensorRT_Pose::post_process()
 #endif // _CUDA_POSTPROCESS
 
 	if(m_draw_result)
-		draw_result(m_output_pose);
+		draw_result();
 }
 
 void YOLO_TensorRT_Pose::release()

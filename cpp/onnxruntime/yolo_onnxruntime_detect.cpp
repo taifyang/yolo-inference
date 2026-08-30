@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2025-12-21 22:21:42
- * @LastEditTime: 2026-01-17 00:11:55
+ * @LastEditTime: 2026-08-29 16:03:22
  * @Description: source file for YOLO onnxruntime detection
  */
 
@@ -192,5 +192,5 @@ void YOLO_ONNXRuntime_Detect::post_process()
 	}
 
 	if(m_draw_result)
-		draw_result(m_output_det);
+		draw_result();
 }

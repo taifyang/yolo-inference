@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2026-01-12 10:30:09
- * @LastEditTime: 2026-01-17 20:36:20
+ * @LastEditTime: 2026-08-30 11:23:03
 * @Description: source file for YOLO openvino obb
  */
 
@@ -101,5 +101,5 @@ void YOLO_OpenVINO_OBB::post_process()
 	}
 
 	if(m_draw_result)
-		draw_result(m_output_obb);
+		draw_result();
 }

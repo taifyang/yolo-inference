@@ -88,5 +88,5 @@ void YOLO_OpenCV_Classify::post_process()
 		m_output_cls.score = scores[id];
 
 	if(m_draw_result)
-		draw_result(m_output_cls);
+		draw_result();
 }

@@ -741,3 +741,26 @@ python main.py --algo_type YOLO26 --backend_type OpenVINO --task_type Depth --de
 python main.py --algo_type YOLO26 --backend_type TensorRT --task_type Depth --device_type GPU --model_type FP32 --model_path ../weights/yolo26n_depth_fp32.engine --input_path bus.jpg
 python main.py --algo_type YOLO26 --backend_type TensorRT --task_type Depth --device_type GPU --model_type FP16 --model_path ../weights/yolo26n_depth_fp16.engine --input_path bus.jpg
 python main.py --algo_type YOLO26 --backend_type TensorRT --task_type Depth --device_type GPU --model_type INT8 --model_path ../weights/yolo26n_depth_int8.engine --input_path bus.jpg
+
+python main.py --algo_type YOLO26 --backend_type PyTorch --task_type Semantic --device_type CPU --model_type FP32 --model_path ../weights/yolo26n_sem_fp32_cpu.torchscript --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type PyTorch --task_type Semantic --device_type GPU --model_type FP32 --model_path ../weights/yolo26n_sem_fp32_gpu.torchscript --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type PyTorch --task_type Semantic --device_type GPU --model_type FP16 --model_path ../weights/yolo26n_sem_fp16_gpu.torchscript --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type ONNXRuntime --task_type Semantic --device_type CPU --model_type FP32 --model_path ../weights/yolo26n_sem_fp32.onnx --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type ONNXRuntime --task_type Semantic --device_type GPU --model_type FP32 --model_path ../weights/yolo26n_sem_fp32.onnx --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type ONNXRuntime --task_type Semantic --device_type CPU --model_type FP16 --model_path ../weights/yolo26n_sem_fp16.onnx --input_path bus.jpg 
+python main.py --algo_type YOLO26 --backend_type ONNXRuntime --task_type Semantic --device_type GPU --model_type FP16 --model_path ../weights/yolo26n_sem_fp16.onnx --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type ONNXRuntime --task_type Semantic --device_type CPU --model_type INT8 --model_path ../weights/yolo26n_sem_int8.onnx --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type ONNXRuntime --task_type Semantic --device_type GPU --model_type INT8 --model_path ../weights/yolo26n_sem_int8.onnx --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type OpenCV --task_type Semantic --device_type CPU --model_type FP32 --model_path ../weights/yolo26n_sem_fp32.onnx --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type OpenCV --task_type Semantic --device_type GPU --model_type FP32 --model_path ../weights/yolo26n_sem_fp32.onnx --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type OpenCV --task_type Semantic --device_type CPU --model_type FP16 --model_path ../weights/yolo26n_sem_fp16.onnx --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type OpenCV --task_type Semantic --device_type GPU --model_type FP16 --model_path ../weights/yolo26n_sem_fp16.onnx --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type OpenVINO --task_type Semantic --device_type CPU --model_type FP32 --model_path ../weights/yolo26n_sem_fp32.xml --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type OpenVINO --task_type Semantic --device_type GPU --model_type FP32 --model_path ../weights/yolo26n_sem_fp32.xml --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type OpenVINO --task_type Semantic --device_type CPU --model_type FP16 --model_path ../weights/yolo26n_sem_fp16.xml --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type OpenVINO --task_type Semantic --device_type GPU --model_type FP16 --model_path ../weights/yolo26n_sem_fp16.xml --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type OpenVINO --task_type Semantic --device_type CPU --model_type INT8 --model_path ../weights/yolo26n_sem_int8.xml --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type OpenVINO --task_type Semantic --device_type GPU --model_type INT8 --model_path ../weights/yolo26n_sem_int8.xml --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type TensorRT --task_type Semantic --device_type GPU --model_type FP32 --model_path ../weights/yolo26n_sem_fp32.engine --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type TensorRT --task_type Semantic --device_type GPU --model_type FP16 --model_path ../weights/yolo26n_sem_fp16.engine --input_path bus.jpg
+python main.py --algo_type YOLO26 --backend_type TensorRT --task_type Semantic --device_type GPU --model_type INT8 --model_path ../weights/yolo26n_sem_int8.engine --input_path bus.jpg

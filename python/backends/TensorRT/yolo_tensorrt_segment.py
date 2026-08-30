@@ -115,7 +115,7 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
             resized_masks = []
             for mask in masks:
                 mask = cv2.resize(mask, self.inputs_shape, cv2.INTER_LINEAR)
-                mask = scale_mask(mask, self.inputs_shape, self.image.shape)
+                mask = scale_masks(mask, self.inputs_shape, self.image.shape)
                 resized_masks.append(mask)
             resized_masks = np.array(resized_masks)
             if self.algo_type in ['YOLOv5']:
@@ -123,4 +123,4 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT):
             elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLO26']:
                 resized_masks = resized_masks > 0       
             if self.draw_result:
-                self.result = draw_result(self.image, boxes, resized_masks)
+                self.result = draw_result(task_type='Segment', image=self.image, preds=boxes, masks=resized_masks)

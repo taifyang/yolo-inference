@@ -1,7 +1,7 @@
 '''
 Author: taifyang
 Date: 2026-01-12 10:46:21
-LastEditTime: 2026-01-12 10:46:37
+LastEditTime: 2026-08-23 11:22:18
 Description: opencv inference class for YOLO pose algorithm
 '''
 
@@ -65,5 +65,5 @@ class YOLO_OpenCV_OBB(YOLO_OpenCV):
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape, xywh=True)
             boxes = np.array(list(reversed(boxes)))
             if self.draw_result:
-                self.result = draw_result(self.image, boxes)   
+                self.result = draw_result(task_type='OBB', image=self.image, preds=boxes)   
                 

@@ -140,21 +140,20 @@ protected:
 
 	/**
 	 * @description: 						draw result
-	 * @param {vector<OutputSeg>} result	segmentation model output
 	 * @return {*}
 	 */	
-	void draw_result(std::vector<OutputSeg> output_seg)
+	void draw_result()
 	{
 		cv::Mat mask = m_image.clone();
     	m_result = m_image.clone();
 		srand(time(0));
 
-		for (int i = 0; i < output_seg.size(); i++)
+		for (int i = 0; i < m_output_seg.size(); i++)
 		{
-			cv::Rect bbox = output_seg[i].box & cv::Rect(0, 0, m_image.cols, m_image.rows);
+			cv::Rect bbox = m_output_seg[i].box & cv::Rect(0, 0, m_image.cols, m_image.rows);
 			cv::rectangle(m_result, bbox, cv::Scalar(0, 255, 0), 2);
-			mask(bbox).setTo(cv::Scalar(rand() % 256, rand() % 256, rand() % 256), output_seg[i].mask);
-			std::string label = "class" + std::to_string(output_seg[i].id) + ":" + cv::format("%.2f", output_seg[i].score);
+			mask(bbox).setTo(cv::Scalar(rand() % 256, rand() % 256, rand() % 256), m_output_seg[i].mask);
+			std::string label = "class" + std::to_string(m_output_seg[i].id) + ":" + cv::format("%.2f", m_output_seg[i].score);
 			cv::putText(m_result, label, cv::Point(bbox.x, bbox.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
 		}
 		

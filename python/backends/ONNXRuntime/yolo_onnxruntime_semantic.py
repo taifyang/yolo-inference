@@ -1,8 +1,8 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-08-03 22:19:15
-Description: onnxruntime inference class for YOLO depth estimation algorithm
+LastEditTime: 2026-08-29 16:04:48
+Description: onnxruntime inference class for YOLO semantic segmentation algorithm
 '''
 
 
@@ -11,9 +11,9 @@ from backends.ONNXRuntime.yolo_onnxruntime import *
             
 
 '''
-description: onnxruntime inference class for the YOLO depth estimation algorithm
+description: onnxruntime inference class for the YOLO semantic segmentation algorithm
 '''      
-class YOLO_ONNXRuntime_Depth(YOLO_ONNXRuntime):
+class YOLO_ONNXRuntime_Semantic(YOLO_ONNXRuntime):
     '''
     description:    model pre-process
     param {*} self  instance of class
@@ -21,7 +21,7 @@ class YOLO_ONNXRuntime_Depth(YOLO_ONNXRuntime):
     '''    
     def pre_process(self) -> None:
         assert self.algo_type in ['YOLO26'], 'algo type not supported!'
-        self.inputs_shape = (768, 768)
+        self.inputs_shape = (1024, 1024)
         input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW
         input = input / 255.0
@@ -38,6 +38,11 @@ class YOLO_ONNXRuntime_Depth(YOLO_ONNXRuntime):
     '''           
     def post_process(self) -> None:
         output = np.squeeze(self.outputs[0]).astype(dtype=np.float32)
-        depth = scale_masks(output, self.inputs_shape, self.image.shape)
+        class_map = scale_masks(output, self.inputs_shape, self.image.shape)
+        mask = class_map.astype(np.uint8)
         if self.draw_result:
-            self.result = draw_result(task_type='Depth', image=depth)
+            masks = []
+            for cls_id in np.unique(mask):
+                binary_mask = (mask == cls_id).astype(np.bool_)
+                masks.append(binary_mask)
+            self.result = draw_result(task_type='Semantic', image=self.image, masks=masks)

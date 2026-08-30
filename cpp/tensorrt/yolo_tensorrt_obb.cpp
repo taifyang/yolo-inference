@@ -31,8 +31,8 @@ void YOLO_TensorRT_OBB::init(const Algo_Type algo_type, const Device_Type device
 	cudaMalloc(&m_input_device, sizeof(float) * m_input_numel);
 	cudaMalloc(&m_output0_device, sizeof(float) * m_output_numdet);
 
-	m_bindings[0] = m_input_device;
-	m_bindings[1] = m_output0_device;
+	m_bindings.push_back(m_input_device);
+	m_bindings.push_back(m_output0_device);
 
 #ifdef _CUDA_PREPROCESS
 	cudaMalloc(&m_d2s_device, sizeof(float) * 6);
@@ -70,7 +70,7 @@ void YOLO_TensorRT_OBB::pre_process()
 
 void YOLO_TensorRT_OBB::process()
 {
-	m_execution_context->executeV2((void**)m_bindings);
+	m_execution_context->executeV2(m_bindings.data());
 
 #ifndef _CUDA_POSTPROCESS
 	cudaMemcpy(m_output0_host, m_output0_device, sizeof(float) * m_output_numdet, cudaMemcpyDeviceToHost);
@@ -215,7 +215,7 @@ void YOLO_TensorRT_OBB::post_process()
 #endif // _CUDA_POSTPROCESS
 
 	if(m_draw_result)
-		draw_result(m_output_obb);
+		draw_result();
 }
 
 void YOLO_TensorRT_OBB::release()

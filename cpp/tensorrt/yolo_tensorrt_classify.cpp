@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-31 08:39:23
+ * @LastEditTime: 2026-08-30 11:19:53
  * @Description: source file for YOLO tensorrt classification
  */
 
@@ -35,8 +35,8 @@ void YOLO_TensorRT_Classify::init(const Algo_Type algo_type, const Device_Type d
 	cudaMalloc(&m_input_device, sizeof(float) * m_input_numel);
 	cudaMalloc(&m_output0_device, sizeof(float) * m_class_num);
 
-	m_bindings[0] = m_input_device;
-	m_bindings[1] = m_output0_device;
+	m_bindings.push_back(m_input_device);
+	m_bindings.push_back(m_output0_device);
 }
 
 void YOLO_TensorRT_Classify::pre_process()
@@ -101,7 +101,7 @@ void YOLO_TensorRT_Classify::pre_process()
 
 void YOLO_TensorRT_Classify::process()
 {
-	m_execution_context->executeV2((void**)m_bindings);
+	m_execution_context->executeV2(m_bindings.data());
 	cudaMemcpy(m_output0_host, m_output0_device, sizeof(float) * m_class_num, cudaMemcpyDeviceToHost);
 }
 
@@ -123,7 +123,7 @@ void YOLO_TensorRT_Classify::post_process()
 		m_output_cls.score = scores[id];
 
 	if(m_draw_result)
-		draw_result(m_output_cls);
+		draw_result();
 }
 
 void YOLO_TensorRT_Classify::release()

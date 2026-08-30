@@ -1,8 +1,8 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-08-05 21:13:26
-Description: pytorch inference class for YOLO depth estimation algorithm
+LastEditTime: 2026-08-25 00:15:31
+Description: pytorch inference class for YOLO semantic segmentation algorithm
 '''
 
 
@@ -11,9 +11,9 @@ from backends.PyTorch.yolo_pytorch import *
 
 
 '''
-description: pytorch inference class for the YOLO depth estimation algorithm
+description: pytorch inference class for the YOLO semantic segmentation algorithm
 '''    
-class YOLO_PyTorch_Depth(YOLO_PyTorch):
+class YOLO_PyTorch_Semantic(YOLO_PyTorch):
     '''
     description:    model pre-process
     param {*} self  instance of class
@@ -21,7 +21,7 @@ class YOLO_PyTorch_Depth(YOLO_PyTorch):
     ''' 
     def pre_process(self) -> None:
         assert self.algo_type in ['YOLO26'], 'algo type not supported!'
-        self.inputs_shape = (768, 768)
+        self.inputs_shape = (1024, 1024)
         input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
@@ -38,7 +38,13 @@ class YOLO_PyTorch_Depth(YOLO_PyTorch):
     return {*}
     '''           
     def post_process(self) -> None:
-        output = torch.squeeze(self.outputs[0]).to(torch.float32)
-        depth = scale_masks(output.cpu().numpy(), self.inputs_shape, self.image.shape)
+        output = self.outputs.to(torch.float32)
+        class_map = scale_masks(output, self.inputs_shape, self.image.shape)
+        mask = class_map[0].argmax(0).cpu().numpy().astype(np.uint8)
         if self.draw_result:
-            self.result = draw_result(task_type='Depth', image=depth)
+            masks = []
+            for cls_id in np.unique(mask):
+                binary_mask = (mask == cls_id).astype(np.bool_)
+                masks.append(binary_mask)
+            self.result = draw_result(task_type='Semantic', image=self.image, masks=masks)
+            

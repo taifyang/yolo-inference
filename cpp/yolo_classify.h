@@ -73,14 +73,13 @@ protected:
 
 	/**	
 	 * @description: 								draw result
-	 * @param {OutputCls} output_cls				classification model output
 	 * @return {*}
 	 */
-	void draw_result(OutputCls output_cls)
+	void draw_result()
 	{
 		int baseLine;
     	m_result = m_image.clone();
-		std::string label = "class" + std::to_string(output_cls.id) + ":" + cv::format("%.2f", output_cls.score);
+		std::string label = "class" + std::to_string(m_output_cls.id) + ":" + cv::format("%.2f", m_output_cls.score);
 		cv::Size label_size = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 1, 1, &baseLine);
 		cv::putText(m_result, label, cv::Point(0, label_size.height), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 1);
 	}
