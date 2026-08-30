@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-08-21 23:39:29
+ * @LastEditTime: 2026-08-29 22:49:49
  * @Description: source file for YOLO tensorrt segmentation
  */
 
@@ -34,13 +34,13 @@ void YOLO_TensorRT_Segment::init(const Algo_Type algo_type, const Device_Type de
 	cudaMalloc(&m_output1_device, sizeof(float) * m_output_numseg);
 
 #if NV_TENSORRT_MAJOR < 10
-	m_bindings[0] = m_input_device;
-	m_bindings[1] = m_output1_device;
-	m_bindings[2] = m_output0_device;
+	m_bindings.push_back(m_input_device);
+	m_bindings.push_back(m_output1_device);
+	m_bindings.push_back(m_output0_device);
 #else
-	m_bindings[0] = m_input_device;
-	m_bindings[1] = m_output0_device;
-	m_bindings[2] = m_output1_device;
+	m_bindings.push_back(m_input_device);
+	m_bindings.push_back(m_output0_device);
+	m_bindings.push_back(m_output1_device);
 #endif 
 
 #ifdef _CUDA_PREPROCESS
@@ -66,12 +66,18 @@ void YOLO_TensorRT_Segment::pre_process()
 
 void YOLO_TensorRT_Segment::process()
 {
-	m_execution_context->executeV2((void**)m_bindings);
+	m_execution_context->executeV2(m_bindings.data());
 
 #ifndef _CUDA_POSTPROCESS
 	cudaMemcpy(m_output0_host, m_output0_device, sizeof(float) * m_output_numdet, cudaMemcpyDeviceToHost);
 	cudaMemcpy(m_output1_host, m_output1_device, sizeof(float) * m_output_numseg, cudaMemcpyDeviceToHost);
 #endif // !_CUDA_POSTPROCESS
+}
+
+static void affine_project(float* matrix, float x, float y, float* ox, float* oy)
+{
+    *ox = matrix[0] * x + matrix[1] * y + matrix[2];
+    *oy = matrix[3] * x + matrix[4] * y + matrix[5];
 }
 
 void YOLO_TensorRT_Segment::post_process()
@@ -250,7 +256,7 @@ void YOLO_TensorRT_Segment::post_process()
 #endif // _CUDA_POSTPROCESS
 
 	if(m_draw_result)
-		draw_result(m_output_seg);
+		draw_result();
 }
 
 void YOLO_TensorRT_Segment::release()

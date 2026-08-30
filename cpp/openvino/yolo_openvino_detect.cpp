@@ -153,5 +153,5 @@ void YOLO_OpenVINO_Detect::post_process()
 	}
 
 	if(m_draw_result)
-		draw_result(m_output_det);
+		draw_result();
 }

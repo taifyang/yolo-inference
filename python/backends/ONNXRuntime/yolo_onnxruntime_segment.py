@@ -1,7 +1,7 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2025-12-23 08:25:19
+LastEditTime: 2026-08-23 10:20:40
 Description: onnxruntime inference class for YOLO segmentation algorithm
 '''
 
@@ -87,7 +87,7 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
             resized_masks = []
             for mask in masks:
                 mask = cv2.resize(mask, self.inputs_shape, cv2.INTER_LINEAR)
-                mask = scale_mask(mask, self.inputs_shape, self.image.shape)
+                mask = scale_masks(mask, self.inputs_shape, self.image.shape)
                 resized_masks.append(mask)
             resized_masks = np.array(resized_masks)
             if self.algo_type in ['YOLOv5']:
@@ -95,4 +95,4 @@ class YOLO_ONNXRuntime_Segment(YOLO_ONNXRuntime):
             elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLO26']:
                 resized_masks = resized_masks > 0       
             if self.draw_result:
-                self.result = draw_result(self.image, boxes, resized_masks)
+                self.result = draw_result(task_type='Segment', image=self.image, preds=boxes, masks=resized_masks)

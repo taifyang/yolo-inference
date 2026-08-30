@@ -63,4 +63,4 @@ class YOLO_PyTorch_Detect(YOLO_PyTorch):
                 boxes = boxes[indices]
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
             if self.draw_result:
-                self.result = draw_result(self.image, boxes.cpu().numpy())
+                self.result = draw_result(task_type='Detect', image=self.image, preds=boxes.cpu().numpy())

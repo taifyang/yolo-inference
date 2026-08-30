@@ -1,3 +1,9 @@
+/* 
+ * @Author: taifyang
+ * @Date: 2025-10-21 06:50:02
+ * @LastEditTime: 2026-08-15 10:42:23
+ * @Description: 
+ */
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
@@ -21,3 +27,4 @@ uint16_t float32_to_float16(float value);
  * @return {*}     float32 
  */
 float float16_to_float32(uint16_t value);
+

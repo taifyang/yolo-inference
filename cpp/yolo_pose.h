@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2026-01-03 19:31:25
- * @LastEditTime: 2026-01-17 20:19:33
+ * @LastEditTime: 2026-08-30 11:31:32
  * @Description: pose algorithm class
  */
 
@@ -86,15 +86,14 @@ protected:
 
 	/**
 	 * @description: 								draw result
-	 * @param {std::vector<OutputPose>} output_det	pose model output
 	 * @return {*}
 	 */
-	void draw_result(std::vector<OutputPose> output_pose)
+	void draw_result()
 	{
     	m_result = m_image.clone();
-		for (int i = 0; i < output_pose.size(); i++)
+		for (int i = 0; i < m_output_pose.size(); i++)
 		{
-			OutputPose output = output_pose[i];
+			OutputPose output = m_output_pose[i];
 			int idx = output.id;
 			float score = output.score;
 			cv::Rect box = output.box;

@@ -3,7 +3,7 @@ C++ and Python implementations of YOLOv3, YOLOv4, YOLOv5, YOLOv6, YOLOv7, YOLOv8
 
 Supported inference backends include Libtorch/PyTorch, ONNXRuntime, OpenCV, OpenVINO, TensorRT. 
 
-Supported task types include Classify, Detect, Segment, Pose, OBB, Depth.
+Supported task types include Classify, Detect, Segment, Pose, OBB, Depth, Semantic.
 
 Supported model types include FP32, FP16, INT8.
 
@@ -224,6 +224,12 @@ C++ test in Docker with 25 vCPU Intel(R) Xeon(R) Platinum 8470Q , RTX 5090(32GB)
 | YOLO26n            | Depth            | GPU                | FP16                  | 25.4ms   | ×            | ×       | ?        | 2.1ms    |
 | YOLO26n            | Depth            | CPU                | INT8                  | ×        | 88.6ms       | ×       | 44.8ms   | ×        |
 | YOLO26n            | Depth            | GPU                | INT8                  | ×        | 68.1ms       | ×       | ?        | 2.1ms    |
+| YOLO26n            | Semantic         | CPU                | FP32                  | 175.1ms  | 76.3ms       | 150.5ms | 41.6ms   | ×        |
+| YOLO26n            | Semantic         | GPU                | FP32                  | 195.9ms  | 42.5ms       | ×       | ?        | 1.7ms    |
+| YOLO26n            | Semantic         | CPU                | FP16                  | ×        | ×            | 150.7ms | 42.7ms   | ×        |
+| YOLO26n            | Semantic         | GPU                | FP16                  | 173.7ms  | ×            | ×       | ?        | 1.1ms    |
+| YOLO26n            | Semantic         | CPU                | INT8                  | ×        | 79.6ms       | ×       | 42.8ms   | ×        |
+| YOLO26n            | Semantic         | GPU                | INT8                  | ×        | 78.9ms       | ×       | ?        | 1.4ms    |
 
 You can test Python code with:
 ```bash
@@ -427,3 +433,9 @@ Python test in Docker with 25 vCPU Intel(R) Xeon(R) Platinum 8470Q , RTX 5090(32
 | YOLO26n            | Depth            | GPU                | FP16                  | 27.6ms   | ×            | ×       | ?        | 13.1ms   |
 | YOLO26n            | Depth            | CPU                | INT8                  | ×        | 96.6ms       | ×       | 49.7ms   | ×        |
 | YOLO26n            | Depth            | GPU                | INT8                  | ×        | 68.2ms       | ×       | ?        | 13.4ms   |
+| YOLO26n            | Semantic         | CPU                | FP32                  | 181.5ms  | 72.0ms       | 149.6ms | 34.6ms   | ×        |
+| YOLO26n            | Semantic         | GPU                | FP32                  | 21.0ms   | 38.6ms       | ×       | ?        | 9.1ms    |
+| YOLO26n            | Semantic         | CPU                | FP16                  | ×        | ×            | 147.0ms | 34.1ms   | ×        |
+| YOLO26n            | Semantic         | GPU                | FP16                  | 21.8ms   | ×            | ×       | ?        | 12.0ms   |
+| YOLO26n            | Semantic         | CPU                | INT8                  | ×        | 72.2ms       | ×       | 37.9ms   | ×        |
+| YOLO26n            | Semantic         | GPU                | INT8                  | ×        | 73.8ms       | ×       | ?        | 10.0ms   |

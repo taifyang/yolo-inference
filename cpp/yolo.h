@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2025-10-21 06:50:02
- * @LastEditTime: 2026-08-22 09:20:28
+ * @LastEditTime: 2026-08-24 23:53:33
  * @Description: header file for YOLO algorithm
  */
 
@@ -38,6 +38,7 @@ enum Task_Type
 	Pose,
 	OBB,
 	Depth,
+	Semantic,
 };
 
 /**
@@ -77,6 +78,18 @@ enum Model_Type
 	FP16,
 	INT8,
 };
+
+/**
+ * @description: yolo task list
+ */
+#define YOLO_TASK_LIST \
+X(Classify, Task_Type::Classify) \
+X(Detect,   Task_Type::Detect) \
+X(Segment,  Task_Type::Segment) \
+X(Pose,     Task_Type::Pose) \
+X(OBB,      Task_Type::OBB) \
+X(Depth,    Task_Type::Depth) \
+X(Semantic, Task_Type::Semantic)
 
 /**
  * @description: interface class for YOLO algorithm
@@ -168,7 +181,7 @@ protected:
 	/**
 	 * @description: thread number for CPU inference
 	 */
-	int m_threads = 24;
+	int m_threads = 12;
 
 	/**
 	 * @description: draw result

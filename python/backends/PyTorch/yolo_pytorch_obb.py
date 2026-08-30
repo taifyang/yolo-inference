@@ -65,4 +65,4 @@ class YOLO_PyTorch_OBB(YOLO_PyTorch):
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape, xywh=True)
             boxes = reversed(boxes).cpu().numpy()     
             if self.draw_result:
-                self.result = draw_result(self.image, boxes)
+                self.result = draw_result(task_type='OBB', image=self.image, preds=boxes)   

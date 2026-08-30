@@ -1,7 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-08-21 23:38:17
+ * @LastEditTime: 2026-08-29 23:47:31
  * @Description: source file for cuda post-processing decoding
  */
 
@@ -603,9 +603,34 @@ void cuda_scale_boxes(float* boxes_d, int num_bboxes, float output_w, float outp
 	auto block = block_dims(num_bboxes);
     scale_boxes_kernel<<<grid, block>>>(boxes_d, num_bboxes, output_w, output_h, gain, pad_w, pad_h);
 }
+// 类型特征：映射T -> NPP对应类型、函数
+template<typename T>
+struct NppTraits;
 
-void cuda_scale_mask(const float* src, float* dst, const cv::Size input_shape, const cv::Size output_shape)
+// float特化
+template<>
+struct NppTraits<float>
 {
+    using npp_type = Npp32f;
+    static constexpr auto copyFunc = nppiCopy_32f_C1R;
+    static constexpr auto resizeFunc = nppiResize_32f_C1R;
+};
+
+// uint8_t特化
+template<>
+struct NppTraits<uint8_t>
+{
+    using npp_type = Npp8u;
+    static constexpr auto copyFunc = nppiCopy_8u_C1R;
+    static constexpr auto resizeFunc = nppiResize_8u_C1R;
+};
+
+template<typename T>
+void cuda_scale_mask_tpl(const T* src, T* dst, const cv::Size input_shape, const cv::Size output_shape)
+{
+    using Traits = NppTraits<T>;
+    using NppT = typename Traits::npp_type;
+
     const int inW = input_shape.width;
     const int inH = input_shape.height;
     const int outW = output_shape.width;
@@ -620,33 +645,57 @@ void cuda_scale_mask(const float* src, float* dst, const cv::Size input_shape, c
     int roi_w = std::min(inW - 2 * pad_w, inW - roi_x);
     int roi_h = std::min(inH - 2 * pad_h, inH - roi_y);
 
-    Npp32f* d_crop = nullptr;
+    if(roi_w <=0 || roi_h <=0) return;
+
+    NppT* d_crop = nullptr;
     size_t cropPitch{};
-    cudaMallocPitch(reinterpret_cast<void**>(&d_crop), &cropPitch, roi_w*sizeof(Npp32f), roi_h);
+    cudaMallocPitch(reinterpret_cast<void**>(&d_crop), &cropPitch, roi_w*sizeof(T), roi_h);
 
-    const int srcStep = static_cast<int>(inW * sizeof(Npp32f));
-    const Npp32f* pSrcOffset = reinterpret_cast<const Npp32f*>(src) + roi_y*(srcStep/sizeof(Npp32f)) + roi_x;
+    const int srcStep = static_cast<int>(inW * sizeof(T));
+    const NppT* pSrcOffset = reinterpret_cast<const NppT*>(src)
+        + roi_y * (srcStep / sizeof(T)) + roi_x;
 
-    NppStatus st = nppiCopy_32f_C1R(pSrcOffset, srcStep, d_crop, static_cast<int>(cropPitch), NppiSize{roi_w, roi_h});
-    if(st != NPP_NO_ERROR) { cudaFree(d_crop); return; }
+    NppStatus st = Traits::copyFunc(
+        pSrcOffset,
+        srcStep,
+        d_crop,
+        static_cast<int>(cropPitch),
+        NppiSize{roi_w, roi_h}
+    );
+    if(st != NPP_NO_ERROR) {
+        cudaFree(d_crop);
+        return;
+    }
 
-    Npp32f* d_tmp_out = nullptr;
+    NppT* d_tmp_out = nullptr;
     size_t tmpPitch{};
-    cudaMallocPitch(reinterpret_cast<void**>(&d_tmp_out), &tmpPitch, outW*sizeof(Npp32f), outH);
+    cudaMallocPitch(reinterpret_cast<void**>(&d_tmp_out), &tmpPitch, outW*sizeof(T), outH);
 
-    st = nppiResize_32f_C1R(
+    st = Traits::resizeFunc(
         d_crop, static_cast<int>(cropPitch),
         NppiSize{roi_w, roi_h}, NppiRect{0,0,roi_w,roi_h},
         d_tmp_out, static_cast<int>(tmpPitch),
         NppiSize{outW, outH}, NppiRect{0,0,outW,outH},
         NPPI_INTER_LINEAR
     );
+
     if(st == NPP_NO_ERROR)
     {
-        const size_t rowBytes = outW * sizeof(float);
+        const size_t rowBytes = outW * sizeof(T);
         cudaMemcpy2D(dst, rowBytes, d_tmp_out, tmpPitch, rowBytes, outH, cudaMemcpyDeviceToDevice);
     }
 
     cudaFree(d_crop);
     cudaFree(d_tmp_out);
+}
+
+// 对外两个重载接口，和你原来签名完全保持不变
+void cuda_scale_mask(const float* src, float* dst, const cv::Size input_shape, const cv::Size output_shape)
+{
+    cuda_scale_mask_tpl(src, dst, input_shape, output_shape);
+}
+
+void cuda_scale_mask(const uint8_t* src, uint8_t* dst, const cv::Size input_shape, const cv::Size output_shape)
+{
+    cuda_scale_mask_tpl(src, dst, input_shape, output_shape);
 }

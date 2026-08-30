@@ -57,4 +57,4 @@ class YOLO_PyTorch_Pose(YOLO_PyTorch):
             boxes = boxes[indices].cpu().numpy()
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
             if self.draw_result:
-                self.result = draw_result(self.image, boxes, kpts=boxes[:, 6:])
+                self.result = draw_result(task_type='Pose', image=self.image, preds=boxes, kpts=boxes[:, 6:])    

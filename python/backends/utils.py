@@ -1,7 +1,7 @@
 '''
 Author: taifyang
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-08-16 16:18:01
+LastEditTime: 2026-08-23 16:32:31
 Description: utilities functions
 '''
 
@@ -17,6 +17,7 @@ except:
     print('cupy import failed!')
 try:
     import torch
+    import torch.nn.functional as F 
 except:
     print('torch import failed!')
 from backends.yolo import *
@@ -188,8 +189,7 @@ def crop_mask(masks, boxes):
         x1, y1, x2, y2 = np.expand_dims(x1, 2), np.expand_dims(y1, 2), np.expand_dims(x2, 2), np.expand_dims(y2, 2)
         r = np.arange(w)[None, None, :]
         c = np.arange(h)[None, :, None]
-    else:
-        import torch
+    elif isinstance(boxes, torch.Tensor):
         x1, y1, x2, y2 = torch.chunk(boxes[..., :4][:, :, None], 4, 1)  # x1 shape(n,1,1)
         r = torch.arange(w, device=masks.device, dtype=x1.dtype)[None, None, :]  # rows shape(1,1,w)
         c = torch.arange(h, device=masks.device, dtype=x1.dtype)[None, :, None]  # cols shape(1,h,1)
@@ -203,11 +203,16 @@ param {*} input_shape   input image shape
 param {*} output_shape  output image shape
 return {*}              scaled masks
 '''
-def scale_mask(mask, input_shape, output_shape):
+def scale_masks(mask, input_shape, output_shape):
     gain = min(input_shape[0] / output_shape[0], input_shape[1] / output_shape[1])  # gain  = old / new
     pad = (input_shape[1] - output_shape[1] * gain) / 2, (input_shape[0] - output_shape[0] * gain) / 2  # wh padding
-    mask = mask[int(pad[1]):mask.shape[1]-int(pad[1]), int(pad[0]):mask.shape[0]-int(pad[0])]
-    mask = cv2.resize(mask, (output_shape[1], output_shape[0]), cv2.INTER_LINEAR)
+    top, left = int(round(pad[1] - 0.1)), int(round(pad[0] - 0.1))
+    bottom, right = input_shape[1] - int(round(pad[1] + 0.1)), input_shape[0] - int(round(pad[0] + 0.1))
+    if isinstance(mask, np.ndarray):
+        mask = mask[top:bottom, left:right]
+        mask = cv2.resize(mask, (output_shape[1], output_shape[0]), cv2.INTER_LINEAR)
+    elif isinstance(mask, torch.Tensor):
+        mask = F.interpolate(mask[..., top:bottom, left:right].float(), output_shape[:2], mode='bilinear')
     return mask
 
 
@@ -251,7 +256,7 @@ def nms_rotated(boxes, scores, threshold=0.45):
         boxes = boxes[sorted_idx]
         ious = np.triu(probiou(boxes, boxes), k=1)
         pick = np.nonzero(np.max(ious, axis=0) < threshold)[0]
-    else:
+    elif isinstance(boxes, torch.Tensor):
         sorted_idx = torch.argsort(scores, descending=True)  
         boxes = boxes[sorted_idx]
         ious = probiou(boxes, boxes).triu_(diagonal=1)
@@ -284,7 +289,7 @@ def probiou(obb1, obb2, eps=1e-7):
         t3 = np.log(((a1 + a2) * (b1 + b2) - (c1 + c2)**2) / (4 * np.sqrt(term1 * term2) + eps) + eps) * 0.5
         bd = np.clip(t1 + t2 + t3, eps, 100.0)
         hd = np.sqrt(1.0 - np.exp(-bd) + eps) 
-    else: 
+    elif isinstance(obb1, torch.Tensor): 
         x1, y1 = obb1[..., :2].split(1, dim=-1)                                
         x2, y2 = (x.squeeze(-1)[None] for x in obb2[..., :2].split(1, dim=-1))  
         a1, b1, c1 = _get_covariance_matrix(obb1)                              
@@ -313,7 +318,7 @@ def _get_covariance_matrix(boxes):
         sin = np.sin(c)
         cos2 = cos **2
         sin2 = sin** 2
-    else:
+    elif isinstance(boxes, torch.Tensor):
         gbbs = torch.cat((boxes[:, 2:4].pow(2) / 12, boxes[:, -1:]), dim=-1)
         a, b, c = gbbs.split(1, dim=-1)
         cos = c.cos()
@@ -334,7 +339,7 @@ def regularize_rboxes(rboxes):
         h_ = np.where(w > h, h, w) 
         t = np.where(w > h, t, t + np.pi / 2) % np.pi
         return np.stack([x, y, w_, h_, score, cls, t], axis=-1)
-    else:
+    elif isinstance(rboxes, torch.Tensor):
         x, y, w, h, score, cls, t  = rboxes.unbind(dim=-1)
         w_ = torch.where(w > h, w, h)
         h_ = torch.where(w > h, h, w)
@@ -369,41 +374,58 @@ def xywhr2xyxyxyxy(x):
     return stack([pt1, pt2, pt3, pt4], -2)
 
 '''
-description:    draw result
-param {*} image input image
-param {*} preds prediction result
-param {*} masks masks
-param {*} kpts  keypoints
-return {*}      output image
+description:        draw result
+param {*} task_type task type
+param {*} image     input image
+param {*} preds     prediction result
+param {*} masks     masks
+param {*} kpts      keypoints
+return {*}          output image
 '''
-def draw_result(image, preds=None, masks=[], kpts=None):
-    if preds is None:
+def draw_result(task_type, image, preds=None, masks=None, kpts=None):
+    if task_type == 'Detect':
+        assert (image is not None) and (preds is not None) and (masks is None) and (kpts is None)
+    elif task_type == 'Segment':
+        assert (image is not None) and (preds is not None) and (masks is not None) and (kpts is None)
+    elif task_type == 'Pose':
+        assert (image is not None) and (preds is not None) and (masks is None) and (kpts is not None)
+    elif task_type == 'OBB':
+        assert (image is not None) and (preds is not None) and (masks is None) and (kpts is None)
+    elif task_type == 'Depth':
+        assert (image is not None) and (preds is None) and (masks is None) and (kpts is None)
+    elif task_type == 'Semantic':
+        assert (image is not None) and (preds is None) and (masks is not None) and (kpts is None)
+    else:
+        raise ValueError('Invalid task type: {}'.format(task_type))
+    
+    if task_type == 'Depth':
         depth = np.clip(image * 1000, 0, 65535).astype(np.uint16)
         depth = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
         return depth
     
     image_copy = image.copy()   
-    boxes = preds[..., :4] 
-    scores = preds[..., 4]
-    classes = preds[..., 5].astype(np.int32)
+    if task_type in ['Detect', 'Segment', 'Pose', 'OBB']:
+        boxes = preds[..., :4] 
+        scores = preds[..., 4]
+        classes = preds[..., 5].astype(np.int32)
     
     for mask in masks:
         image_copy[mask] = [np.random.randint(0, 256), np.random.randint(0, 256), np.random.randint(0, 256)]
     result = (image*0.5 + image_copy*0.5).astype(np.uint8)
     
-    if preds.shape[1] == 7:
+    if task_type == 'OBB':
         boxes = np.concatenate((boxes, preds[..., -1:]), axis=1)   
         for box, score, cls in zip(boxes, scores, classes):
             box = xywhr2xyxyxyxy(box).astype(np.int32)
             cv2.polylines(result, [np.asarray(box)], isClosed=True, color=(0, 255, 0), thickness=2)
             cv2.putText(result, 'class:{0} score:{1:.2f}'.format(cls, score), (box[0][0], box[0][1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-    elif kpts is not None:
+    elif task_type == 'Pose':
         for box, score, cls, kpt in zip(boxes, scores, classes, kpts):
             box = box.astype(np.int32)
             cv2.rectangle(result, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
             cv2.putText(result, 'class:{0} score:{1:.2f}'.format(cls, score), (box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
             plot_skeleton_kpts(result, kpt)
-    else:
+    elif task_type in ['Detect', 'Segment']:
         for box, score, cls in zip(boxes, scores, classes):
             box = box.astype(np.int32)
             cv2.rectangle(result, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)

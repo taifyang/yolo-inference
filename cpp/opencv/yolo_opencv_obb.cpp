@@ -87,5 +87,5 @@ void YOLO_OpenCV_OBB::post_process()
 	}
 
 	if(m_draw_result)
-		draw_result(m_output_obb);
+		draw_result();
 }

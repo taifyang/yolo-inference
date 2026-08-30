@@ -1,7 +1,7 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2025-12-23 08:25:46
+LastEditTime: 2026-08-23 11:18:09
 Description: onnxruntime inference class for YOLO detection algorithm
 '''
 
@@ -72,5 +72,5 @@ class YOLO_ONNXRuntime_Detect(YOLO_ONNXRuntime):
                 boxes = boxes[indices]
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
             if self.draw_result:
-                self.result = draw_result(self.image, boxes)
+                self.result = draw_result(task_type='Detect', image=self.image, preds=boxes)
             

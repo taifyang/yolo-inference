@@ -1,7 +1,7 @@
 '''
 Author: taifyang 
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-08-22 16:30:40
+LastEditTime: 2026-08-23 09:56:42
 Description: YOLO algorithm interface class
 '''
 
@@ -37,7 +37,7 @@ class YOLO:
     '''    
     def task_map(self):
         backend_names = ["ONNXRuntime", "OpenCV", "OpenVINO", "PyTorch", "TensorRT"]
-        task_names = ["Classify", "Detect", "Segment", "Pose", "OBB", "Depth"]
+        task_names = ["Classify", "Detect", "Segment", "Pose", "OBB", "Depth", "Semantic"]
         mapping = {}
         for bk in backend_names:
             try:

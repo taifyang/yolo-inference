@@ -740,3 +740,26 @@
 ./yolo TensorRT Depth YOLO26 GPU FP32 ../../weights/yolo26n_depth_fp32.engine bus.jpg
 ./yolo TensorRT Depth YOLO26 GPU FP16 ../../weights/yolo26n_depth_fp16.engine bus.jpg
 ./yolo TensorRT Depth YOLO26 GPU INT8 ../../weights/yolo26n_depth_int8.engine bus.jpg
+
+./yolo Libtorch Semantic YOLO26 CPU FP32 ../../weights/yolo26n_sem_fp32_cpu.torchscript bus.jpg
+./yolo Libtorch Semantic YOLO26 GPU FP32 ../../weights/yolo26n_sem_fp32_gpu.torchscript bus.jpg
+./yolo Libtorch Semantic YOLO26 GPU FP16 ../../weights/yolo26n_sem_fp16_gpu.torchscript bus.jpg
+./yolo ONNXRuntime Semantic YOLO26 CPU FP32 ../../weights/yolo26n_sem_fp32.onnx bus.jpg
+./yolo ONNXRuntime Semantic YOLO26 GPU FP32 ../../weights/yolo26n_sem_fp32.onnx bus.jpg
+./yolo ONNXRuntime Semantic YOLO26 CPU FP16 ../../weights/yolo26n_sem_fp16.onnx bus.jpg
+./yolo ONNXRuntime Semantic YOLO26 GPU FP16 ../../weights/yolo26n_sem_fp16.onnx bus.jpg
+./yolo ONNXRuntime Semantic YOLO26 CPU INT8 ../../weights/yolo26n_sem_int8.onnx bus.jpg
+./yolo ONNXRuntime Semantic YOLO26 GPU INT8 ../../weights/yolo26n_sem_int8.onnx bus.jpg
+./yolo OpenCV Semantic YOLO26 CPU FP32 ../../weights/yolo26n_sem_fp32.onnx bus.jpg
+./yolo OpenCV Semantic YOLO26 GPU FP32 ../../weights/yolo26n_sem_fp32.onnx bus.jpg
+./yolo OpenCV Semantic YOLO26 CPU FP16 ../../weights/yolo26n_sem_fp16.onnx bus.jpg
+./yolo OpenCV Semantic YOLO26 GPU FP16 ../../weights/yolo26n_sem_fp16.onnx bus.jpg
+./yolo OpenVINO Semantic YOLO26 CPU FP32 ../../weights/yolo26n_sem_fp32.xml bus.jpg
+./yolo OpenVINO Semantic YOLO26 GPU FP32 ../../weights/yolo26n_sem_fp32.xml bus.jpg
+./yolo OpenVINO Semantic YOLO26 CPU FP16 ../../weights/yolo26n_sem_fp16.xml bus.jpg
+./yolo OpenVINO Semantic YOLO26 GPU FP16 ../../weights/yolo26n_sem_fp16.xml bus.jpg
+./yolo OpenVINO Semantic YOLO26 CPU INT8 ../../weights/yolo26n_sem_int8.xml bus.jpg
+./yolo OpenVINO Semantic YOLO26 GPU INT8 ../../weights/yolo26n_sem_int8.xml bus.jpg
+./yolo TensorRT Semantic YOLO26 GPU FP32 ../../weights/yolo26n_sem_fp32.engine bus.jpg
+./yolo TensorRT Semantic YOLO26 GPU FP16 ../../weights/yolo26n_sem_fp16.engine bus.jpg
+./yolo TensorRT Semantic YOLO26 GPU INT8 ../../weights/yolo26n_sem_int8.engine bus.jpg

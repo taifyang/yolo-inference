@@ -153,5 +153,5 @@ void YOLO_OpenCV_Segment::post_process()
 	}
 
 	if(m_draw_result)
-		draw_result(m_output_seg);
+		draw_result();
 }

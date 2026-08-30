@@ -1,7 +1,7 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2025-12-23 08:28:19
+LastEditTime: 2026-08-23 16:10:12
 Description: pytorch inference class for YOLO segmentation algorithm
 '''
 
@@ -81,7 +81,7 @@ class YOLO_PyTorch_Segment(YOLO_PyTorch):
             masks = F.interpolate(masks[None], self.inputs_shape, mode="bilinear", align_corners=False)[0]
             resized_masks = []
             for mask in masks:
-                resized_mask = scale_mask(mask.cpu().numpy(), self.inputs_shape, self.image.shape)
+                resized_mask = scale_masks(mask.cpu().numpy(), self.inputs_shape, self.image.shape)
                 resized_masks.append(resized_mask)
             resized_masks = np.array(resized_masks)
             if self.algo_type in ['YOLOv5']:
@@ -89,4 +89,4 @@ class YOLO_PyTorch_Segment(YOLO_PyTorch):
             elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLO26']:
                 resized_masks = resized_masks > 0    
             if self.draw_result:
-                self.result = draw_result(self.image, boxes.cpu().numpy(), resized_masks.astype(np.bool_))
+                self.result = draw_result(task_type='Segment', image=self.image, preds=boxes.cpu().numpy(), masks=resized_masks.astype(np.bool_))

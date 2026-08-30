@@ -66,4 +66,4 @@ class YOLO_OpenVINO_OBB(YOLO_OpenVINO):
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape, xywh=True)
             boxes = np.array(list(reversed(boxes)))
             if self.draw_result:
-                self.result = draw_result(self.image, boxes)   
+                self.result = draw_result(task_type='OBB', image=self.image, preds=boxes)     

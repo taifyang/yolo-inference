@@ -182,10 +182,10 @@ protected:
 	/**
 	 * @description: 							scale boxes
 	 * @param {std::vector<cv::Rect>&} boxes	detect boxes
-	 * @param {Size} size						output image shape
+	 * @param {const cv::Size} size				output image shape
 	 * @return {*}
 	 */
-	void scale_boxes(std::vector<cv::Rect>& boxes, cv::Size size)
+	void scale_boxes(std::vector<cv::Rect>& boxes, const cv::Size size)
 	{
 		float gain = std::min(m_input_size.width * 1.0 / size.width, m_input_size.height * 1.0 / size.height);
 		int pad_w = (m_input_size.width - size.width * gain) / 2;
@@ -202,16 +202,36 @@ protected:
 	}
 
 	/**
-	 * @description: 								draw result
-	 * @param {std::vector<OutputDet>} output_det	detection model output
+	 * @description: 						scale masks
+	 * @param {cv::Mat&} mask				input mask
+	 * @param {const cv::Size} input_shape	input shape
+	 * @param {const cv::Size} output_shape	output shape
 	 * @return {*}
 	 */
-	void draw_result(std::vector<OutputDet> output_det)
+	void scale_mask(cv::Mat& input_mask, cv::Mat& output_mask, const cv::Size input_shape, const cv::Size output_shape)
+	{
+		double gain = std::min(static_cast<double>(input_shape.height) / output_shape.height,
+							static_cast<double>(input_shape.width) / output_shape.width);
+
+		int pad_w = static_cast<int>((input_shape.width - output_shape.width * gain) / 2);
+		int pad_h = static_cast<int>((input_shape.height - output_shape.height * gain) / 2);
+
+		cv::Rect roi(pad_w, pad_h, input_mask.cols - 2 * pad_w, input_mask.rows - 2 * pad_h);
+		roi &= cv::Rect(0, 0, input_mask.cols, input_mask.rows);
+		input_mask = input_mask(roi).clone();
+		cv::resize(input_mask, output_mask, cv::Size(output_shape.width, output_shape.height), 0, 0, cv::INTER_LINEAR);
+	}
+
+	/**
+	 * @description: 								draw result
+	 * @return {*}
+	 */
+	void draw_result()
 	{
     	m_result = m_image.clone();
-		for (int i = 0; i < output_det.size(); i++)
+		for (int i = 0; i < m_output_det.size(); i++)
 		{
-			OutputDet output = output_det[i];
+			OutputDet output = m_output_det[i];
 			int idx = output.id;
 			float score = output.score;
 			cv::Rect box = output.box;

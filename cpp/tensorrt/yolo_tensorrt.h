@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-08-15 10:44:11
+ * @LastEditTime: 2026-08-30 00:15:55
  * @Description: header file for YOLO tensorrt inference
  */
 
@@ -13,6 +13,7 @@
 #include "yolo_pose.h"
 #include "yolo_obb.h"
 #include "yolo_depth.h"
+#include "yolo_semantic.h"
 #include "utils.h"
 #include <cuda_runtime.h>
 #include <NvInfer.h>
@@ -80,9 +81,9 @@ protected:
 	const int m_max_input_size = sizeof(float) * m_input_numel;
 
 	/**
-	 * @description: max bounding box num
+	 * @description: input and output tensor bindings
 	 */
-	const int m_max_box = 1024;
+	std::vector<void*> m_bindings;
 
 	/**
 	 * @description: task type
@@ -130,11 +131,6 @@ private:
 	 * @return {*}
 	 */
 	void release();
-
-	/**
-	 * @description: input and output tensor bindings
-	 */
-	float* m_bindings[2];
 
 	/**
 	 * @description: pointer to input on host
@@ -193,11 +189,6 @@ protected:
 	void release();
 
 	/**
-	 * @description: input and output tensor bindings
-	 */
-	float* m_bindings[2];
-
-	/**
 	 * @description: pointer to output on device
 	 */
 	float* m_output0_device;
@@ -240,6 +231,11 @@ protected:
 	 * @description: box element num
 	 */
 	const int m_num_box_element = 7;
+	
+	/**
+	 * @description: max bounding box num
+	 */
+	const int m_max_box = 1024;
 };
 
 /**
@@ -282,11 +278,6 @@ private:
 	 * @return {*}
 	 */
 	void release();
-
-	/**
-	 * @description: input and output tensor bindings
-	 */
-	float* m_bindings[3];
 
 	/**
 	 * @description: pointer to output0 on device
@@ -396,11 +387,6 @@ private:
 	 */
 	void release();
 
-	/**
-	 * @description: input and output tensor bindings
-	 */
-	float* m_bindings[2];
-
 #ifndef _CUDA_PREPROCESS
 	/**
 	 * @description: pointer to input on host
@@ -453,14 +439,14 @@ private:
 #endif // _CUDA_POSTPROCESS
 
 	/**
-	 * @description: box element num
-	 */
-	const int m_num_box_element = 8;
-
-		/**
 	 * @description: max input size
 	 */
 	const int m_max_input_size = sizeof(float) * 3 * 4096 * 4096;
+
+	/**
+	 * @description: box element num
+	 */
+	const int m_num_box_element = 8;
 
 	/**
 	 * @description: max bounding box num
@@ -509,11 +495,6 @@ private:
 	 */
 	void release();
 
-	/**
-	 * @description: input and output tensor bindings
-	 */
-	float* m_bindings[2];
-
 #ifndef _CUDA_PREPROCESS
 	/**
 	 * @description: pointer to input on host
@@ -537,16 +518,60 @@ private:
 };
 
 /**
- * @description: 			compute affine transformation
- * @param {float*} matrix	input matrix
- * @param {float} x			input x
- * @param {float} y			input y
- * @param {float*} ox		output x
- * @param {float*} oy		output y
- * @return {*}
- */	
-static void affine_project(float* matrix, float x, float y, float* ox, float* oy)
+ * @description: tensorrt inference class for the yolo semantic segmentation algorithm
+ */
+class YOLO_TensorRT_Semantic : public YOLO_TensorRT_Detect, public YOLO_Semantic
 {
-    *ox = matrix[0] * x + matrix[1] * y + matrix[2];
-    *oy = matrix[3] * x + matrix[4] * y + matrix[5];
-}
+public:
+	/**
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
+	 * @return {*}
+	 */
+	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path);
+
+private:
+	/**
+	 * @description: model pre-process
+	 * @return {*}
+	 */
+	void pre_process();
+
+	/**
+	 * @description: model inference
+	 * @return {*}
+	 */
+	void process();
+
+	/**
+	 * @description: model post-process
+	 * @return {*}
+	 */
+	void post_process();
+
+	/**
+	 * @description: resource release
+	 * @return {*}
+	 */
+	void release();
+
+#ifndef _CUDA_PREPROCESS
+	/**
+	 * @description: pointer to input on host
+	 */
+	float* m_input_host;
+#else
+	/**
+	 * @description: pointer to uint8_t input on host 
+	 */
+	uint8_t* m_input_host;
+#endif // !_CUDA_PREPROCESS
+
+	/**
+	 * @description: pointer to output on device
+	 */
+	uint8_t* m_output0_device;
+};

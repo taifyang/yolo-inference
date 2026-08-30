@@ -252,15 +252,14 @@ protected:
 	}
 	/**
 	 * @description: 								draw result
-	 * @param {std::vector<OutputOBB>} output_obb	obb model output
 	 * @return {*}
 	 */
-	void draw_result(std::vector<OutputOBB> output_obb)
+	void draw_result()
 	{
     	m_result = m_image.clone();
-		for (int i = 0; i < output_obb.size(); i++)
+		for (int i = 0; i < m_output_obb.size(); i++)
 		{
-			OutputOBB output = output_obb[i];
+			OutputOBB output = m_output_obb[i];
 			int idx = output.id;
 			float score = output.score;
 			cv::RotatedRect box_rotate = output.box_rotate;
