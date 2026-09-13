@@ -1,12 +1,13 @@
 '''
 Author: taifyang
 Date: 2026-01-05 11:09:10
-LastEditTime: 2026-01-05 11:24:45
+LastEditTime: 2026-09-13 21:36:37
 Description: pytorch inference class for YOLO pose algorithm
 '''
 
 
 from backends.utils import *
+from backends.yolo_pose import *
 from backends.PyTorch.yolo_pytorch import *
 
 
@@ -56,5 +57,5 @@ class YOLO_PyTorch_Pose(YOLO_PyTorch):
             indices = torchvision.ops.nms(box, scores.squeeze(), self.iou_threshold)
             boxes = boxes[indices].cpu().numpy()
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
-            if self.draw_result:
-                self.result = draw_result(task_type='Pose', image=self.image, preds=boxes, kpts=boxes[:, 6:])    
+            if self.render_result:
+                self.result = self.draw_result(boxes)  

@@ -1,19 +1,20 @@
 '''
 Author: taifyang
 Date: 2026-01-12 10:57:45
-LastEditTime: 2026-01-12 11:06:45
+LastEditTime: 2026-09-11 23:04:43
 Description: tensorrt inference class for YOLO obb algorithm
 '''
 
 
 from backends.utils import *
+from backends.yolo_obb import *
 from backends.TensorRT.yolo_tensorrt import *
 
 
 '''
 description: tensorrt inference class for the YOLO detection algorithm
 '''   
-class YOLO_TensorRT_OBB(YOLO_TensorRT):
+class YOLO_TensorRT_OBB(YOLO_TensorRT, YOLO_OBB):
     '''
     description:            construction method
     param {*} self          instance of class
@@ -22,13 +23,10 @@ class YOLO_TensorRT_OBB(YOLO_TensorRT):
     param {str} model_type  model type
     param {str} model_path  model path
     return {*}
-    '''      
+    '''   
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
-        super().__init__(algo_type, device_type, model_type, model_path)
-        assert self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12', 'YOLO26'], 'algo type not supported!'
-        self.class_num = 15		            
-        self.inputs_shape = (1024, 1024) 
-        self.iou_threshold = 0.7
+        YOLO_TensorRT.__init__(self, algo_type, device_type, model_type, model_path)
+        YOLO_OBB.__init__(self, algo_type, device_type, model_type, model_path)
         self.output0_device = cupy.empty(self.outputs_shape[0], dtype=np.float32)
         self.output0_ptr = self.output0_device.data.ptr
 
@@ -80,6 +78,6 @@ class YOLO_TensorRT_OBB(YOLO_TensorRT):
             boxes = regularize_rboxes(boxes)
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape, xywh=True)
             boxes = np.array(list(reversed(boxes)))
-            if self.draw_result:
-                self.result = draw_result(task_type='OBB', image=self.image, preds=boxes)   
+            if self.render_result:
+                self.result = self.draw_result(boxes)  
   

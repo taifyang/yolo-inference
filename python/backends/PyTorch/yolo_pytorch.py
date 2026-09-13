@@ -1,7 +1,7 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-08-30 21:04:12
+LastEditTime: 2026-09-10 22:16:47
 Description: pytorch inference class for YOLO algorithm
 '''
 

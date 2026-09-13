@@ -1,27 +1,39 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-08-03 22:19:15
+LastEditTime: 2026-09-11 23:12:33
 Description: onnxruntime inference class for YOLO depth estimation algorithm
 '''
 
 
 from backends.utils import *
+from backends.yolo_depth import *
 from backends.ONNXRuntime.yolo_onnxruntime import *
             
 
 '''
 description: onnxruntime inference class for the YOLO depth estimation algorithm
 '''      
-class YOLO_ONNXRuntime_Depth(YOLO_ONNXRuntime):
+class YOLO_ONNXRuntime_Depth(YOLO_ONNXRuntime, YOLO_Depth):
+    '''
+    description:            construction method
+    param {*} self          instance of class
+    param {str} algo_type   algorithm type
+    param {str} device_type device type
+    param {str} model_type  model type
+    param {str} model_path  model path
+    return {*}
+    '''      
+    def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
+        YOLO_ONNXRuntime.__init__(self, algo_type, device_type, model_type, model_path)
+        YOLO_Depth.__init__(self, algo_type, device_type, model_type, model_path)
+
     '''
     description:    model pre-process
     param {*} self  instance of class
     return {*}
     '''    
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLO26'], 'algo type not supported!'
-        self.inputs_shape = (768, 768)
         input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW
         input = input / 255.0
@@ -39,5 +51,5 @@ class YOLO_ONNXRuntime_Depth(YOLO_ONNXRuntime):
     def post_process(self) -> None:
         output = np.squeeze(self.outputs[0]).astype(dtype=np.float32)
         depth = scale_masks(output, self.inputs_shape, self.image.shape)
-        if self.draw_result:
-            self.result = draw_result(task_type='Depth', image=depth)
+        if self.render_result:
+            self.result = self.draw_result(depth)
