@@ -1,26 +1,39 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-01-20 23:51:18
+LastEditTime: 2026-09-11 21:13:42
 Description: opencv inference class for YOLO segmentation algorithm
 '''
 
 
 from backends.utils import *
+from backends.yolo_segment import *
 from backends.OpenCV.yolo_opencv import *
 
 
 '''
 description: opencv inference class for the YOLO segmentation algorithm
 '''    
-class YOLO_OpenCV_Segment(YOLO_OpenCV):
+class YOLO_OpenCV_Segment(YOLO_OpenCV, YOLO_Segment):
+    '''
+    description:            construction method
+    param {*} self          instance of class
+    param {str} algo_type   algorithm type
+    param {str} device_type device type
+    param {str} model_type  model type
+    param {str} model_path  model path
+    return {*}
+    '''   
+    def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
+        YOLO_OpenCV.__init__(self, algo_type, device_type, model_type, model_path)
+        YOLO_Segment.__init__(self, algo_type, device_type, model_type, model_path)
+
     '''
     description:    model pre-process
     param {*} self  instance of class
     return {*}
     ''' 
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv5', 'YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLO26'], 'algo type not supported!'
         input = letterbox(self.image, self.inputs_shape)
         self.inputs = cv2.dnn.blobFromImage(input, 1/255., size=self.inputs_shape, swapRB=True, crop=False)
         self.net.setInput(self.inputs)
@@ -90,5 +103,5 @@ class YOLO_OpenCV_Segment(YOLO_OpenCV):
                 resized_masks = resized_masks > 0.5
             elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12', 'YOLO26']:
                 resized_masks = resized_masks > 0       
-            if self.draw_result:
-                self.result = draw_result(task_type='Segment', image=self.image, preds=boxes, masks=resized_masks)
+            if self.render_result:
+                self.result = self.draw_result(boxes, resized_masks)

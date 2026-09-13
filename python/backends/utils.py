@@ -1,7 +1,7 @@
 '''
 Author: taifyang
 Date: 2024-06-12 22:23:07
-LastEditTime: 2026-08-23 16:32:31
+LastEditTime: 2026-09-13 21:51:35
 Description: utilities functions
 '''
 
@@ -372,62 +372,3 @@ def xywhr2xyxyxyxy(x):
     pt3 = ctr - vec1 - vec2
     pt4 = ctr - vec1 + vec2
     return stack([pt1, pt2, pt3, pt4], -2)
-
-'''
-description:        draw result
-param {*} task_type task type
-param {*} image     input image
-param {*} preds     prediction result
-param {*} masks     masks
-param {*} kpts      keypoints
-return {*}          output image
-'''
-def draw_result(task_type, image, preds=None, masks=None, kpts=None):
-    if task_type == 'Detect':
-        assert (image is not None) and (preds is not None) and (masks is None) and (kpts is None)
-    elif task_type == 'Segment':
-        assert (image is not None) and (preds is not None) and (masks is not None) and (kpts is None)
-    elif task_type == 'Pose':
-        assert (image is not None) and (preds is not None) and (masks is None) and (kpts is not None)
-    elif task_type == 'OBB':
-        assert (image is not None) and (preds is not None) and (masks is None) and (kpts is None)
-    elif task_type == 'Depth':
-        assert (image is not None) and (preds is None) and (masks is None) and (kpts is None)
-    elif task_type == 'Semantic':
-        assert (image is not None) and (preds is None) and (masks is not None) and (kpts is None)
-    else:
-        raise ValueError('Invalid task type: {}'.format(task_type))
-    
-    if task_type == 'Depth':
-        depth = np.clip(image * 1000, 0, 65535).astype(np.uint16)
-        depth = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
-        return depth
-    
-    image_copy = image.copy()   
-    if task_type in ['Detect', 'Segment', 'Pose', 'OBB']:
-        boxes = preds[..., :4] 
-        scores = preds[..., 4]
-        classes = preds[..., 5].astype(np.int32)
-    
-    for mask in masks:
-        image_copy[mask] = [np.random.randint(0, 256), np.random.randint(0, 256), np.random.randint(0, 256)]
-    result = (image*0.5 + image_copy*0.5).astype(np.uint8)
-    
-    if task_type == 'OBB':
-        boxes = np.concatenate((boxes, preds[..., -1:]), axis=1)   
-        for box, score, cls in zip(boxes, scores, classes):
-            box = xywhr2xyxyxyxy(box).astype(np.int32)
-            cv2.polylines(result, [np.asarray(box)], isClosed=True, color=(0, 255, 0), thickness=2)
-            cv2.putText(result, 'class:{0} score:{1:.2f}'.format(cls, score), (box[0][0], box[0][1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-    elif task_type == 'Pose':
-        for box, score, cls, kpt in zip(boxes, scores, classes, kpts):
-            box = box.astype(np.int32)
-            cv2.rectangle(result, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
-            cv2.putText(result, 'class:{0} score:{1:.2f}'.format(cls, score), (box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            plot_skeleton_kpts(result, kpt)
-    elif task_type in ['Detect', 'Segment']:
-        for box, score, cls in zip(boxes, scores, classes):
-            box = box.astype(np.int32)
-            cv2.rectangle(result, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
-            cv2.putText(result, 'class:{0} score:{1:.2f}'.format(cls, score), (box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)       
-    return result

@@ -1,7 +1,7 @@
 '''
 Author: taifyang  
 Date: 2024-06-12 22:23:07
-LastEditTime: 2025-12-23 08:25:29
+LastEditTime: 2026-09-11 00:08:19
 Description: onnxruntime inference class for YOLO algorithm
 '''
 
@@ -25,7 +25,7 @@ class YOLO_ONNXRuntime(YOLO):
     return {*}
     '''    
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
-        super().__init__()
+        YOLO.__init__(self)
         assert os.path.exists(model_path), 'model not exists!'
         assert device_type in ['CPU', 'GPU'], 'unsupported device type!'
         options = onnxruntime.SessionOptions()

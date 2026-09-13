@@ -7,20 +7,33 @@ Description: onnxruntime inference class for YOLO pose algorithm
 
 
 from backends.utils import *
+from backends.yolo_pose import *
 from backends.ONNXRuntime.yolo_onnxruntime import *
 
 
 '''
 description: onnxruntime inference class for the YOLO pose algorithm
 '''
-class YOLO_ONNXRuntime_Pose(YOLO_ONNXRuntime):
+class YOLO_ONNXRuntime_Pose(YOLO_ONNXRuntime, YOLO_Pose):
+    '''
+    description:            construction method
+    param {*} self          instance of class
+    param {str} algo_type   algorithm type
+    param {str} device_type device type
+    param {str} model_type  model type
+    param {str} model_path  model path
+    return {*}
+    '''   
+    def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
+        YOLO_ONNXRuntime.__init__(self, algo_type, device_type, model_type, model_path)
+        YOLO_Pose.__init__(self, algo_type, device_type, model_type, model_path)
+
     '''
     description:    model pre-process
     param {*} self  instance of class
     return {*}
     '''    
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12', 'YOLO26'], 'algo type not supported!'
         input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW
         input = input / 255.0
@@ -58,5 +71,5 @@ class YOLO_ONNXRuntime_Pose(YOLO_ONNXRuntime):
                 indices = nms(boxes, scores, self.iou_threshold) 
                 boxes = boxes[indices]
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
-            if self.draw_result:
-                self.result = draw_result(task_type='Pose', image=self.image, preds=boxes, kpts=boxes[:, 6:])    
+            if self.render_result:
+                self.result = self.draw_result(boxes)    

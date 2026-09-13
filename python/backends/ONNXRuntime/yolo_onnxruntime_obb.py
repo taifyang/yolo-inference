@@ -1,29 +1,32 @@
 '''
 Author: taifyang
 Date: 2026-01-09 22:58:13
-LastEditTime: 2026-01-20 22:36:50
-Description: onnxruntime inference class for YOLO pose algorithm
+LastEditTime: 2026-09-11 22:38:39
+Description: onnxruntime inference class for YOLO obb algorithm
 '''
 
 
 from backends.utils import *
+from backends.yolo_obb import *
 from backends.ONNXRuntime.yolo_onnxruntime import *
 
 
 '''
 description: onnxruntime inference class for the YOLO obb algorithm
 '''
-class YOLO_ONNXRuntime_OBB(YOLO_ONNXRuntime):
+class YOLO_ONNXRuntime_OBB(YOLO_ONNXRuntime, YOLO_OBB):
     '''
-    description:    construction method
-    param {*} self  instance of class
+    description:            construction method
+    param {*} self          instance of class
+    param {str} algo_type   algorithm type
+    param {str} device_type device type
+    param {str} model_type  model type
+    param {str} model_path  model path
     return {*}
-    '''    
+    '''   
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
-        super().__init__(algo_type, device_type, model_type, model_path)
-        self.class_num = 15		            
-        self.inputs_shape = (1024, 1024) 
-        self.iou_threshold = 0.7
+        YOLO_ONNXRuntime.__init__(self, algo_type, device_type, model_type, model_path)
+        YOLO_OBB.__init__(self, algo_type, device_type, model_type, model_path)
 
     '''
     description:    model pre-process
@@ -31,7 +34,6 @@ class YOLO_ONNXRuntime_OBB(YOLO_ONNXRuntime):
     return {*}
     '''    
     def pre_process(self) -> None:
-        assert self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12', 'YOLO26'], 'algo type not supported!'
         input = letterbox(self.image, self.inputs_shape)
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW
         input = input / 255.0
@@ -69,6 +71,6 @@ class YOLO_ONNXRuntime_OBB(YOLO_ONNXRuntime):
             boxes = regularize_rboxes(boxes)
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape, xywh=True)
             boxes = np.array(list(reversed(boxes)))
-            if self.draw_result:
-                self.result = draw_result(task_type='OBB', image=self.image, preds=boxes)   
+            if self.render_result:
+                self.result = self.draw_result(boxes)   
                 

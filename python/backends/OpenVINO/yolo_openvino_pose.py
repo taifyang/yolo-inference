@@ -1,19 +1,33 @@
 '''
 Author: taifyang
 Date: 2026-01-05 10:50:30
-LastEditTime: 2026-01-05 10:50:40
+LastEditTime: 2026-09-13 21:36:16
 Description: openvino inference class for YOLO pose algorithm
 '''
 
 
 from backends.utils import *
+from backends.yolo_pose import *
 from backends.OpenVINO.yolo_openvino import *
 
  
 '''
 description: openvino inference class for the YOLO pose algorithm
 '''   
-class YOLO_OpenVINO_Pose(YOLO_OpenVINO):
+class YOLO_OpenVINO_Pose(YOLO_OpenVINO, YOLO_Pose):
+    '''
+    description:            construction method
+    param {*} self          instance of class
+    param {str} algo_type   algorithm type
+    param {str} device_type device type
+    param {str} model_type  model type
+    param {str} model_path  model path
+    return {*}
+    '''   
+    def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
+        YOLO_OpenVINO.__init__(self, algo_type, device_type, model_type, model_path)
+        YOLO_Pose.__init__(self, algo_type, device_type, model_type, model_path)
+
     '''
     description:    model pre-process
     param {*} self  instance of class
@@ -54,5 +68,5 @@ class YOLO_OpenVINO_Pose(YOLO_OpenVINO):
                 indices = nms(boxes, scores, self.iou_threshold) 
                 boxes = boxes[indices]
             boxes = scale_boxes(boxes, self.inputs_shape, self.image.shape)
-            if self.draw_result:
-                self.result = draw_result(task_type='Pose', image=self.image, preds=boxes, kpts=boxes[:, 6:])    
+            if self.render_result:
+                self.result = self.draw_result(boxes) 
