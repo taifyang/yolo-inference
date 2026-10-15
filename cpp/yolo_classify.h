@@ -1,13 +1,7 @@
 /* 
  * @Author: taifyang
- * @Date: 2025-10-21 06:50:02
- * @LastEditTime: 2026-08-09 23:05:17
- * @Description: 
- */
-/*
- * @Author: taifyang 
- * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2024-10-30 22:30:23
+ * @Date: 2026-09-10 22:02:36
+ * @LastEditTime: 2026-10-15 23:02:13
  * @Description: classification algorithm class
  */
 
@@ -53,6 +47,12 @@ public:
 	}
 
 protected:
+	/**
+	 * @description: 					center crop
+	 * @param {cv::Mat&} input_image	input image
+	 * @param {cv::Mat&} output_image	output image
+	 * @return {*}
+	 */
 	void CenterCrop(cv::Mat& input_image, cv::Mat& output_image)
 	{
 		int crop_size = std::min(input_image.cols, input_image.rows);
@@ -61,6 +61,13 @@ protected:
 		cv::resize(output_image, output_image, m_input_size);
 	}
 
+	/**
+	 * @description: 					normalize
+	 * @param {cv::Mat&} input_image	input image
+	 * @param {cv::Mat&} output_image	output image
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @return {*}
+	 */
 	void Normalize(cv::Mat& input_image, cv::Mat& output_image, Algo_Type algo_type)
 	{
 		output_image.convertTo(input_image, CV_32FC3, 1. / 255.);
@@ -72,7 +79,7 @@ protected:
 	}
 
 	/**	
-	 * @description: 								draw result
+	 * @description:	draw result
 	 * @return {*}
 	 */
 	void draw_result()

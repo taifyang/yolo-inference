@@ -41,6 +41,14 @@ struct MaskParams
 class YOLO_Segment : virtual public YOLO_Detect
 {
 public:
+	/**
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
+	 * @return {*}
+	 */
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 	{
 		if (m_algo_type == YOLOv5)
