@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2026-01-08 22:18:50
- * @LastEditTime: 2026-01-17 20:33:31
+ * @LastEditTime: 2026-10-15 22:58:00
  * @Description: obb algorithm class
  */
 
@@ -142,117 +142,6 @@ protected:
 		return sorted_idx;
 	}
 	
-	/**
-	 * @description: 											transform vector to eigen matrix
-	 * @param {const std::vector<std::vector<float>> &} vec		input vector
-	 * @return {Eigen::MatrixXf}								output matrix
-	 */
-	Eigen::MatrixXf vector2Eigen(const std::vector<std::vector<float>> & vec) 
-	{
-		Eigen::MatrixXf mat(vec.size(), vec[0].size());
-		for (int i = 0; i < vec.size(); ++i) 
-			for (int j = 0; j < vec[0].size(); ++j) 
-				mat(i, j) = vec[i][j];
-		return mat;
-	}
-
-	/**
-	 * @description: 															get covariance matrix
-	 * @param {Eigen::MatrixXf} rboxes											rotated rboxes
-	 * @return {std::tuple<Eigen::MatrixXf, Eigen::MatrixXf, Eigen::MatrixXf>}	output tuple of matrix
-	 */
-	std::tuple<Eigen::MatrixXf, Eigen::MatrixXf, Eigen::MatrixXf> get_covariance_matrix(Eigen::MatrixXf rboxes)
-	{
-		Eigen::MatrixXf xy_square = rboxes.block(0, 2, rboxes.rows(), 2).array().square() / 12.0;
-		Eigen::MatrixXf c_col = rboxes.col(rboxes.cols() - 1);
-
-		Eigen::MatrixXf gbbs(rboxes.rows(), 3);
-		gbbs << xy_square, c_col;
-
-		Eigen::MatrixXf a = gbbs.col(0);
-		Eigen::MatrixXf b = gbbs.col(1);
-		Eigen::MatrixXf c = gbbs.col(2);
-
-		Eigen::MatrixXf cos = c.array().cos();
-		Eigen::MatrixXf sin = c.array().sin();
-		Eigen::MatrixXf cos2 = cos.array().square();
-		Eigen::MatrixXf sin2 = sin.array().square();
-
-		return {a.array() * cos2.array() + b.array() * sin2.array(), a.array() * sin2.array() + b.array() * cos2.array(), (a.array() - b.array()) * cos.array() * sin.array()};
-	}
-
-	/**
-	 * @description: 					probiou
-	 * @param {Eigen::MatrixXf&} obb1	obb1
-	 * @param {Eigen::MatrixXf&} obb2	obb2
-	 * @param {float} eps				eps
-	 * @return {Eigen::MatrixXf}		output matrix
-	 */
-	Eigen::MatrixXf probiou(Eigen::MatrixXf& obb1, Eigen::MatrixXf& obb2, float eps)
-	{
-		int N = obb1.rows();
-		Eigen::MatrixXf x1 = obb1.block(0, 0, N, 1), y1 = obb1.block(0, 1, N, 1); 
-		Eigen::MatrixXf x2 = obb2.col(0).transpose(), y2 = obb2.col(1).transpose();
-
-		auto [a1, b1, c1] = get_covariance_matrix(obb1);
-		auto [a2_raw, b2_raw, c2_raw] = get_covariance_matrix(obb2);
-		Eigen::MatrixXf a2 = a2_raw.transpose(), b2 = b2_raw.transpose(), c2 = c2_raw.transpose();
-			
-		Eigen::ArrayXXf a_sum = a1.array().replicate(1, N) + a2.array().replicate(N, 1);
-		Eigen::ArrayXXf b_sum = b1.array().replicate(1, N) + b2.array().replicate(N, 1);
-		Eigen::ArrayXXf c_sum = c1.array().replicate(1, N) + c2.array().replicate(N, 1);
-		Eigen::ArrayXXf x_diff = x1.array().replicate(1, N) - x2.array().replicate(N, 1);
-		Eigen::ArrayXXf y_diff = y1.array().replicate(1, N) - y2.array().replicate(N, 1);
-		Eigen::ArrayXXf denominator = a_sum * b_sum - c_sum.square() + eps;
-		Eigen::ArrayXXf t1 = (a_sum * y_diff.square() + b_sum * x_diff.square()) / denominator * 0.25f;
-		Eigen::ArrayXXf t2 = (c_sum * (-x_diff) * y_diff) / denominator * 0.5f; 
-
-		Eigen::ArrayXXf term1 = (a1.array() * b1.array() - c1.array().square()).cwiseMax(0.0f);
-		Eigen::ArrayXXf term2 = (a2.array() * b2.array() - c2.array().square()).cwiseMax(0.0f);
-		Eigen::ArrayXXf numerator_t3 = a_sum * b_sum - c_sum.square();
-		Eigen::ArrayXXf term1_term2 = term1.replicate(1, N) * term2.replicate(N, 1);
-		Eigen::ArrayXXf denominator_t3 = 4.0f * term1_term2.sqrt() + eps;
-		Eigen::ArrayXXf log_input = numerator_t3 / denominator_t3 + eps;
-		Eigen::ArrayXXf t3 = log_input.log() * 0.5f;
-		Eigen::ArrayXXf bd = (t1.array() + t2.array() + t3).cwiseMax(eps).cwiseMin(100.0f);
-		Eigen::ArrayXXf hd = (1.0f - (-bd).exp() + eps).cwiseMax(eps).sqrt();
-
-		return (1 - hd).matrix();
-	}
-
-	/**
-	 * @description: 							triu k1
-	 * @param {const Eigen::MatrixXf&} mat		input matrix
-	 * @return {Eigen::MatrixXf}				output matrix
-	 */
-	Eigen::MatrixXf triu_k1(const Eigen::MatrixXf& mat) 
-	{
-		Eigen::MatrixXf upper = mat.triangularView<Eigen::Upper>();  
-		Eigen::MatrixXf result = upper;
-		int min_dim = std::min(mat.rows(), mat.cols());
-		for(int i = 0; i < min_dim; i++) 
-		{
-			result(i, i) = 0.0; 
-		}
-		return result;
-	}
-
-	/**
-	 * @description: 							find indices max below threshold
-	 * @param {const Eigen::MatrixXf&} ious		ious
-	 * @param {float} threshold					threshold
-	 * @return {std::vector<int>}				indices
-	 */
-	std::vector<int> find_indices_max_below_threshold(const Eigen::MatrixXf& ious, float threshold) 
-	{	
-		std::vector<int> indices;
-		Eigen::VectorXf col_max = ious.colwise().maxCoeff();	
-		for (int i = 0; i < ious.cols(); ++i) 
-			if (col_max(i) < threshold) 
-				indices.push_back(i);	
-		return indices;
-	}
-
 	/**
 	 * @description: 									scale rotated boxes
 	 * @param {std::vector<std::vector<float>>&} rboxes	obb rotated boxes

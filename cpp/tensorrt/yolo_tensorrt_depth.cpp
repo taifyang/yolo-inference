@@ -37,9 +37,8 @@ void YOLO_TensorRT_Depth::init(const Algo_Type algo_type, const Device_Type devi
 #ifdef _CUDA_POSTPROCESS
 	cudaMalloc(&m_depth_device, m_max_input_size);
 
-	int roi_w = 4096, roi_h = 4096;
-	cudaMallocPitch(reinterpret_cast<void**>(&m_scale_crop_device), &m_scale_crop_pitch, roi_w * sizeof(float), roi_h);
-	cudaMallocPitch(reinterpret_cast<void**>(&m_scale_tmp_out_device), &m_scale_tmp_out_pitch, roi_w * sizeof(float), roi_h);
+	cudaMallocPitch(reinterpret_cast<void**>(&m_scale_crop_device), &m_scale_crop_pitch, m_max_input_width * sizeof(float), m_max_input_height);
+	cudaMallocPitch(reinterpret_cast<void**>(&m_scale_tmp_out_device), &m_scale_tmp_out_pitch, m_max_input_width * sizeof(float), m_max_input_height);
 #endif // _CUDA_POSTPROCESS
 }
 

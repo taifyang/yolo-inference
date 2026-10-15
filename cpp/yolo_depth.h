@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2026-08-05 20:53:59
- * @LastEditTime: 2026-08-14 23:29:31
+ * @LastEditTime: 2026-10-15 23:00:32
  * @Description: depth estimation algorithm class
  */
 
@@ -15,6 +15,14 @@
 class YOLO_Depth : virtual public YOLO_Detect
 {
 public:
+	/**
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
+	 * @return {*}
+	 */
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 	{
 		m_input_size = cv::Size(768, 768);

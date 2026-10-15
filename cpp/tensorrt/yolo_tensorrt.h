@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-08-30 00:15:55
+ * @LastEditTime: 2026-10-15 23:16:37
  * @Description: header file for YOLO tensorrt inference
  */
 
@@ -76,9 +76,19 @@ protected:
 	float* m_input_device;
 
 	/**
+	 * @description: max input height
+	 */
+	const int m_max_input_height = 4096;
+
+	/**
+	 * @description: max input width
+	 */
+	const int m_max_input_width = 4096;
+
+	/**
 	 * @description: max input size
 	 */
-	const int m_max_input_size = sizeof(float) * m_input_numel;
+	const int m_max_input_size = sizeof(float) * m_max_input_height * m_max_input_width * 3;
 
 	/**
 	 * @description: input and output tensor bindings
@@ -94,21 +104,6 @@ protected:
 	 * @description: CUDA stream for async execution
 	 */
 	cudaStream_t m_stream = nullptr;
-
-	/**
-	 * @description: CUDA graph for optimized inference
-	 */
-	cudaGraph_t m_graph = nullptr;
-
-	/**
-	 * @description: CUDA graph executable
-	 */
-	cudaGraphExec_t m_graph_exec = nullptr;
-
-	/**
-	 * @description: flag to indicate if CUDA graph is enabled
-	 */
-	bool m_use_cuda_graph = false;
 };
 
 /**
@@ -524,11 +519,6 @@ private:
 #endif // _CUDA_POSTPROCESS
 
 	/**
-	 * @description: max input size
-	 */
-	const int m_max_input_size = sizeof(float) * 3 * 4096 * 4096;
-
-	/**
 	 * @description: box element num
 	 */
 	const int m_num_box_element = 8;
@@ -620,11 +610,6 @@ private:
 	 */
 	size_t m_scale_tmp_out_pitch;
 #endif // _CUDA_POSTPROCESS
-
-	/**
-	 * @description: max input size
-	 */
-	const int m_max_input_size = sizeof(float) * 4096 * 4096;
 };
 
 /**
@@ -711,9 +696,4 @@ private:
 	 */
 	size_t m_scale_tmp_out_pitch;
 #endif // _CUDA_POSTPROCESS
-
-	/**
-	 * @description: max input size
-	 */
-	const int m_max_input_size = sizeof(uint8_t) * 4096 * 4096;
 };

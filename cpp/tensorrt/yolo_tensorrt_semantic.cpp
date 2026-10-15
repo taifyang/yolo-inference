@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2026-01-03 21:57:36
- * @LastEditTime: 2026-08-30 00:19:27
+ * @LastEditTime: 2026-10-15 23:30:25
  * @Description: source file for YOLO tensorrt semantic segmentation
  */
 
@@ -37,9 +37,8 @@ void YOLO_TensorRT_Semantic::init(const Algo_Type algo_type, const Device_Type d
 #ifdef _CUDA_POSTPROCESS
 	cudaMalloc(&m_mask_device, m_max_input_size);
 
-	int roi_w = 4096, roi_h = 4096;
-	cudaMallocPitch(reinterpret_cast<void**>(&m_scale_crop_device), &m_scale_crop_pitch, roi_w * sizeof(uint8_t), roi_h);
-	cudaMallocPitch(reinterpret_cast<void**>(&m_scale_tmp_out_device), &m_scale_tmp_out_pitch, 4096 * sizeof(uint8_t), 4096);
+	cudaMallocPitch(reinterpret_cast<void**>(&m_scale_crop_device), &m_scale_crop_pitch, m_max_input_width * sizeof(uint8_t), m_max_input_height);
+	cudaMallocPitch(reinterpret_cast<void**>(&m_scale_tmp_out_device), &m_scale_tmp_out_pitch, m_max_input_width * sizeof(uint8_t), m_max_input_height);
 #endif // _CUDA_POSTPROCESS
 }
 

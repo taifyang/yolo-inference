@@ -15,6 +15,14 @@
 class YOLO_Semantic : virtual public YOLO_Detect
 {
 public:
+	/**
+	 * @description: 					initialization interface
+	 * @param {Algo_Type} algo_type		algorithm type
+	 * @param {Device_Type} device_type	device type
+	 * @param {Model_Type} model_type	model type
+	 * @param {string} model_path		model path
+	 * @return {*}
+	 */
 	void init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 	{
 		m_input_size = cv::Size(1024, 1024);
