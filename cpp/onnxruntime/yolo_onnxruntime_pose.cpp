@@ -17,6 +17,10 @@ void YOLO_ONNXRuntime_Pose::init(const Algo_Type algo_type, const Device_Type de
 	YOLO_ONNXRuntime::init(algo_type, device_type, model_type, model_path);
 	YOLO_Pose::init(algo_type, device_type, model_type, model_path);
 
+	m_input.resize(m_input_numel);
+	m_input_node_dims = { 1, 3, m_input_size.height, m_input_size.width };
+	m_split_images.resize(3);
+
 	m_output0.resize(m_output_numdet);
 	if (m_model_type == FP16)
 	{

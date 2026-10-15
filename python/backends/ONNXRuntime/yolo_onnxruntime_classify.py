@@ -36,7 +36,6 @@ class YOLO_ONNXRuntime_Classify(YOLO_ONNXRuntime, YOLO_Classify):
     def pre_process(self) -> None:
         if self.algo_type in ['YOLOv5']:
             input = centercrop(self.image, self.inputs_shape)
-            input = cv2.imread("host.png", -1)
             input = normalize(input, self.algo_type)
         elif self.algo_type in ['YOLOv8', 'YOLOv11', 'YOLOv12', 'YOLO26']:
             self.inputs_shape = (224, 224)

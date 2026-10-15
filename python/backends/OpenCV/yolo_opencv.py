@@ -24,16 +24,16 @@ class YOLO_OpenCV(YOLO):
     return {*}
     '''     
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
-        super().__init__()
+        YOLO.__init__(self)
         assert os.path.exists(model_path), 'model not exists!'
         assert device_type in ['CPU', 'GPU'], 'unsupported device type!'
         assert model_type in ['FP32', 'FP16'], 'unsupported model type!'
+        cv2.setNumThreads(self.threads_num); 
         self.net = cv2.dnn.readNet(model_path)
         self.algo_type = algo_type
         if device_type == 'CPU':
             self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
-            self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
-            cv2.setNumThreads(self.threads_num);  
+            self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU) 
         elif device_type == 'GPU':
             self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
             if model_type == 'FP32':

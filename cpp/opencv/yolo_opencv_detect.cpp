@@ -20,9 +20,8 @@ void YOLO_OpenCV_Detect::init(const Algo_Type algo_type, const Device_Type devic
 
 void YOLO_OpenCV_Detect::pre_process()
 {
-	cv::Mat letterbox;
-	LetterBox(m_image, letterbox, m_params, m_input_size);
-	cv::dnn::blobFromImage(letterbox, m_input, 1. / 255., m_input_size, cv::Scalar(), true, false);
+	LetterBox(m_image, m_letterbox, m_params, m_input_size);
+	cv::dnn::blobFromImage(m_letterbox, m_input, 1. / 255., m_input_size, cv::Scalar(), true, false);
 }
 
 void YOLO_OpenCV_Detect::post_process()

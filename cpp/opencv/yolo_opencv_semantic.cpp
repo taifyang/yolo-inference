@@ -28,8 +28,7 @@ void YOLO_OpenCV_Semantic::post_process()
 	m_output0_host = (uint8_t*)m_output[0].data;
 
 	m_mask = cv::Mat::zeros(m_image.size(), CV_8UC1);
-	cv::Mat output = cv::Mat::zeros(m_input_size, CV_8UC1);
-	std::copy(m_output0_host, m_output0_host + m_output_numdet, output.data);
+	cv::Mat output(m_input_size, CV_8UC1, m_output0_host);
 	scale_mask(output, m_mask, m_input_size, m_image.size());
 
 	if (m_draw_result)

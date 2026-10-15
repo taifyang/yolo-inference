@@ -27,8 +27,9 @@ void YOLO_Libtorch::init(const Algo_Type algo_type, const Device_Type device_typ
 		std::exit(-1);
 	}
 
+	m_module.eval();
+
 	m_device = (device_type == GPU ? at::kCUDA : at::kCPU);
-	m_module.to(m_device);
 
 	if (model_type != FP32 && model_type != FP16)
 	{
@@ -41,6 +42,17 @@ void YOLO_Libtorch::init(const Algo_Type algo_type, const Device_Type device_typ
 		std::exit(-1);
 	}
 	m_model_type = model_type;
+
+	try
+	{
+		m_module = torch::jit::optimize_for_inference(m_module);
+	}
+	catch (...)
+	{
+	}
+
+	m_module.to(m_device);
+
 	if (model_type == FP16)
 	{
 		m_module.to(torch::kHalf);

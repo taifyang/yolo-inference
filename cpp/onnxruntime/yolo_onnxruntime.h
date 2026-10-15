@@ -95,6 +95,26 @@ protected:
 	 * @description: output node names
 	 */
 	std::vector<const char*> m_output_names;
+
+	/**
+	 * @description: pre-allocated memory info for tensor creation
+	 */
+	Ort::MemoryInfo* m_memory_info;
+
+	/**
+	 * @description: pre-allocated input node dims
+	 */
+	std::vector<int64_t> m_input_node_dims;
+
+	/**
+	 * @description: pre-allocated letterbox image
+	 */
+	cv::Mat m_letterbox;
+
+	/**
+	 * @description: pre-allocated split channels
+	 */
+	std::vector<cv::Mat> m_split_images;
 };
 
 /**

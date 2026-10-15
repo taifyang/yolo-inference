@@ -42,6 +42,21 @@ void YOLO_TensorRT_OBB::init(const Algo_Type algo_type, const Device_Type device
 #ifdef _CUDA_POSTPROCESS
 	cudaMallocHost(&m_output_box_host, sizeof(float) * (m_num_box_element * m_max_box + 1));
 	cudaMalloc(&m_output_box_device, sizeof(float) * (m_num_box_element * m_max_box + 1));
+
+	cudaMalloc(&m_scores_device, sizeof(float) * m_max_box);
+	cudaMalloc(&m_sorted_idx_device, sizeof(int) * m_max_box);
+	cudaMalloc(&m_output_box_sorted_device, sizeof(float) * m_max_box * m_num_box_element);
+	cudaMalloc(&m_a_device, sizeof(float) * m_max_box);
+	cudaMalloc(&m_b_device, sizeof(float) * m_max_box);
+	cudaMalloc(&m_c_device, sizeof(float) * m_max_box);
+	cudaMalloc(&m_hd_device, sizeof(float) * m_max_box * m_max_box);
+	cudaMalloc(&m_picked_device, sizeof(int) * m_max_box);
+	cudaMalloc(&m_picked_boxes_device, sizeof(float) * m_max_box * m_num_box_element);
+	m_picked_boxes_host = new float[m_num_box_element * m_max_box];
+
+	cudaMalloc(&m_col_max_device, sizeof(float) * m_max_box);
+	cudaMalloc(&m_mask_pick_device, sizeof(int) * m_max_box);
+	cudaMalloc(&m_prefix_sum_device, sizeof(int) * m_max_box);
 #endif // _CUDA_POSTPROCESS
 }
 
@@ -90,68 +105,42 @@ void YOLO_TensorRT_OBB::post_process()
 		 m_output_box_device, m_max_box, m_num_box_element, m_input_size, m_algo_type, m_task_type);
 	cudaMemcpy(m_output_box_host, m_output_box_device, sizeof(float) * (m_num_box_element * m_max_box + 1), cudaMemcpyDeviceToHost);
 
-	float* scores_device;
-	cudaMalloc(&scores_device, sizeof(float) * m_max_box);
-	cuda_extract_col(m_output_box_device, scores_device, 6, m_max_box, m_num_box_element) ;
+	cuda_extract_col(m_output_box_device, m_scores_device, 6, m_max_box, m_num_box_element);
 
-	int* sorted_idx_device;
-	cudaMalloc(&sorted_idx_device, sizeof(int) * m_max_box);
-	thrust_argsort(scores_device, sorted_idx_device, m_max_box);
+	thrust_argsort(m_scores_device, m_sorted_idx_device, m_max_box);
 
-	float* output_box_sorted_device;
-	cudaMalloc(&output_box_sorted_device, sizeof(float) * m_max_box * m_num_box_element);
-	cuda_extract_rows(m_output_box_device, sorted_idx_device, output_box_sorted_device, m_max_box);
+	cuda_extract_rows(m_output_box_device, m_sorted_idx_device, m_output_box_sorted_device, m_max_box);
 
-    float *a_d, *b_d, *c_d, *hd_d;
-    cudaMalloc(&a_d, sizeof(float) * m_max_box);
-    cudaMalloc(&b_d, sizeof(float) * m_max_box);
-    cudaMalloc(&c_d, sizeof(float) * m_max_box );
-    cudaMalloc(&hd_d,  sizeof(float) * m_max_box * m_max_box);
+    cuda_compute_covariance_matrix(m_output_box_sorted_device, m_a_device, m_b_device, m_c_device, m_max_box);
 
-    cuda_compute_covariance_matrix(output_box_sorted_device, a_d, b_d, c_d, m_max_box);
+    cuda_compute_hd(m_output_box_sorted_device, m_output_box_sorted_device, m_a_device, m_b_device, m_c_device, m_a_device, m_b_device, m_c_device, m_hd_device, m_max_box);
 
-    cuda_compute_hd(output_box_sorted_device, output_box_sorted_device, a_d, b_d, c_d, a_d, b_d, c_d, hd_d, m_max_box);
+    cuda_triu_k1(m_hd_device, m_max_box, m_max_box);
 
-    cuda_triu_k1(hd_d, m_max_box, m_max_box);
-
-	int* picked_device;
 	int picked_size;
-	cudaMalloc((void**)&picked_device, sizeof(int) * m_max_box); 
-	cuda_pick_bbox(hd_d, picked_device, m_nms_threshold, m_max_box, picked_size);
+	cuda_pick_bbox(m_hd_device, m_picked_device, m_nms_threshold, m_max_box, picked_size,
+	               m_col_max_device, m_mask_pick_device, m_prefix_sum_device);
 
-	float* picked_boxes;
-	cudaMalloc(&picked_boxes, sizeof(float) * picked_size * m_num_box_element);
-	cuda_extract_rows(output_box_sorted_device, picked_device, picked_boxes, picked_size);
+	cuda_extract_rows(m_output_box_sorted_device, m_picked_device, m_picked_boxes_device, picked_size);
 
-	cuda_regularize_bbox(picked_boxes, picked_size);
+	cuda_regularize_bbox(m_picked_boxes_device, picked_size);
 
 	float gain = std::min(m_input_size.width / (float)m_image.cols, m_input_size.height / (float)m_image.rows);
     float pad_w = (m_input_size.width - m_image.cols * gain) / 2;
 	float pad_h = (m_input_size.height - m_image.rows * gain) / 2;
-	cuda_scale_boxes(picked_boxes, picked_size, m_image.cols, m_image.rows, gain, pad_w, pad_h);
+	cuda_scale_boxes(m_picked_boxes_device, picked_size, m_image.cols, m_image.rows, gain, pad_w, pad_h);
 
-	float* picked_boxes_host = new float[m_num_box_element*picked_size];
-	cudaMemcpy(picked_boxes_host, picked_boxes, sizeof(float) * m_num_box_element * picked_size, cudaMemcpyDeviceToHost);
- 
-	cudaFree(scores_device);
-	cudaFree(sorted_idx_device);
-	cudaFree(output_box_sorted_device);
-	cudaFree(a_d);
-	cudaFree(b_d);
-	cudaFree(c_d);
-	cudaFree(hd_d);
-	cudaFree(picked_device);
-	cudaFree(picked_boxes);
+	cudaMemcpy(m_picked_boxes_host, m_picked_boxes_device, sizeof(float) * m_num_box_element * picked_size, cudaMemcpyDeviceToHost);
 
 	m_output_obb.clear();
 	m_output_obb.resize(picked_size);
 	for (int i = 0; i < picked_size; i++)
 	{
 		OutputOBB output;
-		output.score = picked_boxes_host[i*8+5];
-		output.id = picked_boxes_host[i*8+6];
-		float angle = picked_boxes_host[i*8+7] * 180 / CV_PI;
-		output.box_rotate = cv::RotatedRect(cv::Point2f(picked_boxes_host[i*8+1], picked_boxes_host[i*8+2]), cv::Size2f(picked_boxes_host[i*8+3], picked_boxes_host[i*8+4]), angle);
+		output.score = m_picked_boxes_host[i*8+5];
+		output.id = m_picked_boxes_host[i*8+6];
+		float angle = m_picked_boxes_host[i*8+7] * 180 / CV_PI;
+		output.box_rotate = cv::RotatedRect(cv::Point2f(m_picked_boxes_host[i*8+1], m_picked_boxes_host[i*8+2]), cv::Size2f(m_picked_boxes_host[i*8+3], m_picked_boxes_host[i*8+4]), angle);
 		m_output_obb[i] = output;
 	}
 
@@ -234,5 +223,20 @@ void YOLO_TensorRT_OBB::release()
 #ifdef _CUDA_POSTPROCESS
 	cudaFree(m_output_box_device);
 	cudaFreeHost(m_output_box_host);
+
+	cudaFree(m_scores_device);
+	cudaFree(m_sorted_idx_device);
+	cudaFree(m_output_box_sorted_device);
+	cudaFree(m_a_device);
+	cudaFree(m_b_device);
+	cudaFree(m_c_device);
+	cudaFree(m_hd_device);
+	cudaFree(m_picked_device);
+	cudaFree(m_picked_boxes_device);
+	delete[] m_picked_boxes_host;
+
+	cudaFree(m_col_max_device);
+	cudaFree(m_mask_pick_device);
+	cudaFree(m_prefix_sum_device);
 #endif // _CUDA_POSTPROCESS
 }

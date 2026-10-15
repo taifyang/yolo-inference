@@ -27,18 +27,6 @@ class YOLO_TensorRT_Semantic(YOLO_TensorRT, YOLO_Semantic):
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
         YOLO_TensorRT.__init__(self, algo_type, device_type, model_type, model_path)
         YOLO_Semantic.__init__(self, algo_type, device_type, model_type, model_path)
-        
-    '''
-    description:            construction method
-    param {*} self          instance of class
-    param {str} algo_type   algorithm type
-    param {str} device_type device type
-    param {str} model_type  model type
-    param {str} model_path  model path
-    return {*}
-    '''     
-    def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
-        super().__init__(algo_type, device_type, model_type, model_path)
         self.output0_device = cupy.empty(self.outputs_shape[0], dtype=np.uint8)
         self.output0_ptr = self.output0_device.data.ptr
                

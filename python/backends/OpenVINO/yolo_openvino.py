@@ -23,7 +23,7 @@ class YOLO_OpenVINO(YOLO):
     return {*}
     '''      
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
-        super().__init__()
+        YOLO.__init__(self)
         assert os.path.exists(model_path), 'model not exists!'
         assert device_type in ['CPU', 'GPU'], 'unsupported device type!'
         try:

@@ -59,6 +59,16 @@ protected:
 	 * @description: model output
 	 */
 	std::vector<cv::Mat> m_output;
+
+	/**
+	 * @description: pre-allocated letterbox buffer
+	 */
+	cv::Mat m_letterbox;
+
+	/**
+	 * @description: pre-allocated input blob buffer
+	 */
+	cv::Mat m_input_blob;
 };
 
 /**

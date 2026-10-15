@@ -86,8 +86,12 @@ void thrust_argsort(float* scores_d, int* sorted_idx_d, int num_bbox);
  * @param {float} threshold  		IOU threshold
  * @param {int} num_bbox   			number of input bbox
  * @param {int&} pick_size  		picked bbox size
+ * @param {float*} col_max_d   		pre-allocated buffer for column max
+ * @param {int*} mask_d   			pre-allocated buffer for mask
+ * @param {int*} prefix_sum_d   	pre-allocated buffer for prefix sum
  */
-void cuda_pick_bbox(const float* ious_d, int* pick_d, float threshold, int num_bbox, int& pick_size);
+void cuda_pick_bbox(const float* ious_d, int* pick_d, float threshold, int num_bbox, int& pick_size,
+                    float* col_max_d = nullptr, int* mask_d = nullptr, int* prefix_sum_d = nullptr);
 
 /** 
  * @brief  							cuda extract rows
@@ -157,8 +161,13 @@ void cuda_scale_boxes(float* boxes_d, int num_bbox, float output_w, float output
  * @param {float*} dst 			        output image
  * @param {const cv::Size} input_shape  input image shape
  * @param {const cv::Size} output_shape output image shape
+ * @param {float*} crop_d               pre-allocated crop buffer
+ * @param {float*} tmp_out_d            pre-allocated temp output buffer
+ * @param {size_t} crop_pitch           pitch of crop buffer
+ * @param {size_t} tmp_out_pitch        pitch of temp output buffer
  */
-void cuda_scale_mask(const float* src, float* dst, const cv::Size input_shape, const cv::Size output_shape);
+void cuda_scale_mask(const float* src, float* dst, const cv::Size input_shape, const cv::Size output_shape,
+                     float* crop_d = nullptr, float* tmp_out_d = nullptr, size_t crop_pitch = 0, size_t tmp_out_pitch = 0);
 
 /**
  * @brief 							    cuda scale mask(uint8_t)
@@ -166,5 +175,10 @@ void cuda_scale_mask(const float* src, float* dst, const cv::Size input_shape, c
  * @param {uint8_t*} dst 			    output image
  * @param {const cv::Size} input_shape  input image shape
  * @param {const cv::Size} output_shape output image shape
+ * @param {uint8_t*} crop_d             pre-allocated crop buffer
+ * @param {uint8_t*} tmp_out_d          pre-allocated temp output buffer
+ * @param {size_t} crop_pitch           pitch of crop buffer
+ * @param {size_t} tmp_out_pitch        pitch of temp output buffer
  */
-void cuda_scale_mask(const uint8_t* src, uint8_t* dst, const cv::Size input_shape, const cv::Size output_shape);
+void cuda_scale_mask(const uint8_t* src, uint8_t* dst, const cv::Size input_shape, const cv::Size output_shape,
+                     uint8_t* crop_d = nullptr, uint8_t* tmp_out_d = nullptr, size_t crop_pitch = 0, size_t tmp_out_pitch = 0);

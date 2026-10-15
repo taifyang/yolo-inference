@@ -362,16 +362,17 @@ __global__ void collectIndicesKernel(const int* mask_d, const int* prefix_sum_d,
     }
 }
 
-void cuda_pick_bbox(const float* ious_d, int* pick_d, float threshold, int num_rboxes, int& pick_size) 
+void cuda_pick_bbox(const float* ious_d, int* pick_d, float threshold, int num_rboxes, int& pick_size,
+                    float* col_max_d, int* mask_d, int* prefix_sum_d) 
 {
-    float* col_max_d = nullptr;
-    int* mask_d = nullptr;
-    int* prefix_sum_d = nullptr;
+    bool allocated = false;
+    if (col_max_d == nullptr) {
+        cudaMalloc((void**)&col_max_d, num_rboxes * sizeof(float));
+        cudaMalloc((void**)&mask_d, num_rboxes * sizeof(int));
+        cudaMalloc((void**)&prefix_sum_d, num_rboxes * sizeof(int));
+        allocated = true;
+    }
 
-    cudaMalloc((void**)&col_max_d, num_rboxes * sizeof(float));
-    cudaMalloc((void**)&mask_d, num_rboxes * sizeof(int));
-    cudaMalloc((void**)&prefix_sum_d, num_rboxes * sizeof(int)); 
-    
     auto grid = grid_dims(num_rboxes);
 	auto block = block_dims(num_rboxes);  
 
@@ -384,6 +385,12 @@ void cuda_pick_bbox(const float* ious_d, int* pick_d, float threshold, int num_r
     cudaMemcpy(&pick_size, &prefix_sum_d[num_rboxes - 1], sizeof(int), cudaMemcpyDeviceToHost);
 
     collectIndicesKernel<<<grid, block>>>(mask_d, prefix_sum_d, pick_d, num_rboxes);
+
+    if (allocated) {
+        cudaFree(col_max_d);
+        cudaFree(mask_d);
+        cudaFree(prefix_sum_d);
+    }
 }
 
 
@@ -626,7 +633,8 @@ struct NppTraits<uint8_t>
 };
 
 template<typename T>
-void cuda_scale_mask_tpl(const T* src, T* dst, const cv::Size input_shape, const cv::Size output_shape)
+void cuda_scale_mask_tpl(const T* src, T* dst, const cv::Size input_shape, const cv::Size output_shape,
+                         T* crop_d, T* tmp_out_d, size_t crop_pitch, size_t tmp_out_pitch)
 {
     using Traits = NppTraits<T>;
     using NppT = typename Traits::npp_type;
@@ -647,9 +655,12 @@ void cuda_scale_mask_tpl(const T* src, T* dst, const cv::Size input_shape, const
 
     if(roi_w <=0 || roi_h <=0) return;
 
-    NppT* d_crop = nullptr;
-    size_t cropPitch{};
-    cudaMallocPitch(reinterpret_cast<void**>(&d_crop), &cropPitch, roi_w*sizeof(T), roi_h);
+    bool allocated = false;
+    if (crop_d == nullptr) {
+        cudaMallocPitch(reinterpret_cast<void**>(&crop_d), &crop_pitch, roi_w*sizeof(T), roi_h);
+        cudaMallocPitch(reinterpret_cast<void**>(&tmp_out_d), &tmp_out_pitch, outW*sizeof(T), outH);
+        allocated = true;
+    }
 
     const int srcStep = static_cast<int>(inW * sizeof(T));
     const NppT* pSrcOffset = reinterpret_cast<const NppT*>(src)
@@ -658,23 +669,22 @@ void cuda_scale_mask_tpl(const T* src, T* dst, const cv::Size input_shape, const
     NppStatus st = Traits::copyFunc(
         pSrcOffset,
         srcStep,
-        d_crop,
-        static_cast<int>(cropPitch),
+        crop_d,
+        static_cast<int>(crop_pitch),
         NppiSize{roi_w, roi_h}
     );
     if(st != NPP_NO_ERROR) {
-        cudaFree(d_crop);
+        if (allocated) {
+            cudaFree(crop_d);
+            cudaFree(tmp_out_d);
+        }
         return;
     }
 
-    NppT* d_tmp_out = nullptr;
-    size_t tmpPitch{};
-    cudaMallocPitch(reinterpret_cast<void**>(&d_tmp_out), &tmpPitch, outW*sizeof(T), outH);
-
     st = Traits::resizeFunc(
-        d_crop, static_cast<int>(cropPitch),
+        crop_d, static_cast<int>(crop_pitch),
         NppiSize{roi_w, roi_h}, NppiRect{0,0,roi_w,roi_h},
-        d_tmp_out, static_cast<int>(tmpPitch),
+        tmp_out_d, static_cast<int>(tmp_out_pitch),
         NppiSize{outW, outH}, NppiRect{0,0,outW,outH},
         NPPI_INTER_LINEAR
     );
@@ -682,20 +692,23 @@ void cuda_scale_mask_tpl(const T* src, T* dst, const cv::Size input_shape, const
     if(st == NPP_NO_ERROR)
     {
         const size_t rowBytes = outW * sizeof(T);
-        cudaMemcpy2D(dst, rowBytes, d_tmp_out, tmpPitch, rowBytes, outH, cudaMemcpyDeviceToDevice);
+        cudaMemcpy2D(dst, rowBytes, tmp_out_d, tmp_out_pitch, rowBytes, outH, cudaMemcpyDeviceToDevice);
     }
 
-    cudaFree(d_crop);
-    cudaFree(d_tmp_out);
+    if (allocated) {
+        cudaFree(crop_d);
+        cudaFree(tmp_out_d);
+    }
 }
 
-// 对外两个重载接口，和你原来签名完全保持不变
-void cuda_scale_mask(const float* src, float* dst, const cv::Size input_shape, const cv::Size output_shape)
+void cuda_scale_mask(const float* src, float* dst, const cv::Size input_shape, const cv::Size output_shape,
+                     float* crop_d, float* tmp_out_d, size_t crop_pitch, size_t tmp_out_pitch)
 {
-    cuda_scale_mask_tpl(src, dst, input_shape, output_shape);
+    cuda_scale_mask_tpl(src, dst, input_shape, output_shape, crop_d, tmp_out_d, crop_pitch, tmp_out_pitch);
 }
 
-void cuda_scale_mask(const uint8_t* src, uint8_t* dst, const cv::Size input_shape, const cv::Size output_shape)
+void cuda_scale_mask(const uint8_t* src, uint8_t* dst, const cv::Size input_shape, const cv::Size output_shape,
+                     uint8_t* crop_d, uint8_t* tmp_out_d, size_t crop_pitch, size_t tmp_out_pitch)
 {
-    cuda_scale_mask_tpl(src, dst, input_shape, output_shape);
+    cuda_scale_mask_tpl(src, dst, input_shape, output_shape, crop_d, tmp_out_d, crop_pitch, tmp_out_pitch);
 }

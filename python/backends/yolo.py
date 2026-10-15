@@ -58,7 +58,7 @@ class YOLO:
     '''    
     def infer(self, input_path:str, output_path:str, save_result:bool, show_result:bool) -> None:
         assert os.path.exists(input_path), 'input not exists!'
-        self.draw_result = save_result or show_result
+        self.render_result = save_result or show_result
         if input_path.endswith('.bmp') or input_path.endswith('.jpg') or input_path.endswith('.png'):
             self.image = cv2.imread(input_path)
             self.result = self.image.copy()

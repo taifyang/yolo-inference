@@ -71,7 +71,7 @@ void YOLO::infer(const std::string file_path, bool save_result, bool show_result
 
 		if (save_result)
 		{
-			std::string result_name = std::string(argv[1]) + "_" + std::string(argv[2]) + "_" +std::string(argv[3]) + "_"  + std::string(argv[4]) + "_"  + std::string(argv[5]) + ".jpg";
+			std::string result_name = "./result/" + std::string(argv[1]) + "_" + std::string(argv[2]) + "_" +std::string(argv[3]) + "_"  + std::string(argv[4]) + "_"  + std::string(argv[5]) + ".jpg";
 			cv::imwrite(result_name, m_result);
 		}
 		if (show_result)

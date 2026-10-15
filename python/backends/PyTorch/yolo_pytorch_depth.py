@@ -40,7 +40,7 @@ class YOLO_PyTorch_Depth(YOLO_PyTorch, YOLO_Depth):
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
         self.inputs = np.expand_dims(input, axis=0)
-        self.inputs = torch.from_numpy(self.inputs)
+        self.inputs = torch.from_numpy(self.inputs).to(non_blocking=True)
         if self.device_type == 'GPU':
             self.inputs = self.inputs.cuda()
             if self.model_type == 'FP16':

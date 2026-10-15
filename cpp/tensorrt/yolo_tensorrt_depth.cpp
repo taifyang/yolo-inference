@@ -33,6 +33,14 @@ void YOLO_TensorRT_Depth::init(const Algo_Type algo_type, const Device_Type devi
 
 	m_bindings.push_back(m_input_device);
 	m_bindings.push_back(m_output0_device);
+
+#ifdef _CUDA_POSTPROCESS
+	cudaMalloc(&m_depth_device, m_max_input_size);
+
+	int roi_w = 4096, roi_h = 4096;
+	cudaMallocPitch(reinterpret_cast<void**>(&m_scale_crop_device), &m_scale_crop_pitch, roi_w * sizeof(float), roi_h);
+	cudaMallocPitch(reinterpret_cast<void**>(&m_scale_tmp_out_device), &m_scale_tmp_out_pitch, roi_w * sizeof(float), roi_h);
+#endif // _CUDA_POSTPROCESS
 }
 
 void YOLO_TensorRT_Depth::pre_process()
@@ -54,10 +62,9 @@ void YOLO_TensorRT_Depth::post_process()
 	m_depth = cv::Mat::zeros(m_image.size(), CV_32FC1);
 
 #ifdef _CUDA_POSTPROCESS
-	cudaMalloc(&m_depth_device, sizeof(float) * m_image.cols * m_image.rows);
-	cuda_scale_mask(m_output0_device, m_depth_device, m_input_size, m_image.size());
+	cuda_scale_mask(m_output0_device, m_depth_device, m_input_size, m_image.size(),
+	                m_scale_crop_device, m_scale_tmp_out_device, m_scale_crop_pitch, m_scale_tmp_out_pitch);
 	cudaMemcpy(m_depth.data, m_depth_device, sizeof(float) * m_image.cols * m_image.rows, cudaMemcpyDeviceToHost);
-	cudaFree(m_depth_device);
 #else
 	cv::Mat depth = cv::Mat::zeros(m_input_size, CV_32FC1);
 	m_result = cv::Mat::zeros(m_image.size(), CV_16UC1);
@@ -80,4 +87,10 @@ void YOLO_TensorRT_Depth::release()
 #else
 	cudaFreeHost(m_input);
 #endif // _CUDA_PREPROCESS
+
+#ifdef _CUDA_POSTPROCESS
+	cudaFree(m_depth_device);
+	cudaFree(m_scale_crop_device);
+	cudaFree(m_scale_tmp_out_device);
+#endif // _CUDA_POSTPROCESS
 }
