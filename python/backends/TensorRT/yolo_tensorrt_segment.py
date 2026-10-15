@@ -85,7 +85,7 @@ class YOLO_TensorRT_Segment(YOLO_TensorRT, YOLO_Segment):
             box = output[xc][:, :4]
             cls = output[xc][:, 5:(5+self.class_num)] 
             mask = output[xc][:, (5+self.class_num):]
-            scores = np.max(cls, axis=1, keepdims=True) * output[..., 4:5]
+            scores = np.max(cls, axis=1, keepdims=True) * output[xc][..., 4:5]
             j = np.argmax(cls, axis=1, keepdims=True) 
             boxes = np.concatenate([box, scores, j.astype(np.float32)], axis=1)         
         elif self.algo_type in ['YOLOv8', 'YOLOv9', 'YOLOv11', 'YOLOv12']: 

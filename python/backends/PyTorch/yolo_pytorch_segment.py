@@ -38,7 +38,7 @@ class YOLO_PyTorch_Segment(YOLO_PyTorch, YOLO_Segment):
         input = input[:, :, ::-1].transpose(2, 0, 1).astype(dtype=np.float32)  #BGR2RGB and HWC2CHW
         input = input / 255.0
         self.inputs = np.expand_dims(input, axis=0)
-        self.inputs = torch.from_numpy(self.inputs)
+        self.inputs = torch.from_numpy(self.inputs).to(non_blocking=True)
         if self.device_type == 'GPU':
             self.inputs = self.inputs.cuda()
             if self.model_type == 'FP16':
@@ -72,7 +72,7 @@ class YOLO_PyTorch_Segment(YOLO_PyTorch, YOLO_Segment):
             mask = output[:, 6:]         
                           
         if len(boxes):   
-            indices = torchvision.ops.nms(box, scores, self.iou_threshold)
+            indices = torchvision.ops.nms(box, scores.squeeze(), self.iou_threshold)
             boxes = boxes[indices]       
             masks_in = mask[indices]
             proto = torch.squeeze(self.outputs[1]).to(dtype=torch.float32)

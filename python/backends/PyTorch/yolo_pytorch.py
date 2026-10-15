@@ -27,7 +27,7 @@ class YOLO_PyTorch(YOLO):
     return {*}
     '''      
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
-        super().__init__()
+        YOLO.__init__(self)
         assert os.path.exists(model_path), 'model not exists!'
         assert device_type in ['CPU', 'GPU'], 'unsupported device type!'
         assert model_type in ['FP32', 'FP16'], 'unsupported model type!'

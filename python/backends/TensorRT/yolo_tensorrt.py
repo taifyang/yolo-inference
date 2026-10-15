@@ -24,7 +24,7 @@ class YOLO_TensorRT(YOLO):
     return {*}
     '''     
     def __init__(self, algo_type:str, device_type:str, model_type:str, model_path:str) -> None:
-        super().__init__()
+        YOLO.__init__(self)
         assert os.path.exists(model_path), 'model not exists!'
         assert device_type in ['GPU'], 'unsupported device type!'
         self.algo_type = algo_type

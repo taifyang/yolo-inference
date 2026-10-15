@@ -33,6 +33,14 @@ void YOLO_TensorRT_Semantic::init(const Algo_Type algo_type, const Device_Type d
 
 	m_bindings.push_back(m_input_device);
 	m_bindings.push_back(m_output0_device);
+
+#ifdef _CUDA_POSTPROCESS
+	cudaMalloc(&m_mask_device, m_max_input_size);
+
+	int roi_w = 4096, roi_h = 4096;
+	cudaMallocPitch(reinterpret_cast<void**>(&m_scale_crop_device), &m_scale_crop_pitch, roi_w * sizeof(uint8_t), roi_h);
+	cudaMallocPitch(reinterpret_cast<void**>(&m_scale_tmp_out_device), &m_scale_tmp_out_pitch, 4096 * sizeof(uint8_t), 4096);
+#endif // _CUDA_POSTPROCESS
 }
 
 void YOLO_TensorRT_Semantic::pre_process()
@@ -54,11 +62,9 @@ void YOLO_TensorRT_Semantic::post_process()
 	m_mask = cv::Mat::zeros(m_image.size(), CV_8UC1);
 
 #ifdef _CUDA_POSTPROCESS
-	uint8_t* mask_device;
-	cudaMalloc(&mask_device, sizeof(uint8_t) * m_image.cols * m_image.rows);
-	cuda_scale_mask(m_output0_device, mask_device, m_input_size, m_image.size());
-	cudaMemcpy(m_mask.data, mask_device, sizeof(uint8_t) * m_image.cols * m_image.rows, cudaMemcpyDeviceToHost);
-	cudaFree(mask_device);
+	cuda_scale_mask(m_output0_device, m_mask_device, m_input_size, m_image.size(),
+	                m_scale_crop_device, m_scale_tmp_out_device, m_scale_crop_pitch, m_scale_tmp_out_pitch);
+	cudaMemcpy(m_mask.data, m_mask_device, sizeof(uint8_t) * m_image.cols * m_image.rows, cudaMemcpyDeviceToHost);
 #else
 	cv::Mat output = cv::Mat::zeros(m_input_size, CV_8UC1);
 	std::copy(m_output0_host, m_output0_host + m_output_numdet, output.data);
@@ -82,4 +88,10 @@ void YOLO_TensorRT_Semantic::release()
 #else
 	cudaFreeHost(m_input);
 #endif // _CUDA_PREPROCESS
+
+#ifdef _CUDA_POSTPROCESS
+	cudaFree(m_mask_device);
+	cudaFree(m_scale_crop_device);
+	cudaFree(m_scale_tmp_out_device);
+#endif // _CUDA_POSTPROCESS
 }

@@ -20,7 +20,7 @@ void YOLO_ONNXRuntime::init(const Algo_Type algo_type, const Device_Type device_
 	{
 		OrtCUDAProviderOptions cuda_option;
 		cuda_option.device_id = 0;
-		cuda_option.arena_extend_strategy = 0;
+		cuda_option.arena_extend_strategy = 1;
 		cuda_option.cudnn_conv_algo_search = OrtCudnnConvAlgoSearchExhaustive;
 		cuda_option.gpu_mem_limit = SIZE_MAX;
 		cuda_option.do_copy_in_default_stream = 1;
@@ -50,10 +50,13 @@ void YOLO_ONNXRuntime::init(const Algo_Type algo_type, const Device_Type device_
 
 	m_input_names.push_back("images");
 	m_output_names.push_back("output0");
+
+	m_memory_info = new Ort::MemoryInfo(Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault));
 }
 
 void YOLO_ONNXRuntime::release()
 {
 	m_session->release();
 	m_env.release();
+	delete m_memory_info;
 }

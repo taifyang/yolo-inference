@@ -300,7 +300,7 @@ python main.py --algo_type YOLOv9 --backend_type TensorRT --task_type Detect --d
 python main.py --algo_type YOLOv9 --backend_type TensorRT --task_type Detect --device_type GPU --model_type FP16 --model_path ../weights/yolov9t_fp16.engine --input_path bus.jpg
 python main.py --algo_type YOLOv9 --backend_type TensorRT --task_type Detect --device_type GPU --model_type INT8 --model_path ../weights/yolov9t_int8.engine --input_path bus.jpg
 
-python main.py --algo_type YOLOv9 --backend_type PyTorch --task_type posement --device_type CPU --model_type FP32 --model_path ../weights/yolov9c_seg_fp32_cpu.torchscript --input_path bus.jpg
+python main.py --algo_type YOLOv9 --backend_type PyTorch --task_type Segment --device_type CPU --model_type FP32 --model_path ../weights/yolov9c_seg_fp32_cpu.torchscript --input_path bus.jpg
 python main.py --algo_type YOLOv9 --backend_type PyTorch --task_type Segment --device_type GPU --model_type FP32 --model_path ../weights/yolov9c_seg_fp32_gpu.torchscript --input_path bus.jpg
 python main.py --algo_type YOLOv9 --backend_type PyTorch --task_type Segment --device_type GPU --model_type FP16 --model_path ../weights/yolov9c_seg_fp16_gpu.torchscript --input_path bus.jpg
 python main.py --algo_type YOLOv9 --backend_type ONNXRuntime --task_type Segment --device_type CPU --model_type FP32 --model_path ../weights/yolov9c_seg_fp32.onnx --input_path bus.jpg

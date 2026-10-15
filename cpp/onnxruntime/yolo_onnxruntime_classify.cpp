@@ -22,11 +22,15 @@ void YOLO_ONNXRuntime_Classify::init(const Algo_Type algo_type, const Device_Typ
 	}
 	YOLO_ONNXRuntime::init(algo_type, device_type, model_type, model_path);
 	YOLO_Classify::init(algo_type, device_type, model_type, model_path);
+
+	m_input.resize(m_input_numel);
+	m_input_node_dims = { 1, 3, m_input_size.height, m_input_size.width };
+	m_split_images.resize(3);
+	m_output0.resize(m_class_num);
 	
 	if (m_model_type == FP16)
 	{
 		m_input_fp16.resize(m_input_numel);
-		m_output0.resize(m_class_num);
 	}
 }
 
@@ -51,13 +55,12 @@ void YOLO_ONNXRuntime_Classify::pre_process()
 
 	cv::cvtColor(crop_image, crop_image, cv::COLOR_BGR2RGB);
 
-	std::vector<cv::Mat> split_images;
-	cv::split(crop_image, split_images);
-	m_input.clear();
-	for (size_t i = 0; i < crop_image.channels(); ++i)
+	cv::split(crop_image, m_split_images);
+	float* dst = m_input.data();
+	for (int i = 0; i < 3; ++i)
 	{
-		std::vector<float> split_image_data = split_images[i].reshape(1, 1);
-		m_input.insert(m_input.end(), split_image_data.begin(), split_image_data.end());
+		memcpy(dst, m_split_images[i].ptr<float>(0), m_split_images[i].total() * sizeof(float));
+		dst += m_split_images[i].total();
 	}
 
 	if (m_model_type == FP16)
@@ -72,13 +75,11 @@ void YOLO_ONNXRuntime_Classify::pre_process()
 void YOLO_ONNXRuntime_Classify::process()
 {
 	Ort::Value input_tensor{ nullptr };
-	auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-	std::vector<int64_t> input_node_dims = { 1, m_image.channels(), m_input_size.width, m_input_size.height };
 
 	if (m_model_type == FP32 || m_model_type == INT8)
-		input_tensor = Ort::Value::CreateTensor(memory_info, m_input.data(), sizeof(float) * m_input_numel, input_node_dims.data(), input_node_dims.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT);
+		input_tensor = Ort::Value::CreateTensor(*m_memory_info, m_input.data(), sizeof(float) * m_input_numel, m_input_node_dims.data(), m_input_node_dims.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT);
 	else if (m_model_type == FP16)
-		input_tensor = Ort::Value::CreateTensor(memory_info, m_input_fp16.data(), sizeof(uint16_t) * m_input_numel, input_node_dims.data(), input_node_dims.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
+		input_tensor = Ort::Value::CreateTensor(*m_memory_info, m_input_fp16.data(), sizeof(uint16_t) * m_input_numel, m_input_node_dims.data(), m_input_node_dims.size(), ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16);
 	
 	std::vector<Ort::Value> inputs;
 	inputs.push_back(std::move(input_tensor)); 
@@ -87,15 +88,14 @@ void YOLO_ONNXRuntime_Classify::process()
 	if (m_model_type == FP32 || m_model_type == INT8)
 	{
 		m_output0_host = const_cast<float*>(outputs[0].GetTensorData<float>());
-		m_output0.assign(m_output0_host, m_output0_host + m_class_num);
+		memcpy(m_output0.data(), m_output0_host, m_class_num * sizeof(float));
 	}
 	else if (m_model_type == FP16)
 	{
 		uint16_t* output0_fp16 = const_cast<uint16_t*>(outputs[0].GetTensorData<uint16_t>());
-		m_output0_fp16.assign(output0_fp16, output0_fp16 + m_class_num);
 		for (size_t i = 0; i < m_class_num; i++)
 		{
-			m_output0[i] = float16_to_float32(m_output0_fp16[i]);
+			m_output0[i] = float16_to_float32(output0_fp16[i]);
 		}
 	}
 }

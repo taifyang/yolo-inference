@@ -47,7 +47,7 @@ class YOLO_PyTorch_Classify(YOLO_PyTorch, YOLO_Classify):
             
         input = input[:, :, ::-1].transpose(2, 0, 1)  #BGR2RGB and HWC2CHW
         self.inputs = np.expand_dims(input, axis=0).astype(dtype=np.float32)
-        self.inputs = torch.from_numpy(self.inputs)
+        self.inputs = torch.from_numpy(self.inputs).to(non_blocking=True)
         if self.device_type == 'GPU':
             self.inputs = self.inputs.cuda()
             if self.model_type == 'FP16':
@@ -67,5 +67,5 @@ class YOLO_PyTorch_Classify(YOLO_PyTorch, YOLO_Classify):
             class_id = torch.argmax(output).cpu().item()
             scores = torch.max(output).cpu().item()
         if self.render_result:
-            self.result = self.draw(class_id, scores)
+            self.result = self.draw_result(class_id, scores)
     

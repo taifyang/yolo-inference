@@ -64,19 +64,65 @@ protected:
 	void nms_rotated(const std::vector<std::vector<float>> & rboxes, const std::vector<float> & scores, float score_threshold, float nms_threshold, std::vector<int> & indices)
 	{
 		assert(rboxes.size() == scores.size());
+		int N = rboxes.size();
+		if (N == 0) { indices.clear(); return; }
+
 		std::vector<int> sorted_idx = argsort_desc(scores);
-		std::vector<std::vector<float>> rboxes_sorted(rboxes.size());
-		for(int i=0; i<rboxes.size(); i++)	
+
+		std::vector<bool> suppressed(N, false);
+		indices.clear();
+		indices.reserve(N);
+
+		std::vector<float> a1(N), b1(N), c1(N);
+		for (int i = 0; i < N; i++)
 		{
-			rboxes_sorted[i] = rboxes[sorted_idx[i]];
+			int idx = sorted_idx[i];
+			float w = rboxes[idx][2], h = rboxes[idx][3], theta = rboxes[idx][6];
+			float a = (w * w) / 12.0f, b = (h * h) / 12.0f;
+			float cos_t = std::cos(theta), sin_t = std::sin(theta);
+			float cos2 = cos_t * cos_t, sin2 = sin_t * sin_t;
+			a1[i] = a * cos2 + b * sin2;
+			b1[i] = a * sin2 + b * cos2;
+			c1[i] = (a - b) * cos_t * sin_t;
 		}
-		Eigen::MatrixXf boxes = vector2Eigen(rboxes_sorted);
-		Eigen::MatrixXf ious = triu_k1(probiou(boxes, boxes, 1e-7));
-		std::vector<int> pick = find_indices_max_below_threshold(ious, nms_threshold);
-		indices.resize(pick.size());
-		for(int i=0; i<pick.size(); i++)
+
+		for (int i = 0; i < N; i++)
 		{
-			indices[i] = sorted_idx[pick[i]];
+			if (suppressed[i]) continue;
+			int idx_i = sorted_idx[i];
+			indices.push_back(idx_i);
+
+			float x1 = rboxes[idx_i][0], y1 = rboxes[idx_i][1];
+			float ai = a1[i], bi = b1[i], ci = c1[i];
+			float term1_i = std::max(ai * bi - ci * ci, 0.0f);
+
+			for (int j = i + 1; j < N; j++)
+			{
+				if (suppressed[j]) continue;
+				int idx_j = sorted_idx[j];
+
+				float x2 = rboxes[idx_j][0], y2 = rboxes[idx_j][1];
+				float aj = a1[j], bj = b1[j], cj = c1[j];
+
+				float dx = x1 - x2, dy = y1 - y2;
+				float a_sum = ai + aj, b_sum = bi + bj, c_sum = ci + cj;
+				float den = a_sum * b_sum - c_sum * c_sum + 1e-7f;
+
+				float t1 = (a_sum * dy * dy + b_sum * dx * dx) / den * 0.25f;
+				float t2 = (c_sum * (-dx) * dy) / den * 0.5f;
+
+				float term1_j = std::max(aj * bj - cj * cj, 0.0f);
+				float t3_numer = a_sum * b_sum - c_sum * c_sum;
+				float t3_denom = 4.0f * std::sqrt(term1_i * term1_j) + 1e-7f;
+				float t3 = std::log(std::max(t3_numer / t3_denom + 1e-7f, 1e-7f)) * 0.5f;
+
+				float bd = std::max(std::min(t1 + t2 + t3, 100.0f), 1e-7f);
+				float hd = std::sqrt(std::max(1.0f - std::exp(-bd) + 1e-7f, 1e-7f));
+				float iou = 1.0f - hd;
+
+				if (iou > nms_threshold)
+					suppressed[j] = true;
+			}
 		}
 	}
 
@@ -149,7 +195,7 @@ protected:
 		Eigen::MatrixXf x2 = obb2.col(0).transpose(), y2 = obb2.col(1).transpose();
 
 		auto [a1, b1, c1] = get_covariance_matrix(obb1);
-		auto [a2_raw, b2_raw, c2_raw] = get_covariance_matrix(obb1);
+		auto [a2_raw, b2_raw, c2_raw] = get_covariance_matrix(obb2);
 		Eigen::MatrixXf a2 = a2_raw.transpose(), b2 = b2_raw.transpose(), c2 = c2_raw.transpose();
 			
 		Eigen::ArrayXXf a_sum = a1.array().replicate(1, N) + a2.array().replicate(N, 1);

@@ -89,6 +89,26 @@ protected:
 	 * @description: task type
 	 */
 	Task_Type m_task_type;
+
+	/**
+	 * @description: CUDA stream for async execution
+	 */
+	cudaStream_t m_stream = nullptr;
+
+	/**
+	 * @description: CUDA graph for optimized inference
+	 */
+	cudaGraph_t m_graph = nullptr;
+
+	/**
+	 * @description: CUDA graph executable
+	 */
+	cudaGraphExec_t m_graph_exec = nullptr;
+
+	/**
+	 * @description: flag to indicate if CUDA graph is enabled
+	 */
+	bool m_use_cuda_graph = false;
 };
 
 /**
@@ -436,6 +456,71 @@ private:
 	 * @description: output bounding box on device
 	 */
 	float* m_output_box_device;
+
+	/**
+	 * @description: pre-allocated temp buffer: scores
+	 */
+	float* m_scores_device;
+
+	/**
+	 * @description: pre-allocated temp buffer: sorted indices
+	 */
+	int* m_sorted_idx_device;
+
+	/**
+	 * @description: pre-allocated temp buffer: sorted boxes
+	 */
+	float* m_output_box_sorted_device;
+
+	/**
+	 * @description: pre-allocated temp buffer: covariance a
+	 */
+	float* m_a_device;
+
+	/**
+	 * @description: pre-allocated temp buffer: covariance b
+	 */
+	float* m_b_device;
+
+	/**
+	 * @description: pre-allocated temp buffer: covariance c
+	 */
+	float* m_c_device;
+
+	/**
+	 * @description: pre-allocated temp buffer: hd matrix
+	 */
+	float* m_hd_device;
+
+	/**
+	 * @description: pre-allocated temp buffer: picked indices
+	 */
+	int* m_picked_device;
+
+	/**
+	 * @description: pre-allocated temp buffer: picked boxes
+	 */
+	float* m_picked_boxes_device;
+
+	/**
+	 * @description: pre-allocated host buffer for picked boxes
+	 */
+	float* m_picked_boxes_host;
+
+	/**
+	 * @description: pre-allocated temp buffer for cuda_pick_bbox: col_max
+	 */
+	float* m_col_max_device;
+
+	/**
+	 * @description: pre-allocated temp buffer for cuda_pick_bbox: mask
+	 */
+	int* m_mask_pick_device;
+
+	/**
+	 * @description: pre-allocated temp buffer for cuda_pick_bbox: prefix_sum
+	 */
+	int* m_prefix_sum_device;
 #endif // _CUDA_POSTPROCESS
 
 	/**
@@ -514,7 +599,32 @@ private:
 
 #ifdef _CUDA_POSTPROCESS
 	float* m_depth_device;
+
+	/**
+	 * @description: pre-allocated temp buffer for cuda_scale_mask: crop
+	 */
+	float* m_scale_crop_device;
+
+	/**
+	 * @description: pre-allocated temp buffer for cuda_scale_mask: tmp_out
+	 */
+	float* m_scale_tmp_out_device;
+
+	/**
+	 * @description: pitch of crop buffer
+	 */
+	size_t m_scale_crop_pitch;
+
+	/**
+	 * @description: pitch of tmp_out buffer
+	 */
+	size_t m_scale_tmp_out_pitch;
 #endif // _CUDA_POSTPROCESS
+
+	/**
+	 * @description: max input size
+	 */
+	const int m_max_input_size = sizeof(float) * 4096 * 4096;
 };
 
 /**
@@ -574,4 +684,36 @@ private:
 	 * @description: pointer to output on device
 	 */
 	uint8_t* m_output0_device;
+
+#ifdef _CUDA_POSTPROCESS
+	/**
+	 * @description: pre-allocated temp buffer for mask
+	 */
+	uint8_t* m_mask_device;
+
+	/**
+	 * @description: pre-allocated temp buffer for cuda_scale_mask: crop
+	 */
+	uint8_t* m_scale_crop_device;
+
+	/**
+	 * @description: pre-allocated temp buffer for cuda_scale_mask: tmp_out
+	 */
+	uint8_t* m_scale_tmp_out_device;
+
+	/**
+	 * @description: pitch of crop buffer
+	 */
+	size_t m_scale_crop_pitch;
+
+	/**
+	 * @description: pitch of tmp_out buffer
+	 */
+	size_t m_scale_tmp_out_pitch;
+#endif // _CUDA_POSTPROCESS
+
+	/**
+	 * @description: max input size
+	 */
+	const int m_max_input_size = sizeof(uint8_t) * 4096 * 4096;
 };

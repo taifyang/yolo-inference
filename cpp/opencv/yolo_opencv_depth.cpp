@@ -27,10 +27,9 @@ void YOLO_OpenCV_Depth::post_process()
 {
 	m_output0_host = (float*)m_output[0].data;
 
-	cv::Mat depth = cv::Mat::zeros(m_input_size, CV_32FC1);
+	cv::Mat depth(m_input_size, CV_32FC1, m_output0_host);
 	m_depth = cv::Mat::zeros(m_image.size(), CV_32FC1);	
 	m_result = cv::Mat::zeros(m_image.size(), CV_16UC1);
-	std::copy(m_output0_host, m_output0_host + m_output_numdet, (float*)depth.data);
 	scale_mask(depth, m_depth, m_input_size, m_image.size());
 	
 	if(m_draw_result)
