@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-01-20 21:34:15
+ * @LastEditTime: 2026-10-17 23:57:21
  * @Description: source file for YOLO openvino detection
  */
 
@@ -77,43 +77,31 @@ void YOLO_OpenVINO_Detect::post_process()
 		if (score < m_score_threshold)
 			continue;
 
-		cv::Rect box;
+		int left, top, width, height;
 		if(m_algo_type == YOLOv3 || m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 		{
-			float x = ptr[0];
-			float y = ptr[1];
-			float w = ptr[2];
-			float h = ptr[3];
-			int left = int(x - 0.5 * w) > 0 ? int(x - 0.5 * w) : 0;
-			int top = int(y - 0.5 * h) > 0 ? int(y - 0.5 * h) : 0;
-			int width = int(w) > 0 ? int(w) : 0;
-			int height = int(h)> 0 ? int(h) : 0;
-			width = (left + width) < m_image.cols ? width : (m_image.cols - left);
-			height = (top + height) < m_image.rows ? height : (m_image.rows - top);	
-			box = cv::Rect(left, top, width, height);
+			left = (ptr[0] - 0.5 * ptr[2]) > 0 ? int(ptr[0] - 0.5 * ptr[2]) : 0;
+			top = (ptr[1] - 0.5 * ptr[3]) > 0 ? int(ptr[1] - 0.5 * ptr[3]) : 0;
+			width = ptr[2] > 0 ? int(ptr[2]) : 0;
+			height = ptr[3] > 0 ? int(ptr[3]) : 0;
 		}
 		else if (m_algo_type == YOLOv4)
 		{
-			float x1 = ptr[0] * m_input_size.width;
-			float y1 = ptr[1] * m_input_size.height;
-			float x2 = ptr[2] * m_input_size.width;
-			float y2 = ptr[3] * m_input_size.height;
-			int left = int(x1) > 0 ? int(x1) : 0;
-			int top = int(y1) > 0 ? int(y1) : 0;
-			int width = int(x2 - x1) > 0 ? int(x2 - x1) : 0;
-			int height = int(y2 - y1)> 0 ? int(y2 - y1) : 0;
-			box = cv::Rect(left, top, width, height);
+			left = ptr[0] > 0 ? int(ptr[0] * m_input_size.width) : 0;
+			top = ptr[1] > 0 ? int(ptr[1] * m_input_size.height) : 0;
+			width = (ptr[2] - ptr[0]) > 0 ? int((ptr[2] - ptr[0]) * m_input_size.width) : 0;
+			height = (ptr[3] - ptr[1])> 0 ? int((ptr[3] - ptr[1]) * m_input_size.height) : 0;
 		}
 		else if (m_algo_type == YOLOv10 || m_algo_type == YOLO26)
 		{
-			int left = int(ptr[0]) > 0 ? int(ptr[0]) : 0;
-			int top = int(ptr[1]) > 0 ? int(ptr[1]) : 0;
-			int width = int(ptr[2] - ptr[0]) > 0 ? int(ptr[2] - ptr[0]) : 0;
-			int height = int(ptr[3] - ptr[1])> 0 ? int(ptr[3] - ptr[1]) : 0;
-			width = (left + width) < m_image.cols ? width : (m_image.cols - left);
-			height = (top + height) < m_image.rows ? height : (m_image.rows - top);
-			box = cv::Rect(left, top, width, height);
+			left = ptr[0] > 0 ? int(ptr[0]) : 0;
+			top = ptr[1] > 0 ? int(ptr[1]) : 0;
+			width = (ptr[2] - ptr[0]) > 0 ? int(ptr[2] - ptr[0]) : 0;
+			height = (ptr[3] - ptr[1])> 0 ? int(ptr[3] - ptr[1]) : 0;
 		}
+		width = (left + width) < m_image.cols ? width : (m_image.cols - left);
+		height = (top + height) < m_image.rows ? height : (m_image.rows - top);
+		cv::Rect box = cv::Rect(left, top, width, height);
 
 		boxes.push_back(box);
 		scores.push_back(score);

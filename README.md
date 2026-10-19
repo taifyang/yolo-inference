@@ -38,10 +38,10 @@ C++ test in Docker with 16 vCPU Intel(R) Xeon(R) Gold 6459C , RTX 5090(32GB):
 | YOLOv3u            | Detect           | GPU                | FP16                  |  6.9ms   |   15.1ms   |  6.9ms  |    ?     |  1.9ms   |
 | YOLOv3u            | Detect           | CPU                | INT8                  |    ×     |  182.3ms   |    ×    | 113.6ms  |    ×     |
 | YOLOv3u            | Detect           | GPU                | INT8                  |    ×     |  151.6ms   |    ×    |    ?     |  1.3ms   |
-| YOLOv4             | Detect           | CPU                | FP32                  |    ×     |  190.7ms   | 225.4ms |  58.4ms  |    ×     |
-| YOLOv4             | Detect           | GPU                | FP32                  |    ×     |   10.4ms   | 16.7ms  |    ?     |  3.9ms   |
+| YOLOv4             | Detect           | CPU                | FP32                  | 193.6ms  |  190.7ms   | 225.4ms |  58.4ms  |    ×     |
+| YOLOv4             | Detect           | GPU                | FP32                  |  9.7ms   |   10.4ms   | 16.7ms  |    ?     |  3.9ms   |
 | YOLOv4             | Detect           | CPU                | FP16                  |    ×     |  240.1ms   | 243.9ms |  62.4ms  |    ×     |
-| YOLOv4             | Detect           | GPU                | FP16                  |    ×     |   17.3ms   | 10.0ms  |    ?     |  1.6ms   |
+| YOLOv4             | Detect           | GPU                | FP16                  |  9.5ms   |   17.3ms   | 10.0ms  |    ?     |  1.6ms   |
 | YOLOv4             | Detect           | CPU                | INT8                  |    ×     |  209.1ms   |    ×    |  75.8ms  |    ×     |
 | YOLOv4             | Detect           | GPU                | INT8                  |    ×     |  131.6ms   |    ×    |    ?     |  1.3ms   |
 | YOLOv5n            | Classify         | CPU                | FP32                  |  19.5ms  |   19.7ms   | 40.6ms  |  10.3ms  |    ×     |
@@ -247,10 +247,10 @@ Python test in Docker with 16 vCPU Intel(R) Xeon(R) Gold 6459C, RTX 5090(32GB):
 | YOLOv3u            | Detect           | GPU                | FP16                  |  8.1ms   |   17.3ms   |  8.3ms  |    ?     |  4.1ms   |
 | YOLOv3u            | Detect           | CPU                | INT8                  |    ×     |  174.1ms   |    ×    | 105.8ms  |    ×     |
 | YOLOv3u            | Detect           | GPU                | INT8                  |    ×     |  170.1ms   |    ×    |    ?     |  3.5ms   |
-| YOLOv4             | Detect           | CPU                | FP32                  |    ×     |  191.3ms   | 254.2ms |  64.5ms  |    ×     |
-| YOLOv4             | Detect           | GPU                | FP32                  |    ×     |   14.0ms   | 20.2ms  |    ?     |  9.5ms   |
+| YOLOv4             | Detect           | CPU                | FP32                  | 157.3ms  |  191.3ms   | 254.2ms |  64.5ms  |    ×     |
+| YOLOv4             | Detect           | GPU                | FP32                  |  9.9ms   |   14.0ms   | 20.2ms  |    ?     |  9.5ms   |
 | YOLOv4             | Detect           | CPU                | FP16                  |    ×     |  228.2ms   | 247.5ms |  64.1ms  |    ×     |
-| YOLOv4             | Detect           | GPU                | FP16                  |    ×     |   19.6ms   | 13.6ms  |    ?     |  6.6ms   |
+| YOLOv4             | Detect           | GPU                | FP16                  |  10.3ms  |   19.6ms   | 13.6ms  |    ?     |  6.6ms   |
 | YOLOv4             | Detect           | CPU                | INT8                  |    ×     |  204.1ms   |    ×    |  85.7ms  |    ×     |
 | YOLOv4             | Detect           | GPU                | INT8                  |    ×     |  122.6ms   |    ×    |    ?     |  6.4ms   |
 | YOLOv5n            | Classify         | CPU                | FP32                  |  17.7ms  |   20.6ms   | 56.3ms  |  17.5ms  |    ×     |

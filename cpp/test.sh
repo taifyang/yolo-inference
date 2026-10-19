@@ -22,6 +22,9 @@
 ./yolo TensorRT Detect YOLOv3 GPU INT8 ../../weights/yolov3u_int8.engine bus.jpg
 
 
+./yolo Libtorch Detect YOLOv4 CPU FP32 ../../weights/yolov4_fp32_cpu.torchscript bus.jpg
+./yolo Libtorch Detect YOLOv4 GPU FP32 ../../weights/yolov4_fp32_gpu.torchscript bus.jpg
+./yolo Libtorch Detect YOLOv4 GPU FP16 ../../weights/yolov4_fp16_gpu.torchscript bus.jpg
 ./yolo ONNXRuntime Detect YOLOv4 CPU FP32 ../../weights/yolov4_fp32.onnx bus.jpg
 ./yolo ONNXRuntime Detect YOLOv4 GPU FP32 ../../weights/yolov4_fp32.onnx bus.jpg
 ./yolo ONNXRuntime Detect YOLOv4 CPU FP16 ../../weights/yolov4_fp16.onnx bus.jpg
