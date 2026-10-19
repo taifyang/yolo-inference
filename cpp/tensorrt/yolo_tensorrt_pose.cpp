@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2026-01-03 21:57:36
- * @LastEditTime: 2026-08-30 11:32:08
+ * @LastEditTime: 2026-10-18 00:17:11
  * @Description: source file for YOLO tensorrt pose
  */
 
@@ -125,14 +125,10 @@ void YOLO_TensorRT_Pose::post_process()
 		std::vector<float> keypoint(51);
 		if (m_algo_type == YOLOv8 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
 		{
-			float x = ptr[0];
-			float y = ptr[1];
-			float w = ptr[2];
-			float h = ptr[3];
-			int left = int(x - 0.5 * w) > 0 ? int(x - 0.5 * w) : 0;
-			int top = int(y - 0.5 * h) > 0 ? int(y - 0.5 * h) : 0;
-			int width = int(w) > 0 ? int(w) : 0;
-			int height = int(h)> 0 ? int(h) : 0;
+			int left = (ptr[0] - 0.5 * ptr[2]) > 0 ? int(ptr[0] - 0.5 * ptr[2]) : 0;
+			int top = (ptr[1] - 0.5 * ptr[3]) > 0 ? int(ptr[1] - 0.5 * ptr[3]) : 0;
+			int width = ptr[2] > 0 ? int(ptr[2]) : 0;
+			int height = ptr[3] > 0 ? int(ptr[3]) : 0;
 			width = (left + width) < m_image.cols ? width : (m_image.cols - left);
 			height = (top + height) < m_image.rows ? height : (m_image.rows - top);
 			box = cv::Rect(left, top, width, height);
@@ -143,10 +139,10 @@ void YOLO_TensorRT_Pose::post_process()
 		}
 		else if(m_algo_type == YOLO26)
 		{
-			int left = int(ptr[0]) > 0 ? int(ptr[0]) : 0;
-			int top = int(ptr[1]) > 0 ? int(ptr[1]) : 0;
-			int width = int(ptr[2] - ptr[0]) > 0 ? int(ptr[2] - ptr[0]) : 0;
-			int height = int(ptr[3] - ptr[1])> 0 ? int(ptr[3] - ptr[1]) : 0;
+			int left = ptr[0] > 0 ? int(ptr[0]) : 0;
+			int top = ptr[1] > 0 ? int(ptr[1]) : 0;
+			int width = (ptr[2] - ptr[0]) > 0 ? int(ptr[2] - ptr[0]) : 0;
+			int height = (ptr[3] - ptr[1])> 0 ? int(ptr[3] - ptr[1]) : 0;
 			width = (left + width) < m_image.cols ? width : (m_image.cols - left);
 			height = (top + height) < m_image.rows ? height : (m_image.rows - top);
 			box = cv::Rect(left, top, width, height);

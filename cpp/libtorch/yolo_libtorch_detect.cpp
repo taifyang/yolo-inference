@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-08-09 20:52:14
+ * @LastEditTime: 2026-10-17 23:36:07
  * @Description: source file for YOLO libtorch detection
  */
 
@@ -9,7 +9,7 @@
 
 void YOLO_Libtorch_Detect::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
-	if (algo_type != YOLOv3 && algo_type != YOLOv5 && algo_type != YOLOv6 && algo_type != YOLOv7 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv10 && algo_type != YOLOv11  && algo_type != YOLOv12 && algo_type != YOLOv13 && algo_type != YOLO26)
+	if (algo_type != YOLOv3 && algo_type != YOLOv4 && algo_type != YOLOv5 && algo_type != YOLOv6 && algo_type != YOLOv7 && algo_type != YOLOv8 && algo_type != YOLOv9 && algo_type != YOLOv10 && algo_type != YOLOv11  && algo_type != YOLOv12 && algo_type != YOLOv13 && algo_type != YOLO26)
 	{
 		std::cerr << "unsupported algo type!" << std::endl;
 		std::exit(-1);
@@ -47,7 +47,7 @@ void YOLO_Libtorch_Detect::process()
 	torch::Tensor pred;
 	if (m_algo_type == YOLOv5 || m_algo_type == YOLOv7)
 		pred = m_output.toTuple()->elements()[0].toTensor().to(torch::kFloat).to(at::kCPU);
-	else if (m_algo_type == YOLOv3 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13 || m_algo_type == YOLO26)
+	else if (m_algo_type == YOLOv3 || m_algo_type == YOLOv4 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13 || m_algo_type == YOLO26)
 		pred = m_output.toTensor().to(at::kCPU);
 	m_output0.assign(pred.data_ptr<float>(), pred.data_ptr<float>() + m_output_numdet);
 }
@@ -72,7 +72,7 @@ void YOLO_Libtorch_Detect::post_process()
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
 			score = classes_scores[class_id] * objness;
 		}
-		else if (m_algo_type == YOLOv3 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13 || m_algo_type == YOLO26)
+		else if (m_algo_type == YOLOv3 || m_algo_type == YOLOv4 || m_algo_type == YOLOv6 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv10 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13 || m_algo_type == YOLO26)
 		{
 			float* classes_scores = ptr + 4;
 			class_id = std::max_element(classes_scores, classes_scores + m_class_num) - classes_scores;
@@ -81,32 +81,31 @@ void YOLO_Libtorch_Detect::post_process()
 		if (score < m_score_threshold)
 			continue;
 
-		cv::Rect box;
+		int left, top, width, height;
 		if(m_algo_type == YOLOv3 || m_algo_type == YOLOv5 || m_algo_type == YOLOv6 || m_algo_type == YOLOv7 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12 || m_algo_type == YOLOv13)
 		{
-			float x = ptr[0];
-			float y = ptr[1];
-			float w = ptr[2];
-			float h = ptr[3];
-
-			int left = int(x - 0.5 * w) > 0 ? int(x - 0.5 * w) : 0;
-			int top = int(y - 0.5 * h) > 0 ? int(y - 0.5 * h) : 0;
-			int width = int(w) > 0 ? int(w) : 0;
-			int height = int(h)> 0 ? int(h) : 0;
-			width = (left + width) < m_image.cols ? width : (m_image.cols - left);
-			height = (top + height) < m_image.rows ? height : (m_image.rows - top);
-			box = cv::Rect(left, top, width, height);
+			left = (ptr[0] - 0.5 * ptr[2]) > 0 ? int(ptr[0] - 0.5 * ptr[2]) : 0;
+			top = (ptr[1] - 0.5 * ptr[3]) > 0 ? int(ptr[1] - 0.5 * ptr[3]) : 0;
+			width = ptr[2] > 0 ? int(ptr[2]) : 0;
+			height = ptr[3] > 0 ? int(ptr[3]) : 0;
+		}
+		else if (m_algo_type == YOLOv4)
+		{
+			left = ptr[0] > 0 ? int(ptr[0] * m_input_size.width) : 0;
+			top = ptr[1] > 0 ? int(ptr[1] * m_input_size.height) : 0;
+			width = (ptr[2] - ptr[0]) > 0 ? int((ptr[2] - ptr[0]) * m_input_size.width) : 0;
+			height = (ptr[3] - ptr[1])> 0 ? int((ptr[3] - ptr[1]) * m_input_size.height) : 0;
 		}
 		else if (m_algo_type == YOLOv10 || m_algo_type == YOLO26)
 		{
-			int left = int(ptr[0]) > 0 ? int(ptr[0]) : 0;
-			int top = int(ptr[1]) > 0 ? int(ptr[1]) : 0;
-			int width = int(ptr[2] - ptr[0]) > 0 ? int(ptr[2] - ptr[0]) : 0;
-			int height = int(ptr[3] - ptr[1])> 0 ? int(ptr[3] - ptr[1]) : 0;
-			width = (left + width) < m_image.cols ? width : (m_image.cols - left);
-			height = (top + height) < m_image.rows ? height : (m_image.rows - top);
-			box = cv::Rect(left, top, width, height);
+			left = ptr[0] > 0 ? int(ptr[0]) : 0;
+			top = ptr[1] > 0 ? int(ptr[1]) : 0;
+			width = (ptr[2] - ptr[0]) > 0 ? int(ptr[2] - ptr[0]) : 0;
+			height = (ptr[3] - ptr[1])> 0 ? int(ptr[3] - ptr[1]) : 0;
 		}
+		width = (left + width) < m_image.cols ? width : (m_image.cols - left);
+		height = (top + height) < m_image.rows ? height : (m_image.rows - top);
+		cv::Rect box = cv::Rect(left, top, width, height);
 
 		boxes.push_back(box);
 		scores.push_back(score);

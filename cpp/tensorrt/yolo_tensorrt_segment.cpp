@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-08-29 22:49:49
+ * @LastEditTime: 2026-10-18 00:13:22
  * @Description: source file for YOLO tensorrt segmentation
  */
 
@@ -191,14 +191,21 @@ void YOLO_TensorRT_Segment::post_process()
 		if (score < m_score_threshold)
 			continue;
 
-		float x = ptr[0];
-		float y = ptr[1];
-		float w = ptr[2];
-		float h = ptr[3];
-		int left = int(x - 0.5 * w) > 0 ? int(x - 0.5 * w) : 0;
-		int top = int(y - 0.5 * h) > 0 ? int(y - 0.5 * h) : 0;
-		int width = int(w) > 0 ? int(w) : 0;
-		int height = int(h)> 0 ? int(h) : 0;
+		int left, top, width, height;
+		if (m_algo_type == YOLOv5 || m_algo_type == YOLOv8 || m_algo_type == YOLOv9 || m_algo_type == YOLOv11 || m_algo_type == YOLOv12)
+		{
+			left = (ptr[0] - 0.5 * ptr[2]) > 0 ? int(ptr[0] - 0.5 * ptr[2]) : 0;
+			top = (ptr[1] - 0.5 * ptr[3]) > 0 ? int(ptr[1] - 0.5 * ptr[3]) : 0;
+			width = ptr[2] > 0 ? int(ptr[2]) : 0;
+			height = ptr[3] > 0 ? int(ptr[3]) : 0;
+		}
+		else if (m_algo_type == YOLO26)
+		{
+			left = ptr[0] > 0 ? int(ptr[0]) : 0;
+			top = ptr[1] > 0 ? int(ptr[1]) : 0;
+			width = (ptr[2] - ptr[0]) > 0 ? int(ptr[2] - ptr[0]) : 0;
+			height = (ptr[3] - ptr[1])> 0 ? int(ptr[3] - ptr[1]) : 0;
+		}
 		width = (left + width) < m_image.cols ? width : (m_image.cols - left);
 		height = (top + height) < m_image.rows ? height : (m_image.rows - top);
 		cv::Rect box = cv::Rect(left, top, width, height);

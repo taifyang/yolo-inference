@@ -10,7 +10,6 @@
 void YOLO_OpenCV::init(const Algo_Type algo_type, const Device_Type device_type, const Model_Type model_type, const std::string model_path)
 {
 	m_algo_type = algo_type;
-    cv::setNumThreads(m_threads);
 
 	if(!std::filesystem::exists(model_path))
 	{
@@ -35,6 +34,7 @@ void YOLO_OpenCV::init(const Algo_Type algo_type, const Device_Type device_type,
 	{
 		m_net.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
 		m_net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
+		cv::setNumThreads(m_threads);
 	}
 	else if (device_type == GPU)
 	{
