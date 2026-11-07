@@ -153,8 +153,8 @@ C++ test in Docker with 16 vCPU Intel(R) Xeon(R) Gold 6459C , RTX 5090(32GB):
 | YOLOv11n           | OBB              | CPU                | INT8                  |    ×     |   76.9ms   |    ×    |  29.3ms  |    ×     |
 | YOLOv11n           | OBB              | GPU                | INT8                  |    ×     |   69.6ms   |    ×    |    ?     |  1.7ms   |
 | YOLOv12n           | Classify         | CPU                | FP32                  |  7.0ms   |   4.1ms    | 13.2ms  |  1.7ms   |    ×     |
-| YOLOv12n           | Classify         | GPU                | FP32                  |    ×     |   1.6ms    |  4.0ms  |    ?     |  0.7ms   |
-| YOLOv12n           | Classify         | CPU                | FP16                  |    ×     |   7.2ms    | 13.2ms  |  2.0ms   |    ×     |
+| YOLOv12n           | Classify         | GPU                | FP32                  |  8.0ms  |   1.6ms    |  4.0ms  |    ?     |  0.7ms   |
+| YOLOv12n           | Classify         | CPU                | FP16                  |  7.7ms  |   7.2ms    | 13.2ms  |  2.0ms   |    ×     |
 | YOLOv12n           | Classify         | GPU                | FP16                  |    ×     |   1.8ms    |  4.6ms  |    ?     |  0.6ms   |
 | YOLOv12n           | Classify         | CPU                | INT8                  |    ×     |   7.0ms    |    ×    |  1.9ms   |    ×     |
 | YOLOv12n           | Classify         | GPU                | INT8                  |    ×     |   6.7ms    |    ×    |    ?     |  0.7ms   |
