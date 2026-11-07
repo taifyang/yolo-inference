@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-08-20 23:13:09
+ * @LastEditTime: 2026-11-07 11:26:40
  * @Description: source file for YOLO libtorch inference
  */
 
@@ -17,9 +17,11 @@ void YOLO_Libtorch::init(const Algo_Type algo_type, const Device_Type device_typ
 		std::exit(-1);
 	}
   
+	m_device = (device_type == GPU ? torch::kCUDA : torch::kCPU);
+
 	try
 	{
-		m_module = torch::jit::load(model_path);
+		m_module = torch::jit::load(model_path, m_device);
 	}
 	catch (const c10::Error& e) 
 	{
@@ -28,8 +30,6 @@ void YOLO_Libtorch::init(const Algo_Type algo_type, const Device_Type device_typ
 	}
 
 	m_module.eval();
-
-	m_device = (device_type == GPU ? at::kCUDA : at::kCPU);
 
 	if (model_type != FP32 && model_type != FP16)
 	{
@@ -51,7 +51,6 @@ void YOLO_Libtorch::init(const Algo_Type algo_type, const Device_Type device_typ
 	{
 	}
 
-	m_module.to(m_device);
 
 	if (model_type == FP16)
 	{
