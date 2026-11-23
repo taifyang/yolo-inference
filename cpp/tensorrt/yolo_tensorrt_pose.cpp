@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2026-01-03 21:57:36
- * @LastEditTime: 2026-10-18 00:17:11
+ * @LastEditTime: 2026-11-23 21:20:08
  * @Description: source file for YOLO tensorrt pose
  */
 
@@ -198,19 +198,5 @@ void YOLO_TensorRT_Pose::post_process()
 
 void YOLO_TensorRT_Pose::release()
 {
-	YOLO_TensorRT::release();
-
-	cudaFree(m_output0_device);
-
-#ifdef _CUDA_PREPROCESS
-	cudaFree(m_d2s_device);
-	cudaFree(m_input);
-#else
-	cudaFreeHost(m_input);
-#endif // _CUDA_PREPROCESS
-
-#ifdef _CUDA_POSTPROCESS
-	cudaFree(m_output_box_device);
-	cudaFreeHost(m_output_box_host);
-#endif // _CUDA_POSTPROCESS
+	YOLO_TensorRT_Detect::release();
 }

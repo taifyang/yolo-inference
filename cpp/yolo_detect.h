@@ -71,12 +71,12 @@ protected:
 	 * @description: 				LetterBox image process
 	 * @param {Mat&} input_image	input image
 	 * @param {Mat&} output_image	output image
-	 * @param {Vec4d&} params		transform parameters
+	 * @param {Vec4f&} params		transform parameters
 	 * @param {Size} shape			output image shape
 	 * @param {Scalar} color		filled color
 	 * @return {*}
 	 */
-	void LetterBox(cv::Mat& input_image, cv::Mat& output_image, cv::Vec4d& params, cv::Size shape = cv::Size(640, 640), cv::Scalar color = cv::Scalar(114, 114, 114))
+	void LetterBox(cv::Mat& input_image, cv::Mat& output_image, cv::Vec4f& params, cv::Size shape = cv::Size(640, 640), cv::Scalar color = cv::Scalar(114, 114, 114))
 	{
 		float r = std::min((float)shape.height / (float)input_image.rows, (float)shape.width / (float)input_image.cols);
 		float ratio[2]{ r, r };
@@ -264,7 +264,7 @@ protected:
 	/**
 	 * @description: letterbox related parameters
 	 */
-	cv::Vec4d m_params;
+	cv::Vec4f m_params;
 
 	/**
 	 * @description:output detection size

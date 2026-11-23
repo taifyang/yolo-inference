@@ -1,7 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-08-29 23:47:31
+ * @LastEditTime: 2026-11-21 23:07:56
  * @Description: source file for cuda post-processing decoding
  */
 
@@ -24,7 +24,8 @@ static __device__ void affine_project_kernel(float* matrix, float x, float y, fl
 	*oy = matrix[3] * x + matrix[4] * y + matrix[5];
 }
 
-static __global__ void decode_kernel(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float score_threshold, float* inverse_affine_matrix, float* parray, int max_objects, int num_box_element, cv::Size input_size, Algo_Type algo_type, Task_Type task_type)
+static __global__ void decode_kernel(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float score_threshold, 
+    float* inverse_affine_matrix, float* parray, int max_objects, int num_box_element, cv::Size input_size, Algo_Type algo_type, Task_Type task_type)
 {
 	int position = blockDim.x * blockIdx.x + threadIdx.x;
 	if (position >= num_bboxes)

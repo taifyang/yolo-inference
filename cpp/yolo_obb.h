@@ -232,7 +232,7 @@ protected:
 	/**
 	 * @description: letterbox related parameters
 	 */
-	cv::Vec4d m_params;
+	cv::Vec4f m_params;
 
 	/**
 	 * @description:output detection size
