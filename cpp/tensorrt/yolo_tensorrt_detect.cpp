@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-10-17 23:59:17
+ * @LastEditTime: 2026-11-22 21:35:59
  * @Description: source file for YOLO tensorrt detection
  */
 
@@ -50,6 +50,8 @@ void YOLO_TensorRT_Detect::pre_process()
 #ifdef _CUDA_PREPROCESS
 	cudaMemcpy(m_input, m_image.data, sizeof(uint8_t) * 3 * m_image.cols * m_image.rows, cudaMemcpyHostToDevice);
 	cuda_preprocess_img(m_input, m_image.cols, m_image.rows, m_input_device, m_input_size.width, m_input_size.height, m_d2s_device, m_s2d_device);
+	cudaMemcpy(m_d2s_host, m_d2s_device, sizeof(float) * 6, cudaMemcpyDeviceToHost);
+	cudaMemcpy(m_s2d_host, m_s2d_device, sizeof(float) * 6, cudaMemcpyDeviceToHost);
 #else
 	cv::Mat letterbox;
 	LetterBox(m_image, letterbox, m_params, m_input_size);
@@ -227,6 +229,9 @@ void YOLO_TensorRT_Detect::release()
 
 #ifdef _CUDA_PREPROCESS
 	cudaFree(m_d2s_device);
+	cudaFree(m_s2d_device);
+	cudaFreeHost(m_d2s_host);
+	cudaFreeHost(m_s2d_host);
 	cudaFree(m_input);
 #else
 	cudaFreeHost(m_input);

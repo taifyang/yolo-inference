@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2026-01-03 21:57:36
- * @LastEditTime: 2026-08-21 23:43:17
+ * @LastEditTime: 2026-11-23 21:30:47
  * @Description: source file for YOLO tensorrt pose
  */
 
@@ -52,7 +52,7 @@ void YOLO_TensorRT_OBB::init(const Algo_Type algo_type, const Device_Type device
 	cudaMalloc(&m_hd_device, sizeof(float) * m_max_box * m_max_box);
 	cudaMalloc(&m_picked_device, sizeof(int) * m_max_box);
 	cudaMalloc(&m_picked_boxes_device, sizeof(float) * m_max_box * m_num_box_element);
-	m_picked_boxes_host = new float[m_num_box_element * m_max_box];
+	cudaMallocHost(&m_picked_boxes_host, sizeof(float) * m_num_box_element * m_max_box);
 
 	cudaMalloc(&m_col_max_device, sizeof(float) * m_max_box);
 	cudaMalloc(&m_mask_pick_device, sizeof(int) * m_max_box);
@@ -209,20 +209,7 @@ void YOLO_TensorRT_OBB::post_process()
 
 void YOLO_TensorRT_OBB::release()
 {
-	YOLO_TensorRT::release();
-
-	cudaFree(m_output0_device);
-
-#ifdef _CUDA_PREPROCESS
-	cudaFree(m_d2s_device);
-	cudaFree(m_input);
-#else
-	cudaFreeHost(m_input);
-#endif // _CUDA_PREPROCESS
-
-#ifdef _CUDA_POSTPROCESS
-	cudaFree(m_output_box_device);
-	cudaFreeHost(m_output_box_host);
+	YOLO_TensorRT_Detect::release();
 
 	cudaFree(m_scores_device);
 	cudaFree(m_sorted_idx_device);
@@ -233,10 +220,9 @@ void YOLO_TensorRT_OBB::release()
 	cudaFree(m_hd_device);
 	cudaFree(m_picked_device);
 	cudaFree(m_picked_boxes_device);
-	delete[] m_picked_boxes_host;
+	cudaFreeHost(m_picked_boxes_host);
 
 	cudaFree(m_col_max_device);
 	cudaFree(m_mask_pick_device);
 	cudaFree(m_prefix_sum_device);
-#endif // _CUDA_POSTPROCESS
 }

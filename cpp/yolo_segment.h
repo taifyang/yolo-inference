@@ -32,7 +32,7 @@ struct MaskParams
 	int net_height = 640;		//input height of segmentation model 
 	float mask_threshold = 0.5;	//threshold of segmentation mask
 	cv::Size input_shape;		//input shape of image
-	cv::Vec4d params;			//parameters of letterbox
+	cv::Vec4f params;			//parameters of letterbox
 };
 
 /**
@@ -97,22 +97,10 @@ protected:
 		int rang_w = ceil(((temp_rect.x + temp_rect.width) * params[0] + params[2]) / net_width * seg_width) - rang_x;
 		int rang_h = ceil(((temp_rect.y + temp_rect.height) * params[1] + params[3]) / net_height * seg_height) - rang_y;
 
-		rang_w = MAX(rang_w, 1);
-		rang_h = MAX(rang_h, 1);
-		if (rang_x + rang_w > seg_width)
-		{
-			if (seg_width - rang_x > 0)
-				rang_w = seg_width - rang_x;
-			else
-				rang_x -= 1;
-		}
-		if (rang_y + rang_h > seg_height)
-		{
-			if (seg_height - rang_y > 0)
-				rang_h = seg_height - rang_y;
-			else
-				rang_y -= 1;
-		}
+		rang_x = std::max(0, std::min(rang_x, seg_width - 1));
+		rang_y = std::max(0, std::min(rang_y, seg_height - 1));
+		rang_w = std::max(1, std::min(rang_w, seg_width - rang_x));
+		rang_h = std::max(1, std::min(rang_h, seg_height - rang_y));
 
 		std::vector<cv::Range> roi_rangs;
 		roi_rangs.push_back(cv::Range(0, 1));

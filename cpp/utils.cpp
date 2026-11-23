@@ -1,7 +1,7 @@
 /*
  * @Author: taifyang 
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2024-10-30 20:53:28
+ * @LastEditTime: 2026-11-23 00:08:37
  * @Description: utilities source file
  */
 
@@ -110,4 +110,10 @@ float float16_to_float32(uint16_t value)
 	}
 
 	return tmp.f;
+}
+
+void affine_project(float* matrix, float x, float y, float* ox, float* oy)
+{
+    *ox = matrix[0] * x + matrix[1] * y + matrix[2];
+    *oy = matrix[3] * x + matrix[4] * y + matrix[5];
 }

@@ -1,7 +1,7 @@
 /* 
  * @Author: taifyang
  * @Date: 2024-06-12 09:26:41
- * @LastEditTime: 2026-10-15 23:16:37
+ * @LastEditTime: 2026-11-23 00:05:07
  * @Description: header file for YOLO tensorrt inference
  */
 
@@ -158,7 +158,20 @@ private:
 	float* m_output0_device;
 
 #ifdef _CUDA_PREPROCESS
-	uint8_t *m_image_crop, *m_image_centercrop_device, *m_image_resize_device;
+	/**
+	 * @description: image crop on device
+	 */
+	uint8_t* m_image_crop;
+	
+	/**
+	 * @description: image centercrop on device
+	 */
+	uint8_t* m_image_centercrop_device;
+
+	/**
+	 * @description: image resize on device
+	 */
+	uint8_t* m_image_resize_device;
 #endif // _CUDA_PREPROCESS
 };
 
@@ -402,56 +415,7 @@ private:
 	 */
 	void release();
 
-#ifndef _CUDA_PREPROCESS
-	/**
-	 * @description: pointer to input on host
-	 */
-	float* m_input_host;
-#else
-	/**
-	 * @description: pointer to uint8_t input on host 
-	 */
-	uint8_t* m_input_host;
-#endif // !_CUDA_PREPROCESS
-
-	/**
-	 * @description: pointer to output on device
-	 */
-	float* m_output0_device;
-
-#ifdef _CUDA_PREPROCESS
-	/**
-	 * @description: d2s matrix on host
-	 */
-	float* m_d2s_host;
-
-	/**
-	 * @description: d2s matrix on device
-	 */
-	float* m_d2s_device;
-
-		/**
-	 * @description: s2d matrix on host
-	 */
-	float* m_s2d_host;
-
-	/**
-	 * @description: s2d matrix on device
-	 */
-	float* m_s2d_device;
-#endif // _CUDA_PREPROCESS
-
 #ifdef _CUDA_POSTPROCESS
-	/**
-	 * @description: output bounding box on host
-	 */
-	float* m_output_box_host;
-
-	/**
-	 * @description: output bounding box on device
-	 */
-	float* m_output_box_device;
-
 	/**
 	 * @description: pre-allocated temp buffer: scores
 	 */
@@ -570,23 +534,6 @@ private:
 	 */
 	void release();
 
-#ifndef _CUDA_PREPROCESS
-	/**
-	 * @description: pointer to input on host
-	 */
-	float* m_input_host;
-#else
-	/**
-	 * @description: pointer to uint8_t input on host 
-	 */
-	uint8_t* m_input_host;
-#endif // !_CUDA_PREPROCESS
-
-	/**
-	 * @description: pointer to output on device
-	 */
-	float* m_output0_device;
-
 #ifdef _CUDA_POSTPROCESS
 	float* m_depth_device;
 
@@ -652,18 +599,6 @@ private:
 	 * @return {*}
 	 */
 	void release();
-
-#ifndef _CUDA_PREPROCESS
-	/**
-	 * @description: pointer to input on host
-	 */
-	float* m_input_host;
-#else
-	/**
-	 * @description: pointer to uint8_t input on host 
-	 */
-	uint8_t* m_input_host;
-#endif // !_CUDA_PREPROCESS
 
 	/**
 	 * @description: pointer to output on device
